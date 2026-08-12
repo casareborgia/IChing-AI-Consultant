@@ -53,6 +53,7 @@ def test_orm_models_instantiation():
     hexagram = Hexagram(
         id=1,
         binary_code="111111",
+        symbol="䷀",
         name_ko="건",
         name_hanja="乾",
         name_full="중천건",
@@ -60,18 +61,20 @@ def test_orm_models_instantiation():
     )
     assert hexagram.id == 1
     assert hexagram.name_ko == "건"
+    assert hexagram.symbol == "䷀"
 
     line = Line(
         hexagram_id=1,
-        line_number=1,
-        statement_text="初九：潛龍勿用。",
+        line_number=7,  # 用九 (7번째 행)
+        statement_text="用九：見群龍无首，吉。",
     )
-    assert line.line_number == 1
+    assert line.line_number == 7
     assert line.hexagram_id == 1
 
     session = CounselSession(
         raw_question="진로에 대해 고민이 있습니다.",
         clarified_question="진로 변경에 적합한 타이밍인가요?",
+        status="active",
     )
     assert session.status == "active"
     assert session.raw_question == "진로에 대해 고민이 있습니다."

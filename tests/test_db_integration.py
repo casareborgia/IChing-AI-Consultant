@@ -32,6 +32,11 @@ async def test_db_seeded_hexagrams_and_lines():
         qian_lines = (await session.execute(stmt_qian_lines)).scalars().all()
         assert len(qian_lines) == 7  # 초효~상효(6개) + 용구(1개) = 7개
 
+        # 4. 용구(7효) 효사와 소상전이 분리 적재됐는지 검증 (파서가 붙여놓던 부분)
+        yonggu = qian_lines[6]
+        assert yonggu.statement_text == "用九 見群龍호 无首면 吉리라"
+        assert yonggu.small_xiang_text == "用九 天德은 不可爲首也ㅣ라"
+
 
 @pytest.mark.asyncio
 async def test_db_session_and_counsel_turn_crud():

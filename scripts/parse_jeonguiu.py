@@ -210,6 +210,15 @@ def fix_qian(h: dict) -> dict:
         if slot is not None and not slot["sosang"]:
             slot["sosang"] = leftovers.pop(0)
 
+    # (3) 用九(7효)만은 소상전이 notes로 밀리지 않고 효사 뒤에 그대로 붙어 들어온다.
+    #     "用九 <효사> 用九 <소상전>" 형태이므로 두 번째 '用九'에서 잘라 떼어낸다.
+    yonggu = by_pos.get(7)
+    if yonggu is not None and not yonggu["sosang"]:
+        second = yonggu["original"].find("用九", len("用九"))
+        if second != -1:
+            yonggu["sosang"] = yonggu["original"][second:].strip()
+            yonggu["original"] = yonggu["original"][:second].strip()
+
     h["notes"] = leftovers
     return h
 

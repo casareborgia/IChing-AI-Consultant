@@ -1,3 +1,5 @@
+name: iching
+
 services:
   db:
     # pgvector 확장이 미리 설치된 공식 이미지

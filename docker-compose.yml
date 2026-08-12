@@ -1,0 +1,28 @@
+services:
+  db:
+    # pgvector 확장이 미리 설치된 공식 이미지
+    image: pgvector/pgvector:pg16
+    container_name: iching-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-iching}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      POSTGRES_DB: ${POSTGRES_DB:-iching}
+      # 한글 정렬·검색을 위한 로케일 설정
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --locale=C"
+    ports:
+      # 로컬 5432가 이미 쓰이는 경우를 대비해 호스트 포트만 바꿀 수 있게 함
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # 컨테이너 최초 생성 시 1회만 실행되는 초기화 스크립트
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      # 앱 컨테이너가 DB 준비 전에 붙는 것을 막는다
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-iching} -d ${POSTGRES_DB:-iching}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pgdata:

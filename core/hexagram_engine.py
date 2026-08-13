@@ -1,5 +1,5 @@
 import random
-from typing import List, Optional, Tuple
+from typing import List, Optional
 
 from schemas.hexagram_engine import (
     FocusRuleResult,
@@ -129,7 +129,6 @@ def cast_single_line(method: str = "coin") -> int:
 def calculate_focus_rule(
     original_hex_id: int,
     changing_lines: List[int],
-    transformed_hex_id: Optional[int],
 ) -> FocusRuleResult:
     """주자(朱子) 점법 기준 동효 수(0~6개)에 따른 해석 집중 대상 판단"""
     count = len(changing_lines)
@@ -199,8 +198,9 @@ def calculate_focus_rule(
                 description_ko="곤괘 6효가 모두 변하였으므로 용육(用六) 효사를 주 해석으로 삼습니다.",
             )
         else:
+            # 본괘 괘사는 참작 대상이 아니다. BOTH_JUDGMENTS(3변효)와 반드시 구분되어야 한다.
             return FocusRuleResult(
-                focus_type=FocusType.BOTH_JUDGMENTS,
+                focus_type=FocusType.TRANSFORMED_JUDGMENT,
                 target_hexagram_type="TRANSFORMED",
                 target_line_numbers=[],
                 description_ko="6효가 모두 변하였으므로 지괘의 괘사를 주 해석으로 삼습니다.",
@@ -275,7 +275,6 @@ def cast_hexagram(
     focus_rule = calculate_focus_rule(
         original_hex_id=orig_hex_id,
         changing_lines=changing_lines,
-        transformed_hex_id=trans_hex_id,
     )
 
     return HexagramCastResult(

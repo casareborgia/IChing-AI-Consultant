@@ -5,10 +5,11 @@ from pydantic import BaseModel, Field
 
 class FocusType(str, Enum):
     """주자 점법 중점 해석 대상 유형"""
-    ORIGINAL_JUDGMENT = "ORIGINAL_JUDGMENT"            # 본괘 괘사 (동효 0개, 또는 3개 시 본괘 중심)
+    ORIGINAL_JUDGMENT = "ORIGINAL_JUDGMENT"            # 본괘 괘사만 (동효 0개)
     SINGLE_LINE_STATEMENT = "SINGLE_LINE_STATEMENT"    # 본괘/지괘 단일 효사 (동효 1개, 5개)
     MULTIPLE_LINE_STATEMENTS = "MULTIPLE_LINE_STATEMENTS" # 본괘/지괘 복수 효사 (동효 2개, 4개)
-    BOTH_JUDGMENTS = "BOTH_JUDGMENTS"                  # 본괘 괘사 + 지괘 괘사 (동효 3개, 6개 일반괘)
+    BOTH_JUDGMENTS = "BOTH_JUDGMENTS"                  # 본괘 괘사 + 지괘 괘사 (동효 3개)
+    TRANSFORMED_JUDGMENT = "TRANSFORMED_JUDGMENT"      # 지괘 괘사만 (동효 6개 일반괘)
     SPECIAL_USE_LINE = "SPECIAL_USE_LINE"              # 건괘 용구 / 곤괘 용육 (동효 6개 특수)
 
 

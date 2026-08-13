@@ -223,9 +223,24 @@ def fix_qian(h: dict) -> dict:
     return h
 
 
+# 원문 사이트에서 넘어온 글자 중 손봐야 하는 것들.
+# 확장한자(4바이트)가 latin-1로 잘못 해석돼 깨진 경우와, 이체자를 표준 자형으로 통일하는 경우.
+GLYPH_FIXES = {
+    "\u00f0\u00a4\u00a8\u008f": "瑣",  # 𤨏(U+24A0F)가 깨진 형태 — 괘56 旅瑣瑣 / 鄙猥瑣細
+    "\U00024a0f": "瑣",                # 정상 디코딩된 이체자도 같은 표준자로 통일
+}
+
+
+def normalize_glyphs(text: str) -> str:
+    """알려진 깨진 글자·이체자를 표준 자형으로 되돌린다."""
+    for broken, standard in GLYPH_FIXES.items():
+        text = text.replace(broken, standard)
+    return text
+
+
 def parse_text(text: str) -> list:
     """전체 텍스트에서 괘 섹션들을 찾아 파싱한다."""
-    text = unescape(text)
+    text = normalize_glyphs(unescape(text))
     lines = text.split("\n")
 
     starts = []  # (라인번호, 괘번호, 괘명, 기호)

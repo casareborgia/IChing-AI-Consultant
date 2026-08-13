@@ -22,3 +22,6 @@ htmlcov/
 
 # Database data
 pgdata/
+
+# 파일럿 채점지 — runs/ 출력에서 compare.py가 생성하는 파생물
+pilot/blind_sheet.md

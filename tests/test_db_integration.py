@@ -1,6 +1,7 @@
 import pytest
 from sqlalchemy import select
 from core.db import AsyncSessionLocal
+from core.hexagram_engine import HEXAGRAM_ID_TO_BINARY
 from core.models.hexagram import Hexagram, Line
 from core.models.counsel import CounselSession, CounselTurn
 
@@ -36,6 +37,25 @@ async def test_db_seeded_hexagrams_and_lines():
         yonggu = qian_lines[6]
         assert yonggu.statement_text == "用九 見群龍호 无首면 吉리라"
         assert yonggu.small_xiang_text == "用九 天德은 不可爲首也ㅣ라"
+
+
+@pytest.mark.asyncio
+async def test_engine_binary_table_matches_db():
+    """괘 도출 엔진의 이진표와 DB binary_code가 어긋나지 않는지 검증.
+
+    엔진(core/hexagram_engine.py)과 DB가 64괘 이진 코드를 각자 들고 있어서,
+    한쪽만 고치면 엔진이 뽑은 괘에 엉뚱한 원문이 붙는다. 그 드리프트를 잡는다.
+    """
+    async with AsyncSessionLocal() as session:
+        hexagrams = (await session.execute(select(Hexagram))).scalars().all()
+        assert len(hexagrams) == 64
+
+        mismatched = [
+            (h.id, HEXAGRAM_ID_TO_BINARY[h.id], h.binary_code)
+            for h in hexagrams
+            if HEXAGRAM_ID_TO_BINARY[h.id] != h.binary_code
+        ]
+        assert not mismatched, f"엔진↔DB 이진 코드 불일치 (괘ID, 엔진, DB): {mismatched}"
 
 
 @pytest.mark.asyncio

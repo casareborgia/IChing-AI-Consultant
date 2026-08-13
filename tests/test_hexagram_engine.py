@@ -60,43 +60,45 @@ def test_cast_hexagram_manual_no_changing():
 def test_focus_rules_0_to_6_lines():
     """동효 개수별(0~6개) 해석 포커스 규칙 정확성 검증"""
     # 0개
-    rule0 = calculate_focus_rule(1, [], None)
+    rule0 = calculate_focus_rule(1, [])
     assert rule0.focus_type == FocusType.ORIGINAL_JUDGMENT
     assert rule0.target_hexagram_type == "ORIGINAL"
 
     # 1개 (초효 변효)
-    rule1 = calculate_focus_rule(1, [1], 44)
+    rule1 = calculate_focus_rule(1, [1])
     assert rule1.focus_type == FocusType.SINGLE_LINE_STATEMENT
     assert rule1.target_hexagram_type == "ORIGINAL"
     assert rule1.target_line_numbers == [1]
 
     # 2개 (초효, 4효 변효) -> 상위 4효 우선
-    rule2 = calculate_focus_rule(1, [1, 4], 33)
+    rule2 = calculate_focus_rule(1, [1, 4])
     assert rule2.focus_type == FocusType.MULTIPLE_LINE_STATEMENTS
     assert rule2.target_hexagram_type == "ORIGINAL"
     assert rule2.target_line_numbers == [4, 1]
 
     # 3개 (1, 2, 3효 변효) -> 본괘/지괘 괘사 모두 참작
-    rule3 = calculate_focus_rule(1, [1, 2, 3], 12)
+    rule3 = calculate_focus_rule(1, [1, 2, 3])
     assert rule3.focus_type == FocusType.BOTH_JUDGMENTS
     assert rule3.target_hexagram_type == "BOTH"
 
     # 4개 (1, 2, 3, 4효 변효) -> 지괘 안 변한 5, 6효 중 아래쪽(5효) 우선
-    rule4 = calculate_focus_rule(1, [1, 2, 3, 4], 20)
+    rule4 = calculate_focus_rule(1, [1, 2, 3, 4])
     assert rule4.focus_type == FocusType.MULTIPLE_LINE_STATEMENTS
     assert rule4.target_hexagram_type == "TRANSFORMED"
     assert rule4.target_line_numbers == [5, 6]
 
     # 5개 (1, 2, 3, 4, 5효 변효) -> 지괘 안 변한 6효
-    rule5 = calculate_focus_rule(1, [1, 2, 3, 4, 5], 23)
+    rule5 = calculate_focus_rule(1, [1, 2, 3, 4, 5])
     assert rule5.focus_type == FocusType.SINGLE_LINE_STATEMENT
     assert rule5.target_hexagram_type == "TRANSFORMED"
     assert rule5.target_line_numbers == [6]
 
-    # 6개 (일반 괘: 예를 들어 3번 준괘) -> 지괘 괘사
-    rule6_general = calculate_focus_rule(3, [1, 2, 3, 4, 5, 6], 50)
-    assert rule6_general.focus_type == FocusType.BOTH_JUDGMENTS
+    # 6개 (일반 괘: 예를 들어 3번 준괘) -> 지괘 괘사만. 본괘 괘사를 함께 보는
+    # 3변효(BOTH_JUDGMENTS)와 focus_type만으로 구분되어야 한다.
+    rule6_general = calculate_focus_rule(3, [1, 2, 3, 4, 5, 6])
+    assert rule6_general.focus_type == FocusType.TRANSFORMED_JUDGMENT
     assert rule6_general.target_hexagram_type == "TRANSFORMED"
+    assert rule6_general.focus_type != rule3.focus_type
 
 
 def test_cast_hexagram_random():

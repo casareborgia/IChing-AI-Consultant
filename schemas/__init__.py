@@ -4,10 +4,21 @@ from schemas.counsel import (
     CounselTurnSchema,
     JournalEntrySchema,
 )
+from schemas.hexagram_engine import (
+    FocusType,
+    LineCastResult,
+    FocusRuleResult,
+    HexagramCastResult,
+)
 
 __all__ = [
     "IntakeOutput",
     "HexagramInterpretationSchema",
     "CounselTurnSchema",
     "JournalEntrySchema",
+    "FocusType",
+    "LineCastResult",
+    "FocusRuleResult",
+    "HexagramCastResult",
 ]
+

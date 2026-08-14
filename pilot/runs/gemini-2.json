@@ -1,0 +1,256 @@
+[
+  {
+    "id": "H1",
+    "translation_ko": "건은 으뜸이며, 형통하며, 이로우며, 곧고 바르다.",
+    "xiang_ko": null,
+    "key_terms": {
+      "乾": "건"
+    },
+    "reading_notes": "",
+    "confidence": "high",
+    "flag": null,
+    "_meta": {
+      "model": "gemini-2.5-pro",
+      "location": "us-central1",
+      "elapsed_sec": 28.76,
+      "attempt": 1
+    }
+  },
+  {
+    "id": "H4",
+    "translation_ko": "몽은 형통하니, 내가 동몽을 구하는 것이 아니라 동몽이 나를 구하는 것이니, 처음 점을 치거든 알려주고 두세 번이면 모독이다. 모독하면 알려주지 않으니, 곧게 지키면 이롭다.",
+    "xiang_ko": null,
+    "key_terms": {
+      "匪": "아니다",
+      "我": "나",
+      "求": "구하다",
+      "童蒙": "동몽",
+      "初": "처음",
+      "筮": "점",
+      "告": "알려주다",
+      "再三": "두세 번",
+      "瀆": "모독"
+    },
+    "reading_notes": "",
+    "confidence": "high",
+    "flag": null,
+    "_meta": {
+      "model": "gemini-2.5-pro",
+      "location": "us-central1",
+      "elapsed_sec": 29.63,
+      "attempt": 1
+    }
+  },
+  {
+    "id": "H29",
+    "translation_ko": "습감은 미더움이 있음이라. 마음을 오로지 하면 형통하니, 행하면 숭상함이 있을 것이다.",
+    "xiang_ko": null,
+    "key_terms": {
+      "習": "거듭됨",
+      "坎": "감",
+      "維": "오로지 하다",
+      "心": "마음",
+      "行": "행함",
+      "尙": "숭상함"
+    },
+    "reading_notes": "",
+    "confidence": "high",
+    "flag": null,
+    "_meta": {
+      "model": "gemini-2.5-pro",
+      "location": "us-central1",
+      "elapsed_sec": 45.85,
+      "attempt": 1
+    }
+  },
+  {
+    "id": "H56",
+    "translation_ko": "나그네는 작게 형통하고, 나그네의 곧고 바름이 길하다.",
+    "xiang_ko": null,
+    "key_terms": {
+      "旅": "나그네"
+    },
+    "reading_notes": "",
+    "confidence": "high",
+    "flag": null,
+    "_meta": {
+      "model": "gemini-2.5-pro",
+      "location": "us-central1",
+      "elapsed_sec": 23.37,
+      "attempt": 1
+    }
+  },
+  {
+    "id": "L1-7",
+    "translation_ko": "용구는, 무리의 용이 나타나되 머리가 없으면 길하다.",
+    "xiang_ko": "용구는 하늘의 덕은 머리가 될 수 없음이다.",
+    "key_terms": {
+      "用九": "용구",
+      "群龍": "무리의 용",
+      "首": "머리",
+      "天德": "하늘의 덕"
+    },
+    "reading_notes": "无는 無와 통용됩니다.",
+    "confidence": "high",
+    "flag": null,
+    "_meta": {
+      "model": "gemini-2.5-pro",
+      "location": "us-central1",
+      "elapsed_sec": 63.11,
+      "attempt": 1
+    }
+  },
+  {
+    "id": "L2-1",
+    "translation_ko": "초육은 서리를 밟으면 단단한 얼음이 이른다.",
+    "xiang_ko": "상에 이르기를, '서리를 밟으면 단단한 얼음이 이른다'는 것은 음이 비로소 엉기는 것이니, 그 도를 순하게 이루어 단단한 얼음에 이르는 것이다.",
+    "key_terms": {
+      "履": "밟다",
+      "霜": "서리",
+      "堅": "단단함",
+      "冰": "얼음",
+      "至": "이르다",
+      "陰": "음",
+      "凝": "엉기다",
+      "馴": "순하다"
+    },
+    "reading_notes": "",
+    "confidence": "high",
+    "flag": null,
+    "_meta": {
+      "model": "gemini-2.5-pro",
+      "location": "us-central1",
+      "elapsed_sec": 26.49,
+      "attempt": 1
+    }
+  },
+  {
+    "id": "L4-1",
+    "translation_ko": "초육은 몽매함을 열어주는 것이니, 사람을 형벌함이 이롭다. 질곡을 벗기는 데 쓰는 것이니, 이로써 나아가면 부끄러울 것이다.",
+    "xiang_ko": "사람을 형벌함이 이로운 것은 법을 바로 세우기 위함이다.",
+    "key_terms": {
+      "發": "열다",
+      "蒙": "몽매함",
+      "刑": "형벌",
+      "說": "벗기다",
+      "桎梏": "질곡",
+      "往": "나아가다",
+      "法": "법"
+    },
+    "reading_notes": "說은 '벗다'는 뜻의 脫(탈)과 통하는 통가자입니다.",
+    "confidence": "high",
+    "flag": null,
+    "_meta": {
+      "model": "gemini-2.5-pro",
+      "location": "us-central1",
+      "elapsed_sec": 34.58,
+      "attempt": 1
+    }
+  },
+  {
+    "id": "L29-2",
+    "translation_ko": "구이는 구덩이에 위험이 있으나, 구하면 작게 얻을 것이다.",
+    "xiang_ko": "상(象)에서 말하기를, ‘구하면 작게 얻는다’는 것은 아직 가운데에서 벗어나지 못했기 때문이다.",
+    "key_terms": {
+      "坎": "구덩이",
+      "險": "위험",
+      "求": "구하다",
+      "小得": "작게 얻음"
+    },
+    "reading_notes": "",
+    "confidence": "high",
+    "flag": null,
+    "_meta": {
+      "model": "gemini-2.5-pro",
+      "location": "us-central1",
+      "elapsed_sec": 27.24,
+      "attempt": 1
+    }
+  },
+  {
+    "id": "L29-4",
+    "translation_ko": "한 동이의 술과 두 그릇의 음식을 질그릇에 담고, 창으로부터 약속을 들여놓으면 마침내 허물이 없으리라.",
+    "xiang_ko": "상에서 말하기를, 한 동이의 술과 두 그릇의 음식은 강함과 부드러움이 사귀는 것이다.",
+    "key_terms": {
+      "樽酒": "한 동이의 술",
+      "簋貳": "두 그릇의 음식",
+      "用缶": "질그릇을 사용함",
+      "納約": "약속을 들여놓음",
+      "自牖": "창으로부터",
+      "際": "사귐"
+    },
+    "reading_notes": "",
+    "confidence": "high",
+    "flag": null,
+    "_meta": {
+      "model": "gemini-2.5-pro",
+      "location": "us-central1",
+      "elapsed_sec": 41.76,
+      "attempt": 1
+    }
+  },
+  {
+    "id": "L29-6",
+    "translation_ko": "상육은 굵은 밧줄과 검은 밧줄로 묶이고 가시덤불 속에 놓여, 삼 년이라도 벗어나지 못하니 흉하다.",
+    "xiang_ko": "상에 이르기를, 상육이 도를 잃음은 삼 년 동안 흉한 것이다.",
+    "key_terms": {
+      "徽纆": "굵은 밧줄과 검은 밧줄",
+      "寘": "놓다",
+      "叢棘": "가시덤불",
+      "得": "벗어나다"
+    },
+    "reading_notes": "",
+    "confidence": "high",
+    "flag": null,
+    "_meta": {
+      "model": "gemini-2.5-pro",
+      "location": "us-central1",
+      "elapsed_sec": 35.64,
+      "attempt": 1
+    }
+  },
+  {
+    "id": "L47-1",
+    "translation_ko": "초육은 엉덩이가 그루터기 나무에 곤궁하고, 깊은 골짜기로 들어가 삼 년이 되어도 보이지 않도다.",
+    "xiang_ko": "상에 이르기를, '깊은 골짜기로 들어감'은 어둡고 밝지 않음이라.",
+    "key_terms": {
+      "困": "곤궁함",
+      "臀": "엉덩이",
+      "株木": "그루터기 나무",
+      "幽谷": "깊은 골짜기",
+      "覿": "보이다"
+    },
+    "reading_notes": "覿(볼 척)은 '적'이 아닌 '척'으로 읽습니다.",
+    "confidence": "high",
+    "flag": null,
+    "_meta": {
+      "model": "gemini-2.5-pro",
+      "location": "us-central1",
+      "elapsed_sec": 30.08,
+      "attempt": 1
+    }
+  },
+  {
+    "id": "L63-3",
+    "translation_ko": "구삼은 고종이 귀방을 쳐서 삼 년 만에 이겼으니, 소인은 쓰지 말라.",
+    "xiang_ko": "상에 이르기를, 삼 년 만에 이긴 것은 지침이라.",
+    "key_terms": {
+      "高宗": "고종",
+      "伐": "치다",
+      "鬼方": "귀방",
+      "克": "이기다",
+      "小人": "소인",
+      "勿用": "쓰지 말라",
+      "憊": "지침"
+    },
+    "reading_notes": "",
+    "confidence": "high",
+    "flag": null,
+    "_meta": {
+      "model": "gemini-2.5-pro",
+      "location": "us-central1",
+      "elapsed_sec": 33.04,
+      "attempt": 1
+    }
+  }
+]

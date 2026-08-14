@@ -16,7 +16,7 @@ import json
 import os
 import re
 import sys
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -60,6 +60,24 @@ def normalize_marker(text: str, source: str) -> Tuple[str, str]:
     return text, ""
 
 
+def add_marker(text: str, source: str) -> str:
+    """효 표시가 빠진 번역에 원문의 표시를 한글로 붙인다.
+
+    모델에 따라 '구오는'을 아예 안 붙이기도 한다. 450건 중 대부분은 붙어 있어
+    빠진 것만 눈에 띄므로, 원문에 표시가 있으면 맞춰 준다.
+    """
+    for hanja, korean in LINE_MARKERS.items():
+        if not source.startswith(hanja):
+            continue
+        if text.startswith(hanja) or text.startswith(korean):
+            return text
+        # 받침이 있으면 '은', 없으면 '는'
+        last = korean[-1]
+        josa = "은" if (ord(last) - 0xAC00) % 28 else "는"
+        return f"{korean}{josa} {text}"
+    return text
+
+
 def parse_id(item_id: str) -> Tuple[str, int, int]:
     """'H29' -> ('gua', 29, 0),  'L29-2' -> ('hyo', 29, 2)"""
     m = ID_RE.match(item_id)
@@ -85,13 +103,45 @@ def split_records(records: List[Dict[str, Any]]):
     return ok, skipped
 
 
-async def load(path: str, dry_run: bool, items_path: str) -> int:
+def apply_overrides(records: List[Dict[str, Any]], overrides_path: Optional[str]):
+    """대조에서 결함이 확인된 항목만 다른 모델 값으로 바꾼다.
+
+    코드가 아니라 파일에 근거를 적어 두는 이유는, 왜 이 항목만 다른 모델에서
+    왔는지가 나중에 반드시 문제가 되기 때문이다.
+    """
+    if not overrides_path or not os.path.exists(overrides_path):
+        return records, []
+    spec = json.load(open(overrides_path, encoding="utf-8"))["overrides"]
+    by_id = {str(r["id"]): r for r in records}
+    applied = []
+    cache: Dict[str, Dict[str, Any]] = {}
+    for o in spec:
+        src = o["from"]
+        if src not in cache:
+            cache[src] = {str(r["id"]): r for r in json.load(open(src, encoding="utf-8"))}
+        donor = cache[src].get(str(o["id"]))
+        if donor is None or not (donor.get("translation_ko") or "").strip():
+            applied.append((o["id"], f"⚠️ {src}에 값이 없다"))
+            continue
+        rec = dict(donor)
+        rec["_meta"] = {**(donor.get("_meta") or {}), "override_reason": o["reason"]}
+        by_id[str(o["id"])] = rec
+        applied.append((o["id"], o["reason"]))
+    return [by_id[str(r["id"])] for r in records], applied
+
+
+async def load(path: str, dry_run: bool, items_path: str, overrides_path: Optional[str] = None) -> int:
     records = json.load(open(path, encoding="utf-8"))
+    records, applied = apply_overrides(records, overrides_path)
+    if applied:
+        print(f"교체 {len(applied)}건:")
+        for iid, why in applied:
+            print(f"  {iid}: {why}")
     sources = {str(i["id"]): i["source"] for i in json.load(open(items_path, encoding="utf-8"))}
     ok, skipped = split_records(records)
     print(f"{path}: 총 {len(records)}건 → 적재 대상 {len(ok)}건 / 제외 {len(skipped)}건")
 
-    updated_gua = updated_hyo = normalized = 0
+    updated_gua = updated_hyo = normalized = marker_added = 0
     missing, marker_warn = [], []
 
     async with AsyncSessionLocal() as session:
@@ -106,6 +156,10 @@ async def load(path: str, dry_run: bool, items_path: str) -> int:
                 elif fixed != text:
                     text = fixed
                     normalized += 1
+                before = text
+                text = add_marker(text, sources.get(str(r["id"]), ""))
+                if text != before:
+                    marker_added += 1
 
             if kind == "gua":
                 row = (await session.execute(
@@ -130,7 +184,7 @@ async def load(path: str, dry_run: bool, items_path: str) -> int:
         else:
             await session.commit()
 
-    print(f"괘사 {updated_gua}건 / 효사 {updated_hyo}건 (효 표시 한글화 {normalized}건)")
+    print(f"괘사 {updated_gua}건 / 효사 {updated_hyo}건 (효 표시 한글화 {normalized}건, 표시 보충 {marker_added}건)")
     if marker_warn:
         print(f"\n⚠️ 효 표시가 원문과 다른 항목 {len(marker_warn)}건 — 그대로 두었다:")
         for w in marker_warn:
@@ -152,9 +206,10 @@ def main() -> None:
     ap.add_argument("input", help="번역 결과 JSON (translate.py 출력)")
     ap.add_argument("--dry-run", action="store_true", help="적재하지 않고 결과만 본다")
     ap.add_argument("--items", default="data/translation_items.json", help="원문 항목 파일 (효 표시 대조용)")
+    ap.add_argument("--overrides", default="data/translations/overrides.json", help="다른 모델 값으로 바꿀 항목 목록")
     args = ap.parse_args()
 
-    problems = asyncio.run(load(args.input, args.dry_run, args.items))
+    problems = asyncio.run(load(args.input, args.dry_run, args.items, args.overrides))
     sys.exit(1 if problems else 0)
 
 

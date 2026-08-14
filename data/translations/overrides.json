@@ -1,0 +1,19 @@
+{
+  "_설명": "적재 시 기본 파일 대신 다른 모델 값을 쓸 항목. 450건 대조에서 나온 결함만 담는다.",
+  "_대조": "data/translations/diff.md",
+  "overrides": [
+    {"id": "L5-1",  "from": "data/translations/gemini.json", "reason": "한자 미번역 — '郊에서 需한다'"},
+    {"id": "L13-5", "from": "data/translations/gemini.json", "reason": "한자 미번역 — '同人하되'"},
+    {"id": "L15-1", "from": "data/translations/gemini.json", "reason": "한자 미번역 — '謙하고 또 謙한'"},
+    {"id": "L16-1", "from": "data/translations/gemini.json", "reason": "사실상 미번역 — 원문 한자 100% 유지"},
+    {"id": "L20-1", "from": "data/translations/gemini.json", "reason": "한자 미번역 — '童觀이니, 小人은'"},
+    {"id": "L36-1", "from": "data/translations/gemini.json", "reason": "한자 미번역 — '君子가 행함에 三日'"},
+    {"id": "L54-1", "from": "data/translations/gemini.json", "reason": "한자 미번역 — '歸妹하되 娣로써'"},
+    {"id": "L58-4", "from": "data/translations/gemini.json", "reason": "한자 미번역 — '商兌하여 … 介하여 疾하면'"},
+    {"id": "L51-6", "from": "data/translations/gemini.json", "reason": "한자 미번역 — '震이 索索하여 … 矍矍하니'"},
+    {"id": "L6-2",  "from": "data/translations/gemini.json", "reason": "无眚을 '허물 없음'으로 뭉갬 — 眚은 재앙, 咎와 구분된다"},
+    {"id": "L25-6", "from": "data/translations/gemini.json", "reason": "有眚을 '허물 있음'으로 뭉갬"},
+    {"id": "L51-3", "from": "data/translations/gemini.json", "reason": "无眚을 '허물 없음'으로 뭉갬"},
+    {"id": "L31-5", "from": "data/translations/gemini.json", "reason": "无悔를 '허물 없음'으로 뭉갬 — 용어표는 悔=뉘우침"}
+  ]
+}

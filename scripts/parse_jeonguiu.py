@@ -45,7 +45,33 @@ def unescape(text: str) -> str:
                 .replace("\\[", "[")
                 .replace("\\]", "]")
                 .replace("\\*", "*")
-                .replace("\\_", "_"))
+                .replace("\\_", "_")
+                .replace("\\<", "<")
+                .replace("\\>", ">"))
+
+
+# ── 부록 경계 ──────────────────────────────────────────────────────────
+# 상경은 괘30, 하경은 괘64에서 끝나고 그 뒤에 부록이 붙는다.
+#   상경 뒤 — 하도낙서 도판(HTML <span> 덩어리)과 그 해설
+#   하경 뒤 — 계사전·설괘전·서괘전·잡괘전
+# 마지막 괘의 본문 끝을 알리는 표시가 없어서, 끊지 않으면 이 부록이 전부
+# 마지막 괘로 빨려 들어간다. 실제로 그렇게 됐었다:
+#   괘64 1효 original 9,688자(계사전 8장의 '初六은 藉用白茅'를 효사로 오인한 뒤 전부 누적)
+#   괘64 6효 sosang  1,701자, 괘30 6효 sosang 10,649자
+APPENDIX_HEADS = ("繫辭上傳", "繫辭下傳", "說卦傳", "序卦傳", "雜卦傳")
+
+# 원문에 HTML이 있을 리 없다. 태그가 보이면 본문을 벗어난 것이다.
+HTML_RE = re.compile(r"<\s*/?\s*(span|div|p|br|img|table|td|tr)\b", re.I)
+
+
+def is_appendix(block: str) -> bool:
+    """이 블록부터가 부록인가.
+
+    부록 표제는 블록 첫머리에 온다. `startswith`로 좁게 보는 이유는
+    정전 주석이 본문 안에서 '繫辭曰', '序卦에' 처럼 부록을 인용하기 때문이다.
+    포함 검사로 하면 멀쩡한 주석에서 잘린다.
+    """
+    return block.startswith(APPENDIX_HEADS) or bool(HTML_RE.search(block))
 
 
 def classify(block: str, seen_first_line: bool):
@@ -108,7 +134,12 @@ def parse_section(num: int, name: str, symbol: str, body: str) -> dict:
             return hexagram[current_key]["commentary"]
         return hexagram["notes"]
 
-    for block in blocks:
+    for i, block in enumerate(blocks):
+        # 부록에 닿으면 이 괘의 본문은 끝이다. 이후 블록은 전부 버린다.
+        if is_appendix(block):
+            hexagram["_cut"] = (len(blocks) - i, block[:20])
+            break
+
         # 팔괘 기호 블록·단독 '傳' 표시는 건너뛴다
         if block and block[0] in TRIGRAM_CHARS:
             continue
@@ -241,6 +272,12 @@ def normalize_glyphs(text: str) -> str:
 def parse_text(text: str) -> list:
     """전체 텍스트에서 괘 섹션들을 찾아 파싱한다."""
     text = normalize_glyphs(unescape(text))
+
+    # 구글 문서 마크다운 내보내기는 문단 경계를 빈 줄이 아니라 하드브레이크
+    # (줄 끝 공백 2칸)로 내보낸다. 블록 분리가 빈 줄 기준이라 이대로 두면
+    # 괘 하나가 통째로 한 블록이 되어 효사가 하나도 안 잡힌다.
+    text = re.sub(r"[ \t]+\n", "\n\n", text)
+
     lines = text.split("\n")
 
     starts = []  # (라인번호, 괘번호, 괘명, 기호)
@@ -253,8 +290,33 @@ def parse_text(text: str) -> list:
     for i, (idx, num, name, sym) in enumerate(starts):
         end = starts[i + 1][0] if i + 1 < len(starts) else len(lines)
         body = "\n".join(lines[idx + 1:end])
-        results.append(fix_qian(parse_section(num, name, sym, body)))
+        h = fix_qian(parse_section(num, name, sym, body))
+        cut = h.pop("_cut", None)   # 출력 스키마에는 남기지 않는다
+        if cut:
+            dropped, head = cut
+            print(f"  괘{num} {name}: 부록 이후 {dropped}블록 제외 (시작: {head}…)")
+        results.append(h)
     return results
+
+
+MAX_LINE_LEN = 150   # 효사·소상전 길이 상한 (실측 최대 55자)
+
+
+def _all_texts(h: dict):
+    """검사 대상 문자열을 (이름, 내용)으로 모두 훑는다."""
+    for k in ("guasa", "danjeon", "daesang", "munon"):
+        yield k, h[k]["original"]
+        for c in h[k]["commentary"]:
+            yield f"{k}.주석", c
+    for l in h["lines"]:
+        yield f"효{l['position']}", l["original"]
+        yield f"효{l['position']}.소상전", l["sosang"]
+        for c in l["commentary"]:
+            yield f"효{l['position']}.주석", c
+        for c in l["sosang_commentary"]:
+            yield f"효{l['position']}.소상주석", c
+    for n in h["notes"]:
+        yield "notes", n
 
 
 def validate(hexagrams: list) -> list:
@@ -280,6 +342,27 @@ def validate(hexagrams: list) -> list:
         for l in h["lines"]:
             if not l["original"]:
                 warnings.append(f"[누락] 괘 {hid} 효{l['position']}: 효사 없음")
+
+        # 길이 이상 — 부록이 빨려 들어가면 여기서 걸린다.
+        # 실측 최대는 효사 54자(괘51 6효), 소상전 55자(괘10 3효)다. 상한은 넉넉히 잡았다.
+        for l in h["lines"]:
+            if len(l["original"]) > MAX_LINE_LEN:
+                warnings.append(
+                    f"[길이] 괘 {hid} 효{l['position']}: 효사 {len(l['original'])}자 "
+                    f"(상한 {MAX_LINE_LEN}) — 뒤에 딴 것이 붙었는지 확인"
+                )
+            if len(l["sosang"]) > MAX_LINE_LEN:
+                warnings.append(
+                    f"[길이] 괘 {hid} 효{l['position']}: 소상전 {len(l['sosang'])}자 "
+                    f"(상한 {MAX_LINE_LEN}) — 뒤에 딴 것이 붙었는지 확인"
+                )
+
+        # 마크업·부록 잔여 — 원문에는 있을 수 없다
+        for label, text in _all_texts(h):
+            if HTML_RE.search(text):
+                warnings.append(f"[마크업] 괘 {hid} {label}: HTML 태그가 남아 있음")
+            if text.startswith(APPENDIX_HEADS):
+                warnings.append(f"[부록] 괘 {hid} {label}: 부록 표제로 시작함")
 
     missing = sorted(set(range(1, 65)) - set(seen))
     if missing:

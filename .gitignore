@@ -25,3 +25,6 @@ pgdata/
 
 # 파일럿 채점지 — runs/ 출력에서 compare.py가 생성하는 파생물
 pilot/blind_sheet.md
+
+# 원본 문서 (저작권 확인 전까지 리포에 넣지 않는다 — CLAUDE.md 법적 확인 목록)
+data/source/

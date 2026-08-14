@@ -74,8 +74,22 @@ Model Garden에서 **Claude 모델 사용 신청/약관 동의**를 사람이 �
 
 - `gemini-2.5-pro` @ `us-central1` — 200
 - `gemini-3-pro`, `gemini-3-pro-preview`, `gemini-3-flash` — 404 (이 프로젝트엔 없다)
-- Claude는 승인 후 실제 리전·ID를 다시 확인할 것. `us-east5`로 넣어 본 값은 승인 전이라
-  판정 불가였다. **승인되면 파일럿을 돌리기 전에 ID를 확정하고 여기에 적어 둔다.**
+- Claude는 Vertex 승인 전이라 파일럿을 **Anthropic Direct API**로 돌렸다.
+  Vertex 단일 경로 결정에서 벗어난 것이므로, D단계 경로를 정할 때 다시 판단할 것.
+
+파일럿에 실제로 쓴 조건 (`pilot/runs/`):
+
+| 팔 | 모델 | 경로 | 출력 상한 |
+|---|---|---|---|
+| Gemini | `gemini-2.5-pro` | Vertex `us-central1` | 8192 |
+| Claude | `claude-sonnet-4-5-20250929` | Anthropic Direct API | 2048 |
+
+출력 상한이 다르지만 Claude 쪽 실측 최장 번역이 105자라 잘린 항목은 없다.
+채점에는 영향이 없다. 이후 실행은 `MAX_OUTPUT_TOKENS`로 양쪽 8192 통일이다.
+
+**Claude를 Direct API로 450건 돌릴 때 주의.** 이 `ANTHROPIC_API_KEY`는 사용자의
+다른 에이전트들이 함께 쓰고 있다. `--concurrency`를 올려 배치를 돌리면 그쪽이
+같이 느려지거나 한도에 걸린다. Vertex로 옮기면 GCP 할당량으로 분리된다.
 
 에이전트가 걸릴 함정:
 

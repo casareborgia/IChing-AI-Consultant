@@ -77,6 +77,22 @@ Model Garden에서 **Claude 모델 사용 신청/약관 동의**를 사람이 �
 - Claude는 Vertex 승인 전이라 파일럿을 **Anthropic Direct API**로 돌렸다.
   Vertex 단일 경로 결정에서 벗어난 것이므로, D단계 경로를 정할 때 다시 판단할 것.
 
+Claude on Vertex 실측 (Model Garden 사용 설정 완료 후):
+
+| 리전 | 응답 | 뜻 |
+|---|---|---|
+| `global` | 429 | 서빙됨. 할당량 0 |
+| `us-east5` | 429 | 서빙됨. 할당량 0 |
+| `us-central1` | 400 | **이 리전에서는 서빙 안 됨** (Gemini와 같은 리전을 못 쓴다) |
+| `europe-west1` | 404 | 없음 |
+
+Vertex 모델 ID는 `claude-sonnet-4-5@20250929` (`@` 구분자). Direct API의
+`claude-sonnet-4-5-20250929`와 같은 모델이나 표기가 다르다.
+
+호출하려면 할당량 상향을 신청해야 한다. 걸리는 항목:
+`aiplatform.googleapis.com/global_online_prediction_requests_per_base_model`
+(base model `anthropic-claude-sonnet-4-5`)
+
 파일럿에 실제로 쓴 조건 (`pilot/runs/`):
 
 | 팔 | 모델 | 경로 | 출력 상한 |

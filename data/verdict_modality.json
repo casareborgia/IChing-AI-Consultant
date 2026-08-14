@@ -1,0 +1,4502 @@
+[
+  {
+    "id": "H6",
+    "hexagram_id": 6,
+    "name_hanja": "訟",
+    "line_number": null,
+    "source": "訟은 有孚ㅣ나 窒야 惕니 中은 吉코 終은 凶니 利見大人이오 不利涉大川니라",
+    "translation_ko": "송(訟)은 미더움이 있으나 막혀 있어 두려워하니, 중(中)하면 길하고 끝까지 가면 흉하니, 대인을 만나면 이롭고 큰 내를 건너는 것은 이롭지 않다.",
+    "modality": "conditional_comm",
+    "evidence": "송(訟)의 도는 반드시 그 미더운 실상이 있어야 하니, 가운데 그 실상이 없으면 곧 이것은 거짓으로 속이는 것이니 흉함의 도이다"
+  },
+  {
+    "id": "H7",
+    "hexagram_id": 7,
+    "name_hanja": "師",
+    "line_number": null,
+    "source": "師 貞이니 丈人이라아 吉코 无咎리라",
+    "translation_ko": "師는 곧고 바르며, 丈人이라야 길하고 허물이 없다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "H8",
+    "hexagram_id": 8,
+    "name_hanja": "比",
+    "line_number": null,
+    "source": "比 吉니 原筮호 元永貞이면 无咎ㅣ리라 不寧이어아 方來니 後ㅣ면 夫ㅣ라도 凶이리라",
+    "translation_ko": "比는 길하니, 처음 점쳐서 으뜸되고 영구하며 곧고 바르면 허물이 없으리라. 편안하지 못한 자가 이제 와서 따르니, 뒤늦으면 남편이라도 흉하리라.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "H9",
+    "hexagram_id": 9,
+    "name_hanja": "小畜",
+    "line_number": null,
+    "source": "小畜은 亨니 密雲不雨 自我西郊니라",
+    "translation_ko": "小畜은 형통하니, 빽빽한 구름이 비를 내리지 못함이 우리 서쪽 교외로부터이다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "H10",
+    "hexagram_id": 10,
+    "name_hanja": "履",
+    "line_number": null,
+    "source": "履虎尾라도 不咥人이라 亨니라",
+    "translation_ko": "호랑이 꼬리를 밟더라도 사람을 물지 않으니 형통하다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "H11",
+    "hexagram_id": 11,
+    "name_hanja": "泰",
+    "line_number": null,
+    "source": "泰 小ㅣ 往코 大ㅣ 來니 吉야 亨니라",
+    "translation_ko": "泰는 작은 것이 가고 큰 것이 오니 길하고 형통하다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "H12",
+    "hexagram_id": 12,
+    "name_hanja": "否",
+    "line_number": null,
+    "source": "否之匪人이니 不利君子貞니 大往小來니라",
+    "translation_ko": "否는 사람이 아니니, 군자가 곧게 지킴에 이롭지 않으니, 큰 것은 가고 작은 것이 오느니라.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "H13",
+    "hexagram_id": 13,
+    "name_hanja": "同人",
+    "line_number": null,
+    "source": "同人于野ㅣ면 亨리니 利涉大川이며 利君子의 貞니라",
+    "translation_ko": "들에서 사람들과 함께하면 형통하니, 큰 내를 건너는 것이 이로우며, 군자가 곧게 지키는 것이 이롭다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "H14",
+    "hexagram_id": 14,
+    "name_hanja": "大有",
+    "line_number": null,
+    "source": "大有 元亨니라",
+    "translation_ko": "大有는 크게 형통하다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "H15",
+    "hexagram_id": 15,
+    "name_hanja": "謙",
+    "line_number": null,
+    "source": "謙은 亨니 君子ㅣ 有終이니라",
+    "translation_ko": "겸은 형통하니, 군자가 마침이 있느니라.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "H16",
+    "hexagram_id": 16,
+    "name_hanja": "豫",
+    "line_number": null,
+    "source": "豫 利建侯行師니라",
+    "translation_ko": "豫는 제후를 세우고 군대를 행하는 것이 이롭다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "H17",
+    "hexagram_id": 17,
+    "name_hanja": "隨",
+    "line_number": null,
+    "source": "隨 元亨니 利貞이라 无咎ㅣ리라",
+    "translation_ko": "隨는 크게 형통하니, 곧게 지키면 이롭다. 허물이 없으리라.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "H18",
+    "hexagram_id": 18,
+    "name_hanja": "蠱",
+    "line_number": null,
+    "source": "蠱 元亨니 利涉大川이니 先甲三日며 後甲三日이니라",
+    "translation_ko": "고(蠱)는 크게 형통하니, 큰 내를 건너는 것이 이롭다. 갑일 전 삼 일이며, 갑일 후 삼 일이다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "H19",
+    "hexagram_id": 19,
+    "name_hanja": "臨",
+    "line_number": null,
+    "source": "臨은 元亨코 利貞니 至于八月얀 有凶리라",
+    "translation_ko": "臨은 크게 형통하고 곧게 지키면 이로우니, 팔월에 이르면 흉함이 있으리라",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "H20",
+    "hexagram_id": 20,
+    "name_hanja": "觀",
+    "line_number": null,
+    "source": "觀은 盥而不薦이면 有孚야 顒若리라",
+    "translation_ko": "觀은 손을 씻되 아직 올리지 않았을 때면 미더움이 있어 우러러보는 것과 같으리라",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "H21",
+    "hexagram_id": 21,
+    "name_hanja": "噬嗑",
+    "line_number": null,
+    "source": "噬嗑은 亨니 利用獄니라",
+    "translation_ko": "噬嗑은 형통하니 옥을 쓰면 이롭다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "H22",
+    "hexagram_id": 22,
+    "name_hanja": "賁",
+    "line_number": null,
+    "source": "賁 亨니 小利有攸往니라",
+    "translation_ko": "賁는 형통하니, 나아갈 바가 있으면 작게 이롭다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "H23",
+    "hexagram_id": 23,
+    "name_hanja": "剝",
+    "line_number": null,
+    "source": "剝은 不利有攸往니라",
+    "translation_ko": "박은 나아갈 바가 있으면 이롭지 않다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "H24",
+    "hexagram_id": 24,
+    "name_hanja": "復",
+    "line_number": null,
+    "source": "復은 亨야 出入에 无疾야 朋來라 无咎ㅣ리라 反復其道야 七日에 來復니 利有攸往이니라",
+    "translation_ko": "復은 형통하다. 출입에 병이 없어 벗이 오니 허물이 없을 것이다. 그 도를 반복하여 칠 일에 돌아오니 나아갈 바가 있으면 이롭다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "H25",
+    "hexagram_id": 25,
+    "name_hanja": "无妄",
+    "line_number": null,
+    "source": "无妄은 元亨고 利貞니 其匪正이면 有眚릴 不利有攸往니라",
+    "translation_ko": "无妄은 크게 형통하고 곧게 지키면 이로우니, 그것이 바르지 않으면 재앙이 있을 것이니 나아갈 바가 있음이 이롭지 않다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "H26",
+    "hexagram_id": 26,
+    "name_hanja": "大畜",
+    "line_number": null,
+    "source": "大畜은 利貞니 不家食면 吉니 利涉大川니라",
+    "translation_ko": "大畜은 곧게 지키면 이로우니, 집에서 먹지 않으면 길하니, 큰 내를 건너는 것이 이롭다.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "H27",
+    "hexagram_id": 27,
+    "name_hanja": "頤",
+    "line_number": null,
+    "source": "頤 貞면 吉니 觀頤며 自求口實이니라",
+    "translation_ko": "이(頤)는 곧게 지키면 길하니, 이(頤)를 살피며 스스로 입에 넣을 것을 구함이니라",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "H28",
+    "hexagram_id": 28,
+    "name_hanja": "大過",
+    "line_number": null,
+    "source": "大過 棟이 橈ㅣ니 利有攸往야 亨니라",
+    "translation_ko": "대과는 마룻대가 휘니, 나아갈 바가 있으면 이로워 형통하다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "H29",
+    "hexagram_id": 29,
+    "name_hanja": "坎",
+    "line_number": null,
+    "source": "習坎은 有孚야 維心亨이니 行면 有尙이리라",
+    "translation_ko": "거듭되는 坎은 미더움이 있어 오직 마음이 형통하니, 행하면 숭상함이 있을 것이다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "H30",
+    "hexagram_id": 30,
+    "name_hanja": "離",
+    "line_number": null,
+    "source": "離 利貞니 亨니 畜牝牛면 吉리라",
+    "translation_ko": "離는 곧게 지키면 이로우니 형통하니, 암소를 기르면 길할 것이다.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "H31",
+    "hexagram_id": 31,
+    "name_hanja": "咸",
+    "line_number": null,
+    "source": "咸은 亨니 利貞니 取女ㅣ면 吉리라",
+    "translation_ko": "咸은 형통하니 곧게 지키면 이로우니 여자를 취하면 길하리라",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "H32",
+    "hexagram_id": 32,
+    "name_hanja": "恒",
+    "line_number": null,
+    "source": "恒은 亨야 无咎니 利貞니 利有攸往니라",
+    "translation_ko": "恒은 형통하고 허물이 없으니, 곧게 지키면 이로우니, 나아갈 바가 있으면 이롭다.",
+    "modality": "conditional_comm",
+    "evidence": "항하되 능히 형통하면 곧 허물이 없고, 항하되 형통할 수 없으면 항할 수 있는 도가 아니니 허물이 있게 된다"
+  },
+  {
+    "id": "H33",
+    "hexagram_id": 33,
+    "name_hanja": "遯",
+    "line_number": null,
+    "source": "遯은 亨니 小利貞니라",
+    "translation_ko": "遯은 형통하니, 작게 곧게 지키면 이롭다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "H35",
+    "hexagram_id": 35,
+    "name_hanja": "晉",
+    "line_number": null,
+    "source": "晉은 康侯 用錫馬蕃庶고 晝日三接이로다",
+    "translation_ko": "晉은 康侯가 말을 하사받아 번성하고 많아지며, 낮에 세 번 접견함이로다",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "H36",
+    "hexagram_id": 36,
+    "name_hanja": "明夷",
+    "line_number": null,
+    "source": "明夷 利艱貞니라",
+    "translation_ko": "명이는 어려움을 알고 곧게 지키면 이롭다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "H37",
+    "hexagram_id": 37,
+    "name_hanja": "家人",
+    "line_number": null,
+    "source": "家人은 利女貞니라",
+    "translation_ko": "家人은 여자가 곧게 지키면 이롭다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "H38",
+    "hexagram_id": 38,
+    "name_hanja": "睽",
+    "line_number": null,
+    "source": "睽 小事 吉리라",
+    "translation_ko": "규는 작은 일에 길하리라",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "H39",
+    "hexagram_id": 39,
+    "name_hanja": "蹇",
+    "line_number": null,
+    "source": "蹇은 利西南고 不利東北며 利見大人니 貞이면 吉리라",
+    "translation_ko": "蹇은 서남쪽이 이롭고 동북쪽이 이롭지 않으며, 대인을 만남이 이로우니 곧게 지키면 길하리라",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "H40",
+    "hexagram_id": 40,
+    "name_hanja": "解",
+    "line_number": null,
+    "source": "解 利西南니 无所往이라 其來復이 吉니 有攸往이어든 夙면 吉리라",
+    "translation_ko": "解는 서남쪽이 이롭다. 나아갈 바가 없으면 그 돌아옴이 길하고, 나아갈 바가 있거든 일찍 하면 길하리라.",
+    "modality": "conditional_text",
+    "evidence": "어든"
+  },
+  {
+    "id": "H41",
+    "hexagram_id": 41,
+    "name_hanja": "損",
+    "line_number": null,
+    "source": "損은 有孚ㅣ면 元吉코 无咎야 可貞이라 利有攸往니 曷之用이리오 二簋ㅣ 可用享이니라",
+    "translation_ko": "損은 미더움이 있으면 크게 길하고 허물이 없어 곧게 지킬 만하다. 나아갈 바가 있으면 이로우니, 무엇을 쓰겠는가? 두 그릇이 제사 지내는 데 쓸 만하다.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "H42",
+    "hexagram_id": 42,
+    "name_hanja": "益",
+    "line_number": null,
+    "source": "益은 利有攸往며 利涉大川니라",
+    "translation_ko": "益은 가는 바가 있으면 이로우며, 큰 내를 건너면 이롭다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "H43",
+    "hexagram_id": 43,
+    "name_hanja": "夬",
+    "line_number": null,
+    "source": "夬 揚于王庭이니 孚號有厲ㅣ니라 告自邑이오 不利卽戎이며 利有攸往니라",
+    "translation_ko": "夬는 왕의 조정에서 드러내니, 미더움으로 명하되 위태로움이 있느니라. 고을로부터 알리고, 곧바로 군사를 쓰는 것은 이롭지 않으며, 나아갈 바가 있으면 이로우니라.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "H44",
+    "hexagram_id": 44,
+    "name_hanja": "姤",
+    "line_number": null,
+    "source": "姤 女壯이니 勿用取女ㅣ니라",
+    "translation_ko": "姤는 여자가 장성함이니, 이러한 여자를 취하는 데 쓰지 말아야 한다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "H45",
+    "hexagram_id": 45,
+    "name_hanja": "萃",
+    "line_number": null,
+    "source": "萃 (亨)王假有廟ㅣ니 利見大人니 亨니 利貞니라 用大牲이 吉니 利有攸往니라",
+    "translation_ko": "萃는 형통하니, 왕이 묘에 이르니 대인을 만나면 이롭다. 형통하니 곧게 지키면 이롭다. 큰 희생을 쓰면 길하니 나아갈 바가 있으면 이롭다.",
+    "modality": "conditional_comm",
+    "evidence": "萃의 때를 당하여 만물과 사귐을 두텁게 하면 곧 이것이 풍부함의 길함을 누림이니, 천하가 그 부유함과 즐거움을 함께하지 않음이 없다"
+  },
+  {
+    "id": "H46",
+    "hexagram_id": 46,
+    "name_hanja": "升",
+    "line_number": null,
+    "source": "升은 元亨니 用見大人호 勿恤코 南征면 吉리라",
+    "translation_ko": "升은 크게 형통하니, 대인을 만나는 데 쓰되 근심하지 말고, 남쪽으로 나아가면 길하리라.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "H47",
+    "hexagram_id": 47,
+    "name_hanja": "困",
+    "line_number": null,
+    "source": "困은 亨코 貞니 大人이라 吉코 无咎니 有言이면 不信리라",
+    "translation_ko": "困은 형통하고 곧으니, 大人이라야 길하고 허물이 없다. 말이 있으면 믿어지지 않을 것이다.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "H48",
+    "hexagram_id": 48,
+    "name_hanja": "井",
+    "line_number": null,
+    "source": "井은 改邑호 不改井이니 无喪无得며 往來ㅣ 井井니 汔至ㅣ 亦未繘井이니 羸其甁이면 凶니라",
+    "translation_ko": "井은 읍을 옮겨도 우물은 옮기지 않으니, 잃음도 없고 얻음도 없으며, 가고 오는 것이 우물과 같으니, 거의 이르렀으나 또한 아직 우물을 두레박으로 길어 올리지 못하여 그 병을 깨뜨리면 흉하다.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "H49",
+    "hexagram_id": 49,
+    "name_hanja": "革",
+    "line_number": null,
+    "source": "革은 已日이라 乃孚리니 元亨코 利貞야 悔ㅣ 亡니라",
+    "translation_ko": "革은 이미 날이 지난 뒤라야 미더움이 있으니, 크게 형통하고 곧게 지키면 이로우면 뉘우침이 없어진다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "H50",
+    "hexagram_id": 50,
+    "name_hanja": "鼎",
+    "line_number": null,
+    "source": "鼎은 元(吉)亨니라",
+    "translation_ko": "정(鼎)은 으뜸으로 (길하고) 형통하다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "H51",
+    "hexagram_id": 51,
+    "name_hanja": "震",
+    "line_number": null,
+    "source": "震은 亨니 震來예 虩虩이면 笑言이 啞啞이리니 震驚百里에 不喪匕鬯니라",
+    "translation_ko": "震은 형통하니, 震이 올 때 두려워하면 웃으며 말함이 화락하리니, 震이 백 리를 놀라게 하나 비와 창을 잃지 아니하느니라",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "H52",
+    "hexagram_id": 52,
+    "name_hanja": "艮",
+    "line_number": null,
+    "source": "艮其背면 不獲其身며 行其庭야도 不見其人야 无咎ㅣ리라",
+    "translation_ko": "그 등을 그치게 하면 그 몸을 얻지 못하며, 그 뜰을 행하여도 그 사람을 보지 못하여 허물이 없으리라",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "H53",
+    "hexagram_id": 53,
+    "name_hanja": "漸",
+    "line_number": null,
+    "source": "漸은 女歸ㅣ 吉니 利貞이니라",
+    "translation_ko": "점진은 여자가 시집가는 것이니 길하다. 곧게 지키면 이롭다.",
+    "modality": "conditional_comm",
+    "evidence": "신하가 조정에 나아감과 사람이 일에 나아감에 진실로 마땅히 차례가 있어야 하니, 그 차례로써 하지 않으면 절도를 넘고 의리를 범하여 흉함과 허물이 따른다"
+  },
+  {
+    "id": "H54",
+    "hexagram_id": 54,
+    "name_hanja": "歸妹",
+    "line_number": null,
+    "source": "歸妹 征면 凶니 无攸利니라",
+    "translation_ko": "귀매는 나아가면 흉하니 이로운 바가 없다.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "H55",
+    "hexagram_id": 55,
+    "name_hanja": "豊",
+    "line_number": null,
+    "source": "豊은 亨니 王이아 假之니 勿憂홀뎐 宜日中이니라",
+    "translation_ko": "풍은 형통하니, 왕이 이에 이르니, 근심하지 말지어다. 마땅히 해가 한가운데 있는 것과 같아야 하느니라.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "H56",
+    "hexagram_id": 56,
+    "name_hanja": "旅",
+    "line_number": null,
+    "source": "旅 小亨코 旅貞야 吉니라",
+    "translation_ko": "旅는 작게 형통하고, 旅에서 곧게 지키면 길하다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "H57",
+    "hexagram_id": 57,
+    "name_hanja": "巽",
+    "line_number": null,
+    "source": "巽은 小亨니 利有攸往며 利見大人니라",
+    "translation_ko": "巽은 작게 형통하니, 나아갈 바가 있으면 이로우며, 대인을 만나면 이롭다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "H58",
+    "hexagram_id": 58,
+    "name_hanja": "兌",
+    "line_number": null,
+    "source": "兌 亨니 利貞니라",
+    "translation_ko": "兌는 형통하니 곧게 지키면 이롭다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "H59",
+    "hexagram_id": 59,
+    "name_hanja": "渙",
+    "line_number": null,
+    "source": "渙은 亨니 王假有廟ㅣ며 利涉大川니 利貞니라",
+    "translation_ko": "환은 형통하니, 왕이 묘에 이르며, 큰 내를 건너면 이로우니, 곧게 지키면 이롭다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "H60",
+    "hexagram_id": 60,
+    "name_hanja": "節",
+    "line_number": null,
+    "source": "節은 亨니 苦節은 不可貞이니라",
+    "translation_ko": "節은 형통하니, 괴로운 節은 곧게 지킬 수 없다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "H61",
+    "hexagram_id": 61,
+    "name_hanja": "中孚",
+    "line_number": null,
+    "source": "中孚 豚魚ㅣ면 吉니 利涉大川고 利貞니라",
+    "translation_ko": "중부는 돼지와 물고기에 미치면 길하니, 큰 내를 건너는 데 이롭고 곧게 지키면 이롭다.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "H62",
+    "hexagram_id": 62,
+    "name_hanja": "小過",
+    "line_number": null,
+    "source": "小過 亨니 利貞니 可小事ㅣ오 不可大事ㅣ니 飛鳥遺之音에 不宜上이오 宜下ㅣ면 大吉리라",
+    "translation_ko": "小過는 형통하니 곧게 지키면 이롭다. 작은 일은 가하나 큰 일은 가하지 않다. 나는 새가 남긴 소리에 위로 올라감이 마땅하지 않고 아래로 내려감이 마땅하면 크게 길하리라.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "H63",
+    "hexagram_id": 63,
+    "name_hanja": "旣濟",
+    "line_number": null,
+    "source": "旣濟 亨이 小ㅣ니 利貞니 初吉코 終亂니라",
+    "translation_ko": "기제는 형통함이 작으니, 곧게 지키면 이롭다. 처음은 길하나 마침내 어지러워진다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "H64",
+    "hexagram_id": 64,
+    "name_hanja": "未濟",
+    "line_number": null,
+    "source": "未濟 亨니 小狐ㅣ 汔濟야 濡其尾니 无攸利니라",
+    "translation_ko": "未濟는 형통하니, 작은 여우가 거의 건너서 그 꼬리를 적시니 이로울 바가 없다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "H1",
+    "hexagram_id": 1,
+    "name_hanja": "乾",
+    "line_number": null,
+    "source": "乾은 元코 亨코 利코 貞니라",
+    "translation_ko": "건은 으뜸이고 형통하고 이로우며 곧고 바르다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "H2",
+    "hexagram_id": 2,
+    "name_hanja": "坤",
+    "line_number": null,
+    "source": "坤은 元코 亨코 利코 牝馬之貞이니 君子의 有攸往이니라 先면 迷고 後면 得리니 主利니라 西南은 得朋이오 東北은 喪朋이니 安貞야 吉니라",
+    "translation_ko": "곤은 으뜸이고 형통하고 이로우니 암말의 곧음이니, 군자가 나아갈 바가 있느니라. 먼저 하면 미혹되고 뒤따르면 얻으리니 주인됨이 이로우니라. 서남쪽은 벗을 얻고 동북쪽은 벗을 잃으니 편안히 곧게 지키면 길하니라.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "H3",
+    "hexagram_id": 3,
+    "name_hanja": "屯",
+    "line_number": null,
+    "source": "屯은 元亨고 利貞니 勿用有攸往이오 利建侯니라",
+    "translation_ko": "둔은 크게 형통하고 곧게 지키면 이로우니, 나아갈 바를 두지 말 것이며, 제후를 세우면 이롭다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "H4",
+    "hexagram_id": 4,
+    "name_hanja": "蒙",
+    "line_number": null,
+    "source": "蒙은 亨니 匪我ㅣ 求童蒙이라 童蒙이 求我ㅣ니 初筮ㅣ어든 告고 再三이면 瀆이라 瀆則不告이니 利貞니라",
+    "translation_ko": "몽은 형통하니, 내가 동몽을 구하는 것이 아니라 동몽이 나를 구하는 것이니, 처음 점치면 알려주고 두세 번이면 모독함이라. 모독하면 알려주지 않으니 곧게 지키면 이롭다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "H5",
+    "hexagram_id": 5,
+    "name_hanja": "需",
+    "line_number": null,
+    "source": "需 有孚야 光亨코 貞吉니 利涉大川니라",
+    "translation_ko": "需는 미더움이 있어 빛나게 형통하고 곧으면 길하니, 큰 내를 건너는 것이 이롭다.",
+    "modality": "conditional_comm",
+    "evidence": "미더움이 있으면 밝고 환하여 형통할 수 있고, 곧고 바름을 얻어 길하니, 이로써 기다리면 무엇이 이루어지지 않겠는가"
+  },
+  {
+    "id": "H34",
+    "hexagram_id": 34,
+    "name_hanja": "大壯",
+    "line_number": null,
+    "source": "大壯은 利貞니라",
+    "translation_ko": "대장은 곧게 지키면 이롭다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L1-1",
+    "hexagram_id": 1,
+    "name_hanja": "乾",
+    "line_number": 1,
+    "source": "初九 潛龍이니 勿用이니라",
+    "translation_ko": "초구는 잠긴 용이니 쓰지 말아야 한다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L1-2",
+    "hexagram_id": 1,
+    "name_hanja": "乾",
+    "line_number": 2,
+    "source": "九二 見龍在田이니 利見大人이니라",
+    "translation_ko": "구이는 용이 밭에 나타남이니, 대인을 만남이 이롭다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L1-3",
+    "hexagram_id": 1,
+    "name_hanja": "乾",
+    "line_number": 3,
+    "source": "九三은 君子ㅣ 終日乾乾야 夕惕若면 厲나 无咎ㅣ리라",
+    "translation_ko": "구삼은 군자가 종일토록 건건하여 저녁에 두려워하면 위태로우나 허물이 없으리라",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L1-4",
+    "hexagram_id": 1,
+    "name_hanja": "乾",
+    "line_number": 4,
+    "source": "九四 或躍在淵면 无咎ㅣ리라",
+    "translation_ko": "구사. 혹 뛰어 연못에 있으면 허물이 없으리라.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L1-5",
+    "hexagram_id": 1,
+    "name_hanja": "乾",
+    "line_number": 5,
+    "source": "九五 飛龍在天이니 利見大人이니라",
+    "translation_ko": "구오. 나는 용이 하늘에 있으니, 대인을 만남이 이롭다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L1-6",
+    "hexagram_id": 1,
+    "name_hanja": "乾",
+    "line_number": 6,
+    "source": "上九 亢龍이니 有悔리라",
+    "translation_ko": "상구는 항룡이니 뉘우침이 있을 것이다",
+    "modality": "conditional_comm",
+    "evidence": "구가 위에 있으되 높은 자리에 마땅하지 않으므로, 이로써 백성도 없고 도움도 없어서 움직이면 뉘우침이 있다"
+  },
+  {
+    "id": "L1-7",
+    "hexagram_id": 1,
+    "name_hanja": "乾",
+    "line_number": 7,
+    "source": "用九 見群龍호 无首면 吉리라",
+    "translation_ko": "용구는 뭇 용이 나타나되 머리가 없으면 길하다.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L2-1",
+    "hexagram_id": 2,
+    "name_hanja": "坤",
+    "line_number": 1,
+    "source": "初六은 履霜면 堅冰이 至니라",
+    "translation_ko": "초육은 서리를 밟으면 단단한 얼음이 이른다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L2-2",
+    "hexagram_id": 2,
+    "name_hanja": "坤",
+    "line_number": 2,
+    "source": "六二 直方大라 不習이라도 无不利니라",
+    "translation_ko": "육이는 곧고 모나고 크다. 익히지 않아도 이롭지 않음이 없다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L2-3",
+    "hexagram_id": 2,
+    "name_hanja": "坤",
+    "line_number": 3,
+    "source": "六三은 含章可貞이니 或從王事야 无成有終이니라",
+    "translation_ko": "육삼은 아름다움을 머금고 곧게 지킬 만하니, 혹 왕의 일을 따라 이루지 않고 마침이 있느니라",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L2-4",
+    "hexagram_id": 2,
+    "name_hanja": "坤",
+    "line_number": 4,
+    "source": "六四 括囊이면 无咎ㅣ며 无譽ㅣ리라",
+    "translation_ko": "육사는 주머니를 묶으면 허물이 없으며 명예도 없을 것이다.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L2-5",
+    "hexagram_id": 2,
+    "name_hanja": "坤",
+    "line_number": 5,
+    "source": "六五 黃裳이면 元吉이리라",
+    "translation_ko": "육오는 누런 치마이면 크게 길하리라",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L2-6",
+    "hexagram_id": 2,
+    "name_hanja": "坤",
+    "line_number": 6,
+    "source": "上六은 龍戰于野니 其血이 玄黃이로다",
+    "translation_ko": "상육은 용이 들에서 싸우니, 그 피가 검고 누렇도다",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L2-7",
+    "hexagram_id": 2,
+    "name_hanja": "坤",
+    "line_number": 7,
+    "source": "用六은 利永貞니라",
+    "translation_ko": "용육은 영원히 곧게 지키면 이롭다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L3-1",
+    "hexagram_id": 3,
+    "name_hanja": "屯",
+    "line_number": 1,
+    "source": "初九 磐桓이니 利居貞며 利建侯니라",
+    "translation_ko": "초구는 머뭇거림이니, 머물러 곧게 지키면 이로우며, 제후를 세우면 이롭다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L3-2",
+    "hexagram_id": 3,
+    "name_hanja": "屯",
+    "line_number": 2,
+    "source": "六二 屯如邅如며 乘馬班如니 匪寇ㅣ면 婚媾ㅣ리니 女子ㅣ 貞야 不字ㅣ라가 十年에아 乃字ㅣ로다",
+    "translation_ko": "육이는 머뭇거리고 주저하며, 말을 타고 가려다가 흩어지니, 도적이 아니면 혼인할 것이니, 여자가 곧게 지켜 아이를 낳지 않다가 십 년에 이르러서야 비로소 아이를 낳는다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L3-3",
+    "hexagram_id": 3,
+    "name_hanja": "屯",
+    "line_number": 3,
+    "source": "六三은 卽鹿无虞ㅣ라 惟入于林中ㅣ니 君子ㅣ 幾야 不如舍ㅣ니 往면 吝리라",
+    "translation_ko": "육삼은 사슴을 쫓되 우인이 없는 것이니, 오직 숲 속으로 들어갈 뿐이다. 군자가 기미를 살펴 버리는 것만 못하니, 나아가면 부끄러울 것이다.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L3-4",
+    "hexagram_id": 3,
+    "name_hanja": "屯",
+    "line_number": 4,
+    "source": "六四 乘馬班如ㅣ니 求婚媾야 往면 吉야 无不利리라",
+    "translation_ko": "육사는 말을 타고 가다가 머뭇거린다. 혼구를 구하여 나아가면 길하여 이롭지 않음이 없다.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L3-5",
+    "hexagram_id": 3,
+    "name_hanja": "屯",
+    "line_number": 5,
+    "source": "九五 屯其膏ㅣ니 小貞이면 吉코 大貞이면 凶리라",
+    "translation_ko": "구오는 그 기름을 막히게 하니, 작게 곧게 지키면 길하고 크게 곧게 지키면 흉하리라",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L3-6",
+    "hexagram_id": 3,
+    "name_hanja": "屯",
+    "line_number": 6,
+    "source": "上六은 乘馬班如야 泣血漣如ㅣ로다",
+    "translation_ko": "상육은 말을 타고 가다가 빙빙 돌기만 하며, 피눈물이 줄줄 흐르는구나.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L4-1",
+    "hexagram_id": 4,
+    "name_hanja": "蒙",
+    "line_number": 1,
+    "source": "初六은 發蒙호 利用刑人야 用說桎梏이니 以往이면 吝리라",
+    "translation_ko": "초육은 몽매함을 계발함에 형벌을 씀으로써 질곡을 벗기는 것이 이로우니, 이로써 나아가면 부끄러움이 있으리라",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L4-2",
+    "hexagram_id": 4,
+    "name_hanja": "蒙",
+    "line_number": 2,
+    "source": "九二 包蒙이면 吉고 納婦ㅣ면 吉리니 子ㅣ 克家로다",
+    "translation_ko": "구이는 몽매함을 포용하면 길하고, 부인을 받아들이면 길하니, 자식이 집안을 다스린다.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L4-3",
+    "hexagram_id": 4,
+    "name_hanja": "蒙",
+    "line_number": 3,
+    "source": "六三은 勿用取女ㅣ니 見金夫고 不有躬니 无攸利니라",
+    "translation_ko": "육삼은 여자를 취하는 데 쓰지 말아야 하니, 금부를 보고 몸을 보유하지 못하니 이로운 바가 없다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L4-4",
+    "hexagram_id": 4,
+    "name_hanja": "蒙",
+    "line_number": 4,
+    "source": "六四 困蒙이니 吝토다",
+    "translation_ko": "육사는 몽매함에 곤궁하니, 부끄럽다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L4-5",
+    "hexagram_id": 4,
+    "name_hanja": "蒙",
+    "line_number": 5,
+    "source": "六五 童蒙이니 吉니라",
+    "translation_ko": "육오는 동몽이니 길하다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L4-6",
+    "hexagram_id": 4,
+    "name_hanja": "蒙",
+    "line_number": 6,
+    "source": "上九 擊蒙이니 不利爲寇ㅣ오 利禦寇니라",
+    "translation_ko": "상구는 몽매함을 치는 것이니, 도적이 되는 것은 이롭지 않고, 도적을 막는 것이 이롭다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L5-1",
+    "hexagram_id": 5,
+    "name_hanja": "需",
+    "line_number": 1,
+    "source": "初九 需于郊ㅣ라 利用恒이니 无咎ㅣ리라",
+    "translation_ko": "초구는 들에서 기다림이라. 항상됨을 이용함이 이로우니, 허물이 없으리라.",
+    "modality": "conditional_comm",
+    "evidence": "넓고 먼 곳에 처하면 편안히 그 떳떳함을 지키는 데 이로움이 있으니, 그러면 허물이 없다"
+  },
+  {
+    "id": "L5-2",
+    "hexagram_id": 5,
+    "name_hanja": "需",
+    "line_number": 2,
+    "source": "九二 需于沙ㅣ라 小有言나 終吉리라",
+    "translation_ko": "구이는 모래에서 기다린다. 조금 말이 있으나 마침내 길하리라.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L5-3",
+    "hexagram_id": 5,
+    "name_hanja": "需",
+    "line_number": 3,
+    "source": "九三은 需于泥니 致寇至리라",
+    "translation_ko": "구삼은 진흙에서 기다리니, 도적을 이르게 하여 이르게 할 것이다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L5-4",
+    "hexagram_id": 5,
+    "name_hanja": "需",
+    "line_number": 4,
+    "source": "六四 需于血이니 出自穴이로다",
+    "translation_ko": "육사는 피에서 기다리니, 구멍으로부터 나오는도다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L5-5",
+    "hexagram_id": 5,
+    "name_hanja": "需",
+    "line_number": 5,
+    "source": "九五 需于酒食이니 貞코 吉니라",
+    "translation_ko": "구오는 술과 음식에서 기다리니, 곧게 지키면 길하다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L5-6",
+    "hexagram_id": 5,
+    "name_hanja": "需",
+    "line_number": 6,
+    "source": "上六은 入于穴이니 有不速之客三人이 來리니 敬之면 終吉이리라",
+    "translation_ko": "상육은 구멍에 들어가니, 부르지 않은 손님 세 사람이 올 것이니, 공경하면 마침내 길하리라.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L6-1",
+    "hexagram_id": 6,
+    "name_hanja": "訟",
+    "line_number": 1,
+    "source": "初六은 不永所事ㅣ면 小有言나 終吉ㅣ리라",
+    "translation_ko": "초육은 일을 오래 끌지 않으면 조금 말이 있으나 마침내 길하리라",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L6-2",
+    "hexagram_id": 6,
+    "name_hanja": "訟",
+    "line_number": 2,
+    "source": "九二 不克訟이니 歸而逋야 其邑人이 三百戶ㅣ면 无眚리라",
+    "translation_ko": "구이, 송사를 이기지 못하니, 돌아가 달아나서 그 읍 사람이 삼백 호이면 재앙이 없으리라.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L6-3",
+    "hexagram_id": 6,
+    "name_hanja": "訟",
+    "line_number": 3,
+    "source": "六三은 食舊德야 貞면 厲나 終吉이리니 或從王事야 无成이로다",
+    "translation_ko": "육삼은 옛 덕을 먹으니, 곧게 지키면 위태로우나 마침내 길하리니, 혹 왕의 일을 따라 이룸이 없도다",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L6-4",
+    "hexagram_id": 6,
+    "name_hanja": "訟",
+    "line_number": 4,
+    "source": "九四 不克訟이라 復卽命야 渝야 安貞면 吉리라",
+    "translation_ko": "구사는 송을 이기지 못한다. 돌아와 명에 나아가 바꾸어 편안히 곧게 지키면 길하다.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L6-5",
+    "hexagram_id": 6,
+    "name_hanja": "訟",
+    "line_number": 5,
+    "source": "九五 訟애 元吉이라",
+    "translation_ko": "구오. 송에 원길이다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L6-6",
+    "hexagram_id": 6,
+    "name_hanja": "訟",
+    "line_number": 6,
+    "source": "上九 或錫之鞶帶라도 終朝三褫之리라",
+    "translation_ko": "상구는 혹 가죽띠를 하사받더라도 마침내 아침 동안에 세 번 빼앗기리라",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L7-1",
+    "hexagram_id": 7,
+    "name_hanja": "師",
+    "line_number": 1,
+    "source": "初六은 師出以律이니 否ㅣ면 臧이라도 凶니라",
+    "translation_ko": "초육은 군대가 나아감에 법도로써 하니, 그렇지 않으면 좋다 하더라도 흉하니라",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L7-2",
+    "hexagram_id": 7,
+    "name_hanja": "師",
+    "line_number": 2,
+    "source": "九二 在師야 中 吉코 无咎니 王三錫命이로다",
+    "translation_ko": "구이는 군대 안에 있으면서 치우치지 않으니 길하고 허물이 없다. 왕이 세 번 명을 내린다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L7-3",
+    "hexagram_id": 7,
+    "name_hanja": "師",
+    "line_number": 3,
+    "source": "六三은 師或輿尸면 凶리라",
+    "translation_ko": "육삼은 군대가 혹 시체를 싣고 오면 흉하리라",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L7-4",
+    "hexagram_id": 7,
+    "name_hanja": "師",
+    "line_number": 4,
+    "source": "六四 師左次ㅣ니 无咎ㅣ로다",
+    "translation_ko": "육사는 군대가 왼쪽으로 머무니 허물이 없다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L7-5",
+    "hexagram_id": 7,
+    "name_hanja": "師",
+    "line_number": 5,
+    "source": "六五 田有禽이어든 利執言니 无咎ㅣ리라 長子ㅣ 帥師ㅣ니 弟子ㅣ 輿尸면 貞이라도 凶리라",
+    "translation_ko": "육오. 밭에 짐승이 있거든 말을 잡아 집행하면 이로우니 허물이 없으리라. 장자가 군대를 거느리니 제자가 시체를 수레에 싣게 되면 곧게 지켜도 흉하리라.",
+    "modality": "conditional_text",
+    "evidence": "어든"
+  },
+  {
+    "id": "L7-6",
+    "hexagram_id": 7,
+    "name_hanja": "師",
+    "line_number": 6,
+    "source": "上六은 大君이 有命이니 開國承家애 小人勿用이니라",
+    "translation_ko": "상육은 대군이 명을 내리니, 나라를 열고 집을 이어받음에 소인은 쓰지 말아야 한다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L8-1",
+    "hexagram_id": 8,
+    "name_hanja": "比",
+    "line_number": 1,
+    "source": "初六은 有孚比之라 无咎ㅣ리니 有孚ㅣ 盈缶ㅣ면 終애 來有他吉리라",
+    "translation_ko": "초육은 미더움이 있어 친하게 지내니 허물이 없을 것이다. 미더움이 있어 질그릇에 가득하면 마침내 다른 길함이 올 것이다.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L8-2",
+    "hexagram_id": 8,
+    "name_hanja": "比",
+    "line_number": 2,
+    "source": "六二 比之自內니 貞야 吉토다",
+    "translation_ko": "육이는 안으로부터 비하니, 곧게 지키면 길하다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L8-3",
+    "hexagram_id": 8,
+    "name_hanja": "比",
+    "line_number": 3,
+    "source": "六三은 比之匪人이라",
+    "translation_ko": "육삼은 사람이 아닌 자와 친함이다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L8-4",
+    "hexagram_id": 8,
+    "name_hanja": "比",
+    "line_number": 4,
+    "source": "六四 外比之니 貞야 吉토다",
+    "translation_ko": "육사는 밖으로 친하니, 곧게 지키면 길하다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L8-5",
+    "hexagram_id": 8,
+    "name_hanja": "比",
+    "line_number": 5,
+    "source": "九五 顯比니 王用三驅에 失前禽며 邑人不誡니 吉토다",
+    "translation_ko": "구오. 드러나게 친함이니, 왕이 삼구를 씀에 앞의 짐승을 잃으며, 읍의 사람들이 경계하지 않으니 길하도다.",
+    "modality": "conditional_comm",
+    "evidence": "이와 같이 하면 천하에 누가 위에 친히 친하지 않겠는가? 만약 작은 인을 드러내고 도를 어기면서 명예를 구하여 아래의 친함을 얻고자 한다면 그 도 또한 좁으니, 어찌 천하의 친함을 얻을 수 있겠는가? 그러므로 성인은"
+  },
+  {
+    "id": "L8-6",
+    "hexagram_id": 8,
+    "name_hanja": "比",
+    "line_number": 6,
+    "source": "上六은 比之无首ㅣ니 凶니라",
+    "translation_ko": "상육은 比에서 머리가 없으니 흉하다.",
+    "modality": "conditional_comm",
+    "evidence": "그러므로 比에서 머리가 없으면 마침에 이르러서는 흉한 것이다"
+  },
+  {
+    "id": "L9-1",
+    "hexagram_id": 9,
+    "name_hanja": "小畜",
+    "line_number": 1,
+    "source": "初九 復이 自道ㅣ어니 何其咎ㅣ리오 吉니라",
+    "translation_ko": "초구는 도로부터 돌아오니, 어찌 그 허물이 있겠는가. 길하다.",
+    "modality": "conditional_comm",
+    "evidence": "비록 효의 뜻이 본래 선하다 하더라도, 또한 이와 같이 하지 않으면 허물이 있다는 뜻에 해가 되지 않는다"
+  },
+  {
+    "id": "L9-2",
+    "hexagram_id": 9,
+    "name_hanja": "小畜",
+    "line_number": 2,
+    "source": "九二 牽復이니 吉니라",
+    "translation_ko": "구이는 끌어당겨 돌아오니 길하다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L9-3",
+    "hexagram_id": 9,
+    "name_hanja": "小畜",
+    "line_number": 3,
+    "source": "九三은 輿說輻이며 夫妻反目이로다",
+    "translation_ko": "구삼은 수레가 바퀴살을 벗기며 부부가 눈을 부릅뜨고 서로 봄이로다",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L9-4",
+    "hexagram_id": 9,
+    "name_hanja": "小畜",
+    "line_number": 4,
+    "source": "六四 有孚ㅣ면 血去코 惕出야 无咎ㅣ리라",
+    "translation_ko": "육사는 미더움이 있으면 피가 물러가고 두려움이 벗어나 허물이 없으리라",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L9-5",
+    "hexagram_id": 9,
+    "name_hanja": "小畜",
+    "line_number": 5,
+    "source": "九五 有孚ㅣ라 攣如야 富以其隣이로다",
+    "translation_ko": "구오는 미더움이 있어 서로 이어지니, 그 이웃과 더불어 부유하도다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L9-6",
+    "hexagram_id": 9,
+    "name_hanja": "小畜",
+    "line_number": 6,
+    "source": "上九 旣雨旣處 尙德야 載니 婦ㅣ 貞이면 厲리라 月幾望이니 君子ㅣ 征이면 凶리라",
+    "translation_ko": "상구, 이미 비가 내리고 이미 머물렀으니, 덕을 숭상하여 가득 실었다. 부인이 곧게 지키면 위태로울 것이다. 달이 거의 보름에 이르렀으니, 군자가 나아가면 흉할 것이다.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L10-1",
+    "hexagram_id": 10,
+    "name_hanja": "履",
+    "line_number": 1,
+    "source": "初九 素履로 往면 无咎ㅣ리라",
+    "translation_ko": "초구는 본디 밟음으로 나아가면 허물이 없으리라.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L10-2",
+    "hexagram_id": 10,
+    "name_hanja": "履",
+    "line_number": 2,
+    "source": "九二 履道ㅣ 坦坦니 幽人이라 貞코 吉리라",
+    "translation_ko": "구이는 도를 밟음이 탄탄하니, 그윽한 사람이라야 곧게 지키면 길하리라.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L10-3",
+    "hexagram_id": 10,
+    "name_hanja": "履",
+    "line_number": 3,
+    "source": "六三은 眇能視며 跛能履라 履虎尾야 咥人이니 凶고 武人이 爲于大君이로다",
+    "translation_ko": "육삼은 애꾸눈이 능히 보며 절름발이가 능히 밟는다. 범의 꼬리를 밟아 사람을 물어뜯으니 흉하고, 무인이 대군에게 하는 것이로다.",
+    "modality": "conditional_comm",
+    "evidence": "재주가 이미 부족한데 또 처함이 중을 얻지 못하고, 밟음이 그 바름이 아니며, 부드러움으로써 강함을 힘쓰니[혹은 이긴다고 함], 그 밟음이 이와 같으면 이는 위태로운 곳을 밟는 것이다"
+  },
+  {
+    "id": "L10-4",
+    "hexagram_id": 10,
+    "name_hanja": "履",
+    "line_number": 4,
+    "source": "九四 履虎尾니 愬愬이면 終吉이리라",
+    "translation_ko": "구사는 범의 꼬리를 밟으니, 두려워하면 마침내 길하리라.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L10-5",
+    "hexagram_id": 10,
+    "name_hanja": "履",
+    "line_number": 5,
+    "source": "九五 夬履니 貞이라도 厲리라",
+    "translation_ko": "구오는 결단하여 밟으니, 곧게 지켜도 위태로울 것이다.",
+    "modality": "conditional_comm",
+    "evidence": "5효는 양강한 건(乾)의 본체로써 지극히 높은 자리에 거하여 그 강함으로 결단하여 행하는 자이니, 이와 같이 하면 비록 바름을 얻었다 하더라도 오히려 위태롭다"
+  },
+  {
+    "id": "L10-6",
+    "hexagram_id": 10,
+    "name_hanja": "履",
+    "line_number": 6,
+    "source": "上九 視履야 考祥호 其旋이면 元吉이리라",
+    "translation_ko": "상구. 밟은 바를 살피고 상서로움을 살펴서, 그 돌아옴이 온전하면 크게 길하리라.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L11-1",
+    "hexagram_id": 11,
+    "name_hanja": "泰",
+    "line_number": 1,
+    "source": "初九 拔茅茹ㅣ라 以其彙로 征이니 吉니라",
+    "translation_ko": "초구는 띠풀을 뽑으니 그 뿌리가 얽혀 있다. 그 무리로써 나아가니 길하다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L11-2",
+    "hexagram_id": 11,
+    "name_hanja": "泰",
+    "line_number": 2,
+    "source": "九二 包荒며 用馮河며 不遐遺며 朋亡면 得尙于中行리라",
+    "translation_ko": "구이: 거친 것을 포용하며, 맨몸으로 황하를 건너며, 먼 것을 버리지 않으며, 무리를 잃으면 중행에서 숭상함을 얻으리라.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L11-3",
+    "hexagram_id": 11,
+    "name_hanja": "泰",
+    "line_number": 3,
+    "source": "九三은 无平不陂며 无往不復이니 艱貞이면 无咎야 勿恤이라도 其孚ㅣ라 于食에 有福리라",
+    "translation_ko": "구삼은 평평하되 비탈지지 않음이 없으며 나아가되 돌아오지 않음이 없으니, 어렵게 여기며 곧게 지키면 허물이 없어서 근심하지 않아도 그 미더움이 음식에 복이 있으리라.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L11-4",
+    "hexagram_id": 11,
+    "name_hanja": "泰",
+    "line_number": 4,
+    "source": "六四 翩翩히 不富以其隣야 不戒以孚로다",
+    "translation_ko": "육사는 펄펄 날아 부유하지 않으되 그 이웃과 함께하여, 경계하지 않아도 미더움으로 한다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L11-5",
+    "hexagram_id": 11,
+    "name_hanja": "泰",
+    "line_number": 5,
+    "source": "六五 帝乙歸妹니 以祉며 元吉이리라",
+    "translation_ko": "육오는 제을이 누이를 시집보냄이니, 이로써 복을 받으며 크게 길하리라.",
+    "modality": "conditional_comm",
+    "evidence": "육오(六五)가 음유(陰柔)로써 임금 자리에 있으면서 아래로 구이(九二)의 강명(剛明)한 어진 이에게 응하니, 오(五)가 능히 그 어진 신하를 의지하고 맡겨 순종함이 제을이 누이동생을 시집보냄과 같아서 그 존귀함을 낮"
+  },
+  {
+    "id": "L11-6",
+    "hexagram_id": 11,
+    "name_hanja": "泰",
+    "line_number": 6,
+    "source": "上六은 城復于隍이라 勿用師ㅣ오 自邑告命이니 貞이라도 吝니라",
+    "translation_ko": "상육은 성이 무너져 해자로 돌아가니, 군대를 쓰지 말고, 자기 고을로부터 명을 알려야 하니, 곧게 지켜도 부끄러움이 있다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L12-1",
+    "hexagram_id": 12,
+    "name_hanja": "否",
+    "line_number": 1,
+    "source": "初六은 拔茅茹ㅣ라 以其彙로 貞이니 吉야 亨니라",
+    "translation_ko": "초육은 띠풀을 뽑으니 그 뿌리가 엉켜 있다. 그 무리로써 곧게 지키니 길하고 형통하다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L12-2",
+    "hexagram_id": 12,
+    "name_hanja": "否",
+    "line_number": 2,
+    "source": "六二 包承이니 小人은 吉코 大人은 否니 亨이라",
+    "translation_ko": "육이는 포용하여 받드는 것이니, 소인은 길하고 대인은 막힘이니 형통함이다.",
+    "modality": "conditional_comm",
+    "evidence": "육이는 그 바탕은 음유하고 그 자리는 중정하니, 음유한 소인으로 말하면 바야흐로 아래에서 막혀 있어 뜻이 품고 간직하는 바가 위를 받들어 순종하여 그 막힘을 구제하는 것으로 몸의 이로움을 삼으니, 소인의 길함이다"
+  },
+  {
+    "id": "L12-3",
+    "hexagram_id": 12,
+    "name_hanja": "否",
+    "line_number": 3,
+    "source": "六三은 包ㅣ 羞ㅣ로다",
+    "translation_ko": "육삼은 부끄러움을 품는다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L12-4",
+    "hexagram_id": 12,
+    "name_hanja": "否",
+    "line_number": 4,
+    "source": "九四 有命면 无咎야 疇ㅣ 離祉리라",
+    "translation_ko": "구사. 명이 있으면 허물이 없어서 무리가 복에 붙으리라.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L12-5",
+    "hexagram_id": 12,
+    "name_hanja": "否",
+    "line_number": 5,
+    "source": "九五 休否라 大人의 吉이니 其亡其亡ㅣ라 繫于苞桑이리라",
+    "translation_ko": "구오. 비를 그치게 한다. 대인의 길함이니, '그것이 망할 것이다, 그것이 망할 것이다'라고 하여 뽕나무 덤불에 매어두는 것과 같이 하라.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L12-6",
+    "hexagram_id": 12,
+    "name_hanja": "否",
+    "line_number": 6,
+    "source": "上九 傾否니 先否코 後喜로다",
+    "translation_ko": "상구는 否가 기울어지니, 먼저는 否이고 뒤에는 기쁨이로다",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L13-1",
+    "hexagram_id": 13,
+    "name_hanja": "同人",
+    "line_number": 1,
+    "source": "初九 同人于門이니 无咎ㅣ리라",
+    "translation_ko": "초구는 문에서 사람들과 함께하니, 허물이 없으리라.",
+    "modality": "conditional_comm",
+    "evidence": "문을 나선다는 것은 밖에 있음을 이르니, 밖에 있으면 사사로이 친밀함의 치우침이 없어 그 사귐이 넓고 공정하니, 이와 같으면 허물이 없다"
+  },
+  {
+    "id": "L13-2",
+    "hexagram_id": 13,
+    "name_hanja": "同人",
+    "line_number": 2,
+    "source": "六二 同人于宗이니 吝토다",
+    "translation_ko": "육이는 종족에서 사람들과 함께하니, 부끄러움이 있다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L13-3",
+    "hexagram_id": 13,
+    "name_hanja": "同人",
+    "line_number": 3,
+    "source": "九三은 伏戎于莽고 升其高陵야 三歲不興이로다",
+    "translation_ko": "구삼은 병사를 풀숲에 숨기고 그 높은 언덕에 올라 삼 년 동안 일어나지 못한다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L13-4",
+    "hexagram_id": 13,
+    "name_hanja": "同人",
+    "line_number": 4,
+    "source": "九四 乘其墉호 弗克攻이니 吉니라",
+    "translation_ko": "구사는 그 담에 올랐으나 이기지 못하여 치지 못하니 길하다.",
+    "modality": "conditional_comm",
+    "evidence": "진실로 능히 스스로 의리가 바르지 못함을 알아서 공격하지 않으면 곧 길함이 된다"
+  },
+  {
+    "id": "L13-5",
+    "hexagram_id": 13,
+    "name_hanja": "同人",
+    "line_number": 5,
+    "source": "九五 同人이 先號咷而後笑ㅣ니 大師克이라 相遇ㅣ로다",
+    "translation_ko": "구오는 동인이 먼저 부르짖고 울다가 뒤에 웃으니, 큰 군대가 이겨서 서로 만나다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L13-6",
+    "hexagram_id": 13,
+    "name_hanja": "同人",
+    "line_number": 6,
+    "source": "上九 同人于郊ㅣ니 无悔니라",
+    "translation_ko": "상구는 사람과 교외에서 사귀니, 뉘우침이 없다.",
+    "modality": "conditional_comm",
+    "evidence": "처음에 같아짐이 있으면 마침내 이르러 혹 어긋남과 뉘우침이 있을 것이지만, 먼 곳에 있으면서 더불어 함이 없으므로 비록 같아짐이 없으나 또한 뉘우침도 없고, 비록 같아지고자 하는 뜻이 이루어지지 않으나 그 마침내 뉘"
+  },
+  {
+    "id": "L14-1",
+    "hexagram_id": 14,
+    "name_hanja": "大有",
+    "line_number": 1,
+    "source": "初九 无交害ㅣ니 匪咎ㅣ나 艱則无咎ㅣ리라",
+    "translation_ko": "초구는 해침이 사귀지 않으니, 허물이 아니나, 어려움을 생각하면 허물이 없으리라.",
+    "modality": "conditional_text",
+    "evidence": "則"
+  },
+  {
+    "id": "L14-2",
+    "hexagram_id": 14,
+    "name_hanja": "大有",
+    "line_number": 2,
+    "source": "九二 大車以載ㅣ니 有攸往야 无咎ㅣ리라",
+    "translation_ko": "구이는 큰 수레로써 실으니, 나아갈 바가 있어도 허물이 없으리라.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L14-3",
+    "hexagram_id": 14,
+    "name_hanja": "大有",
+    "line_number": 3,
+    "source": "九三은 公用亨于天子ㅣ니 小人은 弗克이니라",
+    "translation_ko": "구삼은 공이 천자에게 형통함을 쓰니, 소인은 이기지 못한다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L14-4",
+    "hexagram_id": 14,
+    "name_hanja": "大有",
+    "line_number": 4,
+    "source": "九四 匪其彭이면 无咎ㅣ리라",
+    "translation_ko": "구사는 그 성대함이 아니면 허물이 없으리라",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L14-5",
+    "hexagram_id": 14,
+    "name_hanja": "大有",
+    "line_number": 5,
+    "source": "六五 厥孚ㅣ 交如ㅣ니 威如ㅣ면 吉리라",
+    "translation_ko": "육오는 그 미더움이 사귐과 같으니, 위엄이 있으면 길하리라.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L14-6",
+    "hexagram_id": 14,
+    "name_hanja": "大有",
+    "line_number": 6,
+    "source": "上九 自天祐之라 吉无不利로다",
+    "translation_ko": "상구는 하늘로부터 도우심을 받으니, 길하여 이롭지 않음이 없다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L15-1",
+    "hexagram_id": 15,
+    "name_hanja": "謙",
+    "line_number": 1,
+    "source": "初六은 謙謙君子ㅣ니 用涉大川이라도 吉니라",
+    "translation_ko": "초육은 겸손하고 또 겸손한 군자이니, 이로써 큰 내를 건너더라도 길하니라.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L15-2",
+    "hexagram_id": 15,
+    "name_hanja": "謙",
+    "line_number": 2,
+    "source": "六二 鳴謙이니 貞코 吉니라",
+    "translation_ko": "육이는 겸손함을 드러내니, 곧게 지키면 길하다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L15-3",
+    "hexagram_id": 15,
+    "name_hanja": "謙",
+    "line_number": 3,
+    "source": "九三은 勞謙이니 君子ㅣ 有終이니 吉니라",
+    "translation_ko": "구삼은 수고로움 속에서 겸손함이니, 군자가 끝을 이루면 길하다.",
+    "modality": "conditional_comm",
+    "evidence": "이미 수고로우면서 겸손할 수 있고 또한 군자가 이를 행하여 마침이 있으면 길하다"
+  },
+  {
+    "id": "L15-4",
+    "hexagram_id": 15,
+    "name_hanja": "謙",
+    "line_number": 4,
+    "source": "六四 无不利撝謙이니라",
+    "translation_ko": "육사는 이롭지 않음이 없으니 겸손함을 펼치는 것이다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L15-5",
+    "hexagram_id": 15,
+    "name_hanja": "謙",
+    "line_number": 5,
+    "source": "六五 不富以其隣이니 利用侵伐이니 无不利리라",
+    "translation_ko": "육오는 부유하지 않으나 그 이웃과 함께하니, 침벌을 행함이 이로우니, 이롭지 않음이 없으리라.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L15-6",
+    "hexagram_id": 15,
+    "name_hanja": "謙",
+    "line_number": 6,
+    "source": "上六은 鳴謙이니 利用行師야 征邑國이니라",
+    "translation_ko": "상육은 울며 겸손함이니, 군대를 행하여 읍국을 정벌하는 데 이롭다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L16-1",
+    "hexagram_id": 16,
+    "name_hanja": "豫",
+    "line_number": 1,
+    "source": "初六은 鳴豫니 凶니라",
+    "translation_ko": "초육은 소리내어 즐거워하니, 흉하다.",
+    "modality": "conditional_comm",
+    "evidence": "초육은 음유로써 아래에 거하고, 사효는 예괘의 주인인데 이에 응하니, 이는 중정하지 못한 소인이 예에 처하여 위에서 총애를 받아, 그 뜻과 생각이 가득 차서 극에 이르러 그 기쁨을 이기지 못하여 소리로 발하는 데에 "
+  },
+  {
+    "id": "L16-2",
+    "hexagram_id": 16,
+    "name_hanja": "豫",
+    "line_number": 2,
+    "source": "六二 介于石이라 不終日이니 貞코 吉니라",
+    "translation_ko": "육이는 돌처럼 굳게 지키니, 하루를 마치지 않는다. 곧게 지키면 길하다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L16-3",
+    "hexagram_id": 16,
+    "name_hanja": "豫",
+    "line_number": 3,
+    "source": "六三은 盱豫ㅣ라 悔며 遲야도 有悔리라",
+    "translation_ko": "육삼은 쳐다보며 즐거워함이니, 뉘우침이 있다. 더디게 하여도 뉘우침이 있을 것이다.",
+    "modality": "conditional_comm",
+    "evidence": "육삼은 음이면서 양에 거하여 치우치지도 않고 바르지도 않은 사람이니, 치우치지도 않고 바르지도 않으면서 예에 처하면 움직임마다 모두 뉘우침이 있다"
+  },
+  {
+    "id": "L16-4",
+    "hexagram_id": 16,
+    "name_hanja": "豫",
+    "line_number": 4,
+    "source": "九四 由豫라 大有得이니 勿疑면 朋이 盍簪리라",
+    "translation_ko": "구사는 豫가 말미암는 바이니, 크게 얻음이 있다. 의심하지 않으면 벗들이 모여들 것이다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L16-5",
+    "hexagram_id": 16,
+    "name_hanja": "豫",
+    "line_number": 5,
+    "source": "六五 貞호 疾나 恒不死ㅣ로다",
+    "translation_ko": "육오는 곧게 지키나 병이 있으니, 항상 죽지는 않는다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L16-6",
+    "hexagram_id": 16,
+    "name_hanja": "豫",
+    "line_number": 6,
+    "source": "上六은 冥豫니 成나 有渝ㅣ면 无咎ㅣ리라",
+    "translation_ko": "상육은 어두운 예이니, 이루어졌으나 바뀜이 있으면 허물이 없으리라",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L17-1",
+    "hexagram_id": 17,
+    "name_hanja": "隨",
+    "line_number": 1,
+    "source": "初九 官有渝ㅣ니 貞이면 吉니 出門交ㅣ면 有功리라",
+    "translation_ko": "초구는 주관하는 바에 변화가 있으니, 곧고 바르면 길하다. 문을 나가 사귀면 공이 있을 것이다.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L17-2",
+    "hexagram_id": 17,
+    "name_hanja": "隨",
+    "line_number": 2,
+    "source": "六二 係小子ㅣ면 失丈夫리라",
+    "translation_ko": "육이가 소자를 묶으면 장부를 잃을 것이다",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L17-3",
+    "hexagram_id": 17,
+    "name_hanja": "隨",
+    "line_number": 3,
+    "source": "六三은 係丈夫고 失小子니 隨에 有求 得나 利居貞니라",
+    "translation_ko": "육삼은 장부에게 묶이고 소자를 잃으니, 隨에서 구함이 있으면 얻으나 곧게 지키며 머무름이 이롭다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L17-4",
+    "hexagram_id": 17,
+    "name_hanja": "隨",
+    "line_number": 4,
+    "source": "九四 隨에 有獲이면 貞이라도 凶니 有孚코 在道코 以明이면 何咎ㅣ리오",
+    "translation_ko": "구사는 隨에 얻음이 있으면 곧게 지켜도 흉하니, 미더움이 있고 도에 있으며 밝음으로써 하면 어찌 허물이 있겠는가.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L17-5",
+    "hexagram_id": 17,
+    "name_hanja": "隨",
+    "line_number": 5,
+    "source": "九五 孚于嘉ㅣ니 吉니라",
+    "translation_ko": "구오는 아름다움에 미더우니 길하다.",
+    "modality": "conditional_comm",
+    "evidence": "구오는 높은 자리에 있으면서 바름을 얻고 치우치지 않으며 안이 가득 차 있으니, 이는 그 안의 정성이 선을 따르는 데 있는 것이니, 그 길함을 알 수 있다"
+  },
+  {
+    "id": "L17-6",
+    "hexagram_id": 17,
+    "name_hanja": "隨",
+    "line_number": 6,
+    "source": "上六은 拘係之오 乃從維之니 王用亨于西山이로다",
+    "translation_ko": "상육은 묶고 매는 것이니, 이에 따라 이를 유지한다. 왕이 서산에서 형통함을 이룬다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L18-1",
+    "hexagram_id": 18,
+    "name_hanja": "蠱",
+    "line_number": 1,
+    "source": "初六은 幹父之蠱ㅣ니 有子ㅣ면 考ㅣ 无咎리니 厲야 終吉이리라",
+    "translation_ko": "초육은 아버지의 蠱를 바로잡으니, 아들이 있으면 아버지가 허물이 없을 것이니, 위태로우나 마침내 길하리라",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L18-2",
+    "hexagram_id": 18,
+    "name_hanja": "蠱",
+    "line_number": 2,
+    "source": "九二 幹母之蠱ㅣ니 不可貞이니라",
+    "translation_ko": "구이는 어머니의 蠱를 바로잡으니, 곧게 지킬 수 없다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L18-3",
+    "hexagram_id": 18,
+    "name_hanja": "蠱",
+    "line_number": 3,
+    "source": "九三은 幹父之蠱ㅣ니 小有悔나 无大咎ㅣ리라",
+    "translation_ko": "구삼은 아버지의 蠱를 바로잡으니, 조금 뉘우침이 있으나 큰 허물은 없으리라",
+    "modality": "conditional_comm",
+    "evidence": "양으로 강한 자리에 있으면서 치우치지 않지 못하니, 강함이 지나친 것이나, 그러나 손(巽)의 몸체에 있어 비록 강함이 지나치나 순함이 없지 않으니, 순함은 어버이를 섬기는 근본이요, 또 자리를 얻어 바르니 그러므로 "
+  },
+  {
+    "id": "L18-4",
+    "hexagram_id": 18,
+    "name_hanja": "蠱",
+    "line_number": 4,
+    "source": "六四 裕父之蠱ㅣ니 往면 見吝리라",
+    "translation_ko": "육사는 아버지의 고를 너그럽게 함이니, 나아가면 부끄러움을 보리라.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L18-5",
+    "hexagram_id": 18,
+    "name_hanja": "蠱",
+    "line_number": 5,
+    "source": "六五 幹父之蠱ㅣ니 用譽리라",
+    "translation_ko": "육오는 아버지의 고를 바로잡으니, 명예를 쓰리라.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L18-6",
+    "hexagram_id": 18,
+    "name_hanja": "蠱",
+    "line_number": 6,
+    "source": "上九 不事王侯고 高尙其事ㅣ로다",
+    "translation_ko": "상구는 왕후를 섬기지 않고 그 일을 높이고 숭상한다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L19-1",
+    "hexagram_id": 19,
+    "name_hanja": "臨",
+    "line_number": 1,
+    "source": "初九 咸臨이니 貞야 吉니라",
+    "translation_ko": "초구는 함께 임하니, 곧게 지키면 길하다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L19-2",
+    "hexagram_id": 19,
+    "name_hanja": "臨",
+    "line_number": 2,
+    "source": "九二 咸臨이니 吉야 无不利리라",
+    "translation_ko": "구이는 함께 임하니, 길하여 이롭지 않음이 없으리라.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L19-3",
+    "hexagram_id": 19,
+    "name_hanja": "臨",
+    "line_number": 3,
+    "source": "六三은 甘臨이라 无攸利니 旣憂之라 无咎ㅣ리라",
+    "translation_ko": "육삼은 달게 임함이니, 이로울 바가 없다. 이미 이를 근심하면 허물이 없으리라.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L19-4",
+    "hexagram_id": 19,
+    "name_hanja": "臨",
+    "line_number": 4,
+    "source": "六四 至臨이니 无咎니라",
+    "translation_ko": "육사는 지극히 임하니, 허물이 없다.",
+    "modality": "conditional_comm",
+    "evidence": "넷째 효는 바른 자리에 있으면서 아래로 강하고 양인 처음 효에 응하고, 임금에게 가까운 자리에 처하여 바름을 지키고 어진 이를 임용하여 아래에 친히 임하니, 이로써 허물이 없으니 처한 바가 마땅하기 때문이다"
+  },
+  {
+    "id": "L19-5",
+    "hexagram_id": 19,
+    "name_hanja": "臨",
+    "line_number": 5,
+    "source": "六五 知臨이니 大君之宜니 吉니라",
+    "translation_ko": "육오는 지혜로 임하니, 대군이 마땅히 할 바이니 길하다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L19-6",
+    "hexagram_id": 19,
+    "name_hanja": "臨",
+    "line_number": 6,
+    "source": "上六은 敦臨이니 吉야 无咎니라",
+    "translation_ko": "상육은 돈독하게 임함이니, 길하고 허물이 없다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L20-1",
+    "hexagram_id": 20,
+    "name_hanja": "觀",
+    "line_number": 1,
+    "source": "初六은 童觀이니 小人은 无咎ㅣ오 君子 吝이리라",
+    "translation_ko": "초육은 아이처럼 보니, 소인은 허물이 없고 군자는 부끄러우리라.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L20-2",
+    "hexagram_id": 20,
+    "name_hanja": "觀",
+    "line_number": 2,
+    "source": "六二 闚觀이니 利女貞니라",
+    "translation_ko": "육이는 엿보는 관찰이니, 여자가 곧게 지키면 이롭다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L20-3",
+    "hexagram_id": 20,
+    "name_hanja": "觀",
+    "line_number": 3,
+    "source": "六三은 觀我生야 進退로다",
+    "translation_ko": "육삼은 나의 생을 관찰하여 나아가고 물러난다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L20-4",
+    "hexagram_id": 20,
+    "name_hanja": "觀",
+    "line_number": 4,
+    "source": "六四 觀國之光이니 利用賓于王니라",
+    "translation_ko": "육사는 나라의 빛을 보니, 왕에게 빈객이 되는 데 쓰면 이롭다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L20-5",
+    "hexagram_id": 20,
+    "name_hanja": "觀",
+    "line_number": 5,
+    "source": "九五 觀我生호 君子ㅣ면 无咎ㅣ리라",
+    "translation_ko": "구오. 나의 생을 살펴보되, 군자이면 허물이 없으리라.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L20-6",
+    "hexagram_id": 20,
+    "name_hanja": "觀",
+    "line_number": 6,
+    "source": "上九 觀其生호 君子ㅣ면 无咎ㅣ리라",
+    "translation_ko": "상구는 그 생을 관찰하니, 군자이면 허물이 없으리라.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L21-1",
+    "hexagram_id": 21,
+    "name_hanja": "噬嗑",
+    "line_number": 1,
+    "source": "初九 屨校야 滅趾니 无咎니라",
+    "translation_ko": "초구는 질곡을 신어 발가락을 없애니 허물이 없다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L21-2",
+    "hexagram_id": 21,
+    "name_hanja": "噬嗑",
+    "line_number": 2,
+    "source": "六二 噬膚호 滅鼻니 无咎니라",
+    "translation_ko": "육이는 살을 물어 코가 잠기니 허물이 없다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L21-3",
+    "hexagram_id": 21,
+    "name_hanja": "噬嗑",
+    "line_number": 3,
+    "source": "六三은 噬腊肉다가 遇毒이니 小吝이나 无咎ㅣ리라",
+    "translation_ko": "육삼은 마른 고기를 씹다가 독을 만나니, 조금 부끄러우나 허물은 없으리라.",
+    "modality": "conditional_comm",
+    "evidence": "형벌을 쓰되 남이 복종하지 않아 도리어 원망과 상함을 이르게 하면 이는 부끄러운 것이다"
+  },
+  {
+    "id": "L21-4",
+    "hexagram_id": 21,
+    "name_hanja": "噬嗑",
+    "line_number": 4,
+    "source": "九四 噬乾胏야 得金矢나 利艱貞니 吉리라",
+    "translation_ko": "구사는 마른 고기를 씹어 쇠화살을 얻으니, 어려움을 곧게 지키면 이로우니 길하리라.",
+    "modality": "conditional_comm",
+    "evidence": "구사는 양의 덕이 강하고 곧아서 강하고 곧은 도를 얻은 것이니, 비록 강하고 곧은 도를 쓰나 이로움은 그 일을 어렵게 여기고 그 지킴을 곧고 굳게 하는 데 있으면 길하다"
+  },
+  {
+    "id": "L21-5",
+    "hexagram_id": 21,
+    "name_hanja": "噬嗑",
+    "line_number": 5,
+    "source": "六五 噬乾肉야 得黃金이니 貞厲ㅣ면 无咎ㅣ리라",
+    "translation_ko": "육오는 마른 고기를 씹어서 누런 쇠를 얻으니, 곧고 바르되 위태로움을 품으면 허물이 없으리라.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L21-6",
+    "hexagram_id": 21,
+    "name_hanja": "噬嗑",
+    "line_number": 6,
+    "source": "上九 何校야 滅耳니 凶토다",
+    "translation_ko": "상구는 칼을 짊어져서 귀가 없어지니 흉하다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L22-1",
+    "hexagram_id": 22,
+    "name_hanja": "賁",
+    "line_number": 1,
+    "source": "初九 賁其趾니 舍車而徒ㅣ로다",
+    "translation_ko": "초구는 그 발을 꾸미니, 수레를 버리고 걸어가는도다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L22-2",
+    "hexagram_id": 22,
+    "name_hanja": "賁",
+    "line_number": 2,
+    "source": "六二 賁其須ㅣ로다",
+    "translation_ko": "육이는 그 수염을 꾸민다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L22-3",
+    "hexagram_id": 22,
+    "name_hanja": "賁",
+    "line_number": 3,
+    "source": "九三은 賁如ㅣ 濡如니 永貞면 吉리라",
+    "translation_ko": "구삼은 빛남이 윤택함이니, 길이 곧게 지키면 길하리라.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L22-4",
+    "hexagram_id": 22,
+    "name_hanja": "賁",
+    "line_number": 4,
+    "source": "六四 賁如ㅣ 皤如며 白馬ㅣ 翰如니 匪寇ㅣ면 婚媾ㅣ리라",
+    "translation_ko": "육사는 꾸밈이 있는 듯하나 희게 되며, 흰 말이 날아가는 듯하니, 도적이 아니면 혼인하리라.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L22-5",
+    "hexagram_id": 22,
+    "name_hanja": "賁",
+    "line_number": 5,
+    "source": "六五 賁于丘園이니 束帛이 戔戔이면 吝나 終吉이리라",
+    "translation_ko": "육오는 언덕과 동산에서 꾸밈을 받으니, 묶은 비단이 잘게 나뉘면 부끄러우나 마침내 길하리라",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L22-6",
+    "hexagram_id": 22,
+    "name_hanja": "賁",
+    "line_number": 6,
+    "source": "上九 白賁면 无咎ㅣ리라",
+    "translation_ko": "상구는 흰 꾸밈이면 허물이 없으리라",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L23-1",
+    "hexagram_id": 23,
+    "name_hanja": "剝",
+    "line_number": 1,
+    "source": "初六은 剝牀以足이니 蔑貞이라 凶토다",
+    "translation_ko": "초육은 침상을 발부터 벗겨내니, 곧고 바름을 없애는 것이라 흉하다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L23-2",
+    "hexagram_id": 23,
+    "name_hanja": "剝",
+    "line_number": 2,
+    "source": "六二 剝牀以辨이니 蔑貞이라 凶토다",
+    "translation_ko": "육이는 평상을 벗겨 변에 이르니, 곧음을 멸시함이라. 흉하도다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L23-3",
+    "hexagram_id": 23,
+    "name_hanja": "剝",
+    "line_number": 3,
+    "source": "六三은 剝之无咎ㅣ니라",
+    "translation_ko": "육삼은 벗겨짐에서 벗어나 허물이 없다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L23-4",
+    "hexagram_id": 23,
+    "name_hanja": "剝",
+    "line_number": 4,
+    "source": "六四 剝牀以膚ㅣ니 凶니라",
+    "translation_ko": "육사는 침상을 벗겨 살갗에 이르니, 흉하다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L23-5",
+    "hexagram_id": 23,
+    "name_hanja": "剝",
+    "line_number": 5,
+    "source": "六五 貫魚야 以宮人寵이면 无不利리라",
+    "translation_ko": "육오는 물고기를 꿰듯이 하여 궁인의 총애로써 하면 이롭지 않음이 없으리라",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L23-6",
+    "hexagram_id": 23,
+    "name_hanja": "剝",
+    "line_number": 6,
+    "source": "上九 碩果不食이니 君子 得輿고 小人은 剝廬ㅣ리라",
+    "translation_ko": "상구는 큰 과실을 먹지 않으니, 군자는 수레를 얻고 소인은 집을 벗긴다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L24-1",
+    "hexagram_id": 24,
+    "name_hanja": "復",
+    "line_number": 1,
+    "source": "初九 不遠復이라 无祗悔니 元吉니라",
+    "translation_ko": "초구는 멀리 가지 않아 돌아오니, 뉘우침에 이르지 않아 크게 길하다.",
+    "modality": "conditional_comm",
+    "evidence": "이미 힘쓰지 않고도 중을 얻지 못하고, 하고자 하는 바가 법도를 넘지 않지 못하면 이것은 허물이 있는 것이나, 그러나 그가 밝고 강하므로 한 번 불선함이 있으면 일찍이 알지 못함이 없고, 이미 알면 일찍이 곧바로 고"
+  },
+  {
+    "id": "L24-2",
+    "hexagram_id": 24,
+    "name_hanja": "復",
+    "line_number": 2,
+    "source": "六二 休復이니 吉니라",
+    "translation_ko": "육이는 아름답게 돌아오니 길하다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L24-3",
+    "hexagram_id": 24,
+    "name_hanja": "復",
+    "line_number": 3,
+    "source": "六三은 頻復이니 厲나 无咎ㅣ리라",
+    "translation_ko": "육삼은 자주 돌아옴이니, 위태로우나 허물이 없으리라",
+    "modality": "conditional_comm",
+    "evidence": "자주 잃으면 위태로우나, 여러 번 돌아옴이 어찌 허물이 되겠는가"
+  },
+  {
+    "id": "L24-4",
+    "hexagram_id": 24,
+    "name_hanja": "復",
+    "line_number": 4,
+    "source": "六四 中行호 獨復이로다",
+    "translation_ko": "육사는 무리 가운데 행하되 홀로 돌아온다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L24-5",
+    "hexagram_id": 24,
+    "name_hanja": "復",
+    "line_number": 5,
+    "source": "六五 敦復이니 无悔니라",
+    "translation_ko": "육오는 돈독하게 복하니, 뉘우침이 없다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L24-6",
+    "hexagram_id": 24,
+    "name_hanja": "復",
+    "line_number": 6,
+    "source": "上六은 迷復이라 凶니 有災眚야 用行師ㅣ면 終有大敗고 以其國이면 君이 凶야 至于十年히 不克征리라",
+    "translation_ko": "상육은 미혹하여 돌아오는 것이니 흉하다. 재앙과 허물이 있어서 군대를 행하는 데 쓰면 마침내 큰 패배가 있고, 그 나라를 다스리는 데 쓰면 임금이 흉하여 십 년에 이르도록 정벌하지 못할 것이다.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L25-1",
+    "hexagram_id": 25,
+    "name_hanja": "无妄",
+    "line_number": 1,
+    "source": "初九 无妄이니 往애 吉리라",
+    "translation_ko": "초구는 거짓 없음이니, 나아가면 길하리라.",
+    "modality": "conditional_comm",
+    "evidence": "괘사(卦辭)에서 '나아갈 바가 있으면 이롭지 않다'고 말한 것은 이미 무망(无妄)하면 다시 나아감이 있을 수 없음을 이른 것이니, 지나치면 망령됨이요, 효(爻)에서 '나아가면 길하다'고 말한 것은 무망(无妄)의 도로"
+  },
+  {
+    "id": "L25-2",
+    "hexagram_id": 25,
+    "name_hanja": "无妄",
+    "line_number": 2,
+    "source": "六二 不耕야 穫며 不菑야 畬ㅣ니 則利有攸往니라",
+    "translation_ko": "육이는 밭을 갈지 않고 거두며, 처음 개간하지 않고 삼 년 묵은 밭을 얻으니, 곧 나아갈 바가 있으면 이롭다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L25-3",
+    "hexagram_id": 25,
+    "name_hanja": "无妄",
+    "line_number": 3,
+    "source": "六三은 无妄之災니 或繫之牛나 行人之得이 邑人之災로다",
+    "translation_ko": "육삼은 무망의 재앙이니, 혹 소를 매어두었으나 가는 사람이 얻음이 마을 사람의 재앙이로다",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L25-4",
+    "hexagram_id": 25,
+    "name_hanja": "无妄",
+    "line_number": 4,
+    "source": "九四 可貞이니 无咎ㅣ리라",
+    "translation_ko": "구사는 곧게 지킬 만하니 허물이 없으리라",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L25-5",
+    "hexagram_id": 25,
+    "name_hanja": "无妄",
+    "line_number": 5,
+    "source": "九五 无妄之疾은 勿藥이면 有喜리라",
+    "translation_ko": "구오는 无妄의 병이니, 약을 쓰지 않으면 기쁨이 있을 것이다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L25-6",
+    "hexagram_id": 25,
+    "name_hanja": "无妄",
+    "line_number": 6,
+    "source": "上九 无妄애 行이면 有眚야 无攸利니라",
+    "translation_ko": "상구는 무망함에 행하면 재앙이 있고, 이로울 바가 없다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L26-1",
+    "hexagram_id": 26,
+    "name_hanja": "大畜",
+    "line_number": 1,
+    "source": "初九 有厲ㅣ리니 利已니라",
+    "translation_ko": "초구는 위태로움이 있으니, 그치면 이롭다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L26-2",
+    "hexagram_id": 26,
+    "name_hanja": "大畜",
+    "line_number": 2,
+    "source": "九二 輿說(脫)輹이로다",
+    "translation_ko": "구이는 수레가 복(輹)을 벗긴다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L26-3",
+    "hexagram_id": 26,
+    "name_hanja": "大畜",
+    "line_number": 3,
+    "source": "九三은 良馬逐이니 利艱貞니 曰閑輿衛면 利有攸往리라",
+    "translation_ko": "구삼은 좋은 말이 달려가니, 어렵게 여기고 곧게 지키면 이롭다. 날마다 수레와 방위를 익히면 나아갈 바가 있음이 이롭다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L26-4",
+    "hexagram_id": 26,
+    "name_hanja": "大畜",
+    "line_number": 4,
+    "source": "六四 童牛之牿이니 元吉니라",
+    "translation_ko": "육사는 어린 소의 멍에이니, 크게 길하다.",
+    "modality": "conditional_comm",
+    "evidence": "그러므로 위의 악함이 이미 심하면 비록 성인이 구제하더라도 어기고 거스름을 면할 수 없고, 아래의 악함이 이미 심하면 비록 성인이 다스리더라도 형벌과 죽임을 면할 수 없으니, 처음에 그치게 하는 것만 같지 못하니, "
+  },
+  {
+    "id": "L26-5",
+    "hexagram_id": 26,
+    "name_hanja": "大畜",
+    "line_number": 5,
+    "source": "六五 豶豕之牙ㅣ니 吉니라",
+    "translation_ko": "육오는 거세한 돼지의 어금니이니, 길하다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L26-6",
+    "hexagram_id": 26,
+    "name_hanja": "大畜",
+    "line_number": 6,
+    "source": "上九 (何)天之衢ㅣ니 亨니라",
+    "translation_ko": "상구, 하늘의 네거리이니 형통하다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L27-1",
+    "hexagram_id": 27,
+    "name_hanja": "頤",
+    "line_number": 1,
+    "source": "初九 舍爾靈龜고 觀我야 朶頤니 凶니라",
+    "translation_ko": "초구. 너의 신령한 거북을 버리고 나를 보아 턱을 늘어뜨리니 흉하다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L27-2",
+    "hexagram_id": 27,
+    "name_hanja": "頤",
+    "line_number": 2,
+    "source": "六二 顚頤라 拂經이니 于丘에 頤야 征면 凶리라",
+    "translation_ko": "육이는 거꾸로 기름이니, 경상을 어기는 것이다. 언덕에서 기르면 나아가면 흉하리라.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L27-3",
+    "hexagram_id": 27,
+    "name_hanja": "頤",
+    "line_number": 3,
+    "source": "六三은 拂頤貞이라 凶야 十年勿用이라 无攸利니라",
+    "translation_ko": "육삼은 이를 거스르되 곧게 지키면 흉하니, 십 년 동안 쓰지 말라. 이로운 바가 없다.",
+    "modality": "conditional_comm",
+    "evidence": "이(頤)의 바름을 얻으면 기르는 바가 모두 길하여, 기름을 구하고 사람을 기르면 의(義)에 합하고, 스스로를 기르면 그 덕을 이루거늘, 삼(三)은 바른 도를 거스르고 어긋나므로 경계하여 십 년 동안 쓰지 말라고 한 "
+  },
+  {
+    "id": "L27-4",
+    "hexagram_id": 27,
+    "name_hanja": "頤",
+    "line_number": 4,
+    "source": "六四 顚頤나 吉니 虎視耽耽며 其欲逐逐면 无咎ㅣ리라",
+    "translation_ko": "육사는 거꾸로 기름이니 길하다. 호랑이가 보듯 탐탐하며 그 욕구가 축축하면 허물이 없으리라.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L27-5",
+    "hexagram_id": 27,
+    "name_hanja": "頤",
+    "line_number": 5,
+    "source": "六五 拂經이나 居貞면 吉려니와 不可涉大川이니라",
+    "translation_ko": "육오는 경상을 거스르나 곧게 지키면 길하리니, 큰 내를 건너서는 안 된다.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L27-6",
+    "hexagram_id": 27,
+    "name_hanja": "頤",
+    "line_number": 6,
+    "source": "上九 由頤니 厲면 吉니 利涉大川니라",
+    "translation_ko": "상구는 頤를 말미암으니, 위태로우면 길하니, 큰 내를 건너는 것이 이롭다.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L28-1",
+    "hexagram_id": 28,
+    "name_hanja": "大過",
+    "line_number": 1,
+    "source": "初六은 藉用白茅ㅣ니 无咎니라",
+    "translation_ko": "초육은 흰 띠풀을 깔아 쓰니 허물이 없다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L28-2",
+    "hexagram_id": 28,
+    "name_hanja": "大過",
+    "line_number": 2,
+    "source": "九二 枯楊이 生稊며 老夫ㅣ 得其女妻ㅣ니 无不利니라",
+    "translation_ko": "구이는 마른 버드나무가 뿌리를 내고, 늙은 남편이 그 젊은 아내를 얻으니, 이롭지 않음이 없다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L28-3",
+    "hexagram_id": 28,
+    "name_hanja": "大過",
+    "line_number": 3,
+    "source": "九三은 棟ㅣ 橈ㅣ니 凶니라",
+    "translation_ko": "구삼은 마룻대가 휘니 흉하다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L28-4",
+    "hexagram_id": 28,
+    "name_hanja": "大過",
+    "line_number": 4,
+    "source": "九四 棟隆이니 吉커니와 有它ㅣ면 吝리라",
+    "translation_ko": "구사는 동이 융기하니 길하거니와, 다른 것이 있으면 부끄러울 것이다.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L28-5",
+    "hexagram_id": 28,
+    "name_hanja": "大過",
+    "line_number": 5,
+    "source": "九五 枯楊이 生華며 老婦ㅣ 得其士夫ㅣ니 无咎ㅣ나 无譽리라",
+    "translation_ko": "구오. 마른 버드나무가 꽃을 피우며, 늙은 부인이 그 젊은 남자를 얻으니, 허물은 없으나 명예도 없을 것이다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L28-6",
+    "hexagram_id": 28,
+    "name_hanja": "大過",
+    "line_number": 6,
+    "source": "上六은 過涉滅頂이라 凶니 无咎니라",
+    "translation_ko": "상육은 지나치게 건너서 정수리가 잠기니, 흉하나 허물이 없다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L29-1",
+    "hexagram_id": 29,
+    "name_hanja": "坎",
+    "line_number": 1,
+    "source": "初六은 習坎애 入于坎窞이니 凶니라",
+    "translation_ko": "초육은 거듭된 구덩이에서 구덩이의 깊은 곳으로 들어가니 흉하다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L29-2",
+    "hexagram_id": 29,
+    "name_hanja": "坎",
+    "line_number": 2,
+    "source": "九二 坎애 有險나 求 小得리라",
+    "translation_ko": "구이는 감에 험함이 있으나, 구하면 조금 얻으리라.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L29-3",
+    "hexagram_id": 29,
+    "name_hanja": "坎",
+    "line_number": 3,
+    "source": "六三은 來之예 坎坎며 險애 且枕야 入于坎窞이니 勿用이니라",
+    "translation_ko": "육삼은 오고 가는 데 거듭 구덩이이며, 험함에 또 기대어 구덩이 구렁에 들어가니, 쓰지 말아야 한다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L29-4",
+    "hexagram_id": 29,
+    "name_hanja": "坎",
+    "line_number": 4,
+    "source": "六四 樽酒와 簋貳를 用缶고 納約自牖ㅣ면 終无咎리라",
+    "translation_ko": "육사는 한 동이의 술과 두 그릇의 음식을 질그릇을 사용하고, 약속을 창으로부터 들여놓으면 마침내 허물이 없으리라.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L29-5",
+    "hexagram_id": 29,
+    "name_hanja": "坎",
+    "line_number": 5,
+    "source": "九五 坎不盈이니 祗旣平면 无咎ㅣ리라",
+    "translation_ko": "구오는 감이 차지 않으니, 오직 이미 평평해지면 허물이 없으리라.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L29-6",
+    "hexagram_id": 29,
+    "name_hanja": "坎",
+    "line_number": 6,
+    "source": "上六은 係用徽纆야 寘于叢棘야 三歲라도 不得이니 凶니라",
+    "translation_ko": "상육은 굵은 밧줄과 검은 밧줄로 묶여서 가시덤불 속에 두어지니, 삼 년이 되어도 벗어나지 못하니 흉하다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L30-1",
+    "hexagram_id": 30,
+    "name_hanja": "離",
+    "line_number": 1,
+    "source": "初九 履ㅣ 錯然니 敬之면 无咎ㅣ리라",
+    "translation_ko": "초구는 밟음이 착연하니, 공경하면 허물이 없으리라.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L30-2",
+    "hexagram_id": 30,
+    "name_hanja": "離",
+    "line_number": 2,
+    "source": "六二 黃離니 元吉니라",
+    "translation_ko": "육이는 누런 離이니, 크게 길하다.",
+    "modality": "conditional_comm",
+    "evidence": "문명하고 치우치지 않으며 바른 덕으로써 위로 문명하고 치우치지 않으며 순한 임금과 같아지니, 그 밝음이 이와 같고 붙은 바가 이와 같으면 크게 좋은 길함이다"
+  },
+  {
+    "id": "L30-3",
+    "hexagram_id": 30,
+    "name_hanja": "離",
+    "line_number": 3,
+    "source": "九三은 日昃之離니 不鼓缶而歌ㅣ면 則大耋之嗟ㅣ라 凶리라",
+    "translation_ko": "구삼은 해가 기울 때의 離이니, 질그릇을 두드리며 노래하지 않으면 크게 늙음을 탄식함이라. 흉하리라.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L30-4",
+    "hexagram_id": 30,
+    "name_hanja": "離",
+    "line_number": 4,
+    "source": "九四 突如其來如ㅣ라 焚如ㅣ니 死如ㅣ며 棄如ㅣ니라",
+    "translation_ko": "구사. 갑자기 그 오는 것이 불타는 듯하니, 죽는 듯하며 버려지는 듯하다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L30-5",
+    "hexagram_id": 30,
+    "name_hanja": "離",
+    "line_number": 5,
+    "source": "六五 出涕沱若며 戚嗟若이니 吉리라",
+    "translation_ko": "육오는 눈물을 흘리며 탄식하니 길하리라.",
+    "modality": "conditional_comm",
+    "evidence": "높은 자리에 있으면서 문명하고, 근심하고 두려워함을 이와 같이 알기 때문에 길함을 얻는다"
+  },
+  {
+    "id": "L30-6",
+    "hexagram_id": 30,
+    "name_hanja": "離",
+    "line_number": 6,
+    "source": "上九 王用出征이면 有嘉ㅣ니 折首코 獲匪其醜ㅣ면 无咎ㅣ리라",
+    "translation_ko": "상구는 왕이 출정함에 쓰면 아름다움이 있으니, 머리를 꺾고 그 무리가 아닌 자를 사로잡으면 허물이 없으리라",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L31-1",
+    "hexagram_id": 31,
+    "name_hanja": "咸",
+    "line_number": 1,
+    "source": "初六은 咸其拇ㅣ라",
+    "translation_ko": "초육은 그 엄지발가락이 감응함이다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L31-2",
+    "hexagram_id": 31,
+    "name_hanja": "咸",
+    "line_number": 2,
+    "source": "六二 咸其腓면 凶니 居면 吉리라",
+    "translation_ko": "육이는 그 종아리를 감응시키면 흉하니, 머물면 길할 것이다.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L31-3",
+    "hexagram_id": 31,
+    "name_hanja": "咸",
+    "line_number": 3,
+    "source": "九三은 咸其股ㅣ라 執其隨ㅣ니 往면 吝리라",
+    "translation_ko": "구삼은 그 넓적다리가 감응함이라. 그 따름을 잡으니, 나아가면 부끄러우리라.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L31-4",
+    "hexagram_id": 31,
+    "name_hanja": "咸",
+    "line_number": 4,
+    "source": "九四 貞이면 吉야 悔ㅣ 亡리니 憧憧往來면 朋從爾思ㅣ리라",
+    "translation_ko": "구사는 곧고 바르면 길하고 뉘우침이 없어질 것이니, 왕래함이 흔들리면 벗이 너의 생각을 따를 것이다.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L31-5",
+    "hexagram_id": 31,
+    "name_hanja": "咸",
+    "line_number": 5,
+    "source": "九五 咸其脢니 无悔리라",
+    "translation_ko": "구오는 그 등살에 감응하니, 뉘우침이 없으리라.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L31-6",
+    "hexagram_id": 31,
+    "name_hanja": "咸",
+    "line_number": 6,
+    "source": "上六은 咸其輔頰舌이라",
+    "translation_ko": "상육은 그 턱과 뺨과 혀를 감응시킨다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L32-1",
+    "hexagram_id": 32,
+    "name_hanja": "恒",
+    "line_number": 1,
+    "source": "初六은 浚恒이라 貞야 凶니 无攸利니라",
+    "translation_ko": "초육은 恒을 깊이 구함이니, 곧게 지켜도 흉하여 이로운 바가 없다.",
+    "modality": "conditional_comm",
+    "evidence": "뜻이 이미 위로 구하기를 깊이 하면, 이는 떳떳하게 그 처지에 편안히 있지 못하는 것이요, 부드럽고 미약하면서 떳떳하게 그 처지에 편안히 있지 못하는 것도 또한 흉함을 이르는 도이다"
+  },
+  {
+    "id": "L32-2",
+    "hexagram_id": 32,
+    "name_hanja": "恒",
+    "line_number": 2,
+    "source": "九二 悔ㅣ 亡리라",
+    "translation_ko": "구이는 뉘우침이 없어진다.",
+    "modality": "conditional_comm",
+    "evidence": "떳떳함이 아닌 곳에 처하면 본래 마땅히 뉘우침이 있어야 하나, 구이(九二)는 치우치지 않은 덕으로 오(五)에 응하고, 오(五)는 또 가운데에 있어 치우치지 않음으로써 치우치지 않음에 응하니, 그 처함과 움직임이 모두"
+  },
+  {
+    "id": "L32-3",
+    "hexagram_id": 32,
+    "name_hanja": "恒",
+    "line_number": 3,
+    "source": "九三은 不恒其德이라 或承之羞ㅣ니 貞이면 吝리라",
+    "translation_ko": "구삼은 그 덕을 항상되게 하지 못하니, 혹 부끄러움이 이어지리니, 곧게 지키면 부끄러우리라.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L32-4",
+    "hexagram_id": 32,
+    "name_hanja": "恒",
+    "line_number": 4,
+    "source": "九四 田无禽이라",
+    "translation_ko": "구사는 사냥하되 짐승이 없다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L32-5",
+    "hexagram_id": 32,
+    "name_hanja": "恒",
+    "line_number": 5,
+    "source": "六五 恒其德이면 貞니 婦人은 吉코 夫子 凶니라",
+    "translation_ko": "육오는 그 덕을 항구히 하면 곧으니, 부인은 길하고 부자는 흉하다.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L32-6",
+    "hexagram_id": 32,
+    "name_hanja": "恒",
+    "line_number": 6,
+    "source": "上六은 振恒이니 凶니라",
+    "translation_ko": "상육은 진항이니 흉하다.",
+    "modality": "conditional_comm",
+    "evidence": "위에 있으면서 그 움직임에 절도가 없어, 이것으로써 항을 삼으면 그 흉함이 마땅하다"
+  },
+  {
+    "id": "L33-1",
+    "hexagram_id": 33,
+    "name_hanja": "遯",
+    "line_number": 1,
+    "source": "初六은 遯尾라 厲니 勿用有攸往이니라",
+    "translation_ko": "초육은 遯의 꼬리이니 위태로우니 나아가는 바가 있음을 쓰지 말아야 한다.",
+    "modality": "conditional_comm",
+    "evidence": "물러나면서 뒤에 있으면 미치지 못하는 자이니, 이 때문에 위태롭다"
+  },
+  {
+    "id": "L33-2",
+    "hexagram_id": 33,
+    "name_hanja": "遯",
+    "line_number": 2,
+    "source": "六二 執之用黃牛之革이라 莫之勝說이니라",
+    "translation_ko": "육이는 그것을 잡되 누런 소의 가죽으로 하니, 그것을 벗겨내어 이기지 못한다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L33-3",
+    "hexagram_id": 33,
+    "name_hanja": "遯",
+    "line_number": 3,
+    "source": "九三은 係遯이라 有疾야 厲니 畜臣妾애 吉니라",
+    "translation_ko": "구삼은 묶여서 물러남이니, 병이 있어 위태로우니, 신첩을 기르면 길하니라",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L33-4",
+    "hexagram_id": 33,
+    "name_hanja": "遯",
+    "line_number": 4,
+    "source": "九四 好遯이니 君子 吉코 小人은 否니라",
+    "translation_ko": "구사는 좋아하는 것이 있으나 물러남이니, 군자는 길하고 소인은 좋지 못하다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L33-5",
+    "hexagram_id": 33,
+    "name_hanja": "遯",
+    "line_number": 5,
+    "source": "九五 嘉遯이니 貞야 吉니라",
+    "translation_ko": "구오, 아름다운 물러남이니, 곧게 지키면 길하다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L33-6",
+    "hexagram_id": 33,
+    "name_hanja": "遯",
+    "line_number": 6,
+    "source": "上九 肥遯이니 无不利니라",
+    "translation_ko": "상구는 살찐 물러남이니, 이롭지 않음이 없다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L34-1",
+    "hexagram_id": 34,
+    "name_hanja": "大壯",
+    "line_number": 1,
+    "source": "初九 壯于趾니 征면 凶이 有孚ㅣ리라",
+    "translation_ko": "초구는 발에서 장성함이니, 나아가면 흉함이 미더우리라.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L34-2",
+    "hexagram_id": 34,
+    "name_hanja": "大壯",
+    "line_number": 2,
+    "source": "九二 貞야 吉니라",
+    "translation_ko": "구이는 곧게 지키면 길하다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L34-3",
+    "hexagram_id": 34,
+    "name_hanja": "大壯",
+    "line_number": 3,
+    "source": "九三은 小人은 用壯이오 君子 用罔이니 貞이면 厲니 羝羊이 觸藩야 羸其角이로다",
+    "translation_ko": "구삼은 소인은 강함을 쓰고 군자는 없음을 쓰니 곧게 지키면 위태로우니 수양이 울타리를 들이받아 그 뿔이 걸리느니라",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L34-4",
+    "hexagram_id": 34,
+    "name_hanja": "大壯",
+    "line_number": 4,
+    "source": "九四 貞이면 吉야 悔ㅣ 亡리니 藩決不羸며 壯于大輿之輹이로다",
+    "translation_ko": "구사는 곧고 바르면 길하여 뉘우침이 없어질 것이니, 울타리가 터져 막힘이 없으며 큰 수레의 바퀴살에 장성함이로다",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L34-5",
+    "hexagram_id": 34,
+    "name_hanja": "大壯",
+    "line_number": 5,
+    "source": "六五 喪羊于易면 无悔리라",
+    "translation_ko": "육오는 양을 평이함에서 잃으면 뉘우침이 없으리라",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L34-6",
+    "hexagram_id": 34,
+    "name_hanja": "大壯",
+    "line_number": 6,
+    "source": "上六은 羝羊이 觸藩야 不能退며 不能遂야 无攸利니 艱則吉리라",
+    "translation_ko": "상육은 숫양이 울타리를 들이받아 물러날 수도 없고 나아갈 수도 없어 이로운 바가 없으니, 어려움을 알면 길하리라",
+    "modality": "conditional_text",
+    "evidence": "則"
+  },
+  {
+    "id": "L35-1",
+    "hexagram_id": 35,
+    "name_hanja": "晉",
+    "line_number": 1,
+    "source": "初六은 晉如摧如에 貞이면 吉고 罔孚ㅣ라도 裕ㅣ면 无咎ㅣ리라",
+    "translation_ko": "초육은 나아가려 하나 꺾이는 듯하니, 곧게 지키면 길하고, 미더움이 없더라도 너그러우면 허물이 없으리라",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L35-2",
+    "hexagram_id": 35,
+    "name_hanja": "晉",
+    "line_number": 2,
+    "source": "六二 晉如ㅣ 愁如ㅣ나 貞이면 吉리니 受玆介福于其王母ㅣ리라",
+    "translation_ko": "육이는 나아가려 하나 근심스러우니, 곧게 지키면 길하리라. 이 큰 복을 그 왕모로부터 받으리라.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L35-3",
+    "hexagram_id": 35,
+    "name_hanja": "晉",
+    "line_number": 3,
+    "source": "六三은 衆允이라 悔ㅣ 亡니라",
+    "translation_ko": "육삼은 무리가 미더워하니 뉘우침이 없어진다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L35-4",
+    "hexagram_id": 35,
+    "name_hanja": "晉",
+    "line_number": 4,
+    "source": "九四 晉如ㅣ 鼫鼠ㅣ니 貞이면 厲리라",
+    "translation_ko": "구사는 나아감이 석서(鼫鼠)와 같으니, 곧게 지키면 위태롭다.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L35-5",
+    "hexagram_id": 35,
+    "name_hanja": "晉",
+    "line_number": 5,
+    "source": "六五 悔ㅣ 亡란 失得을 勿恤이니 往애 吉야 无不利리라",
+    "translation_ko": "육오는 뉘우침이 없어진다. 잃고 얻음을 염려하지 말라. 나아가면 길하여 이롭지 않음이 없을 것이다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L35-6",
+    "hexagram_id": 35,
+    "name_hanja": "晉",
+    "line_number": 6,
+    "source": "上九 晉其角이니 維用伐邑이면 厲나 吉코 无咎ㅣ어니와 貞엔 吝니라",
+    "translation_ko": "상구는 그 뿔로 나아가니, 오직 읍을 치는 데 쓰면 위태로우나 길하고 허물이 없으나, 곧게 지키면 부끄러움이 있다.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L36-1",
+    "hexagram_id": 36,
+    "name_hanja": "明夷",
+    "line_number": 1,
+    "source": "初九 明夷于飛예 垂其翼이니 君子于行애 三日不食야 有攸往애 主人이 有言이로다",
+    "translation_ko": "초구. 밝음이 상하여 날 때에 그 날개를 드리우니, 군자가 감에 사흘을 먹지 않는다. 나아갈 바가 있음에 주인이 말이 있다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L36-2",
+    "hexagram_id": 36,
+    "name_hanja": "明夷",
+    "line_number": 2,
+    "source": "六二 明夷예 夷于左股ㅣ니 用拯馬ㅣ 壯면 吉리라",
+    "translation_ko": "육이는 명이에 왼쪽 넓적다리를 다쳤으니, 구원함에 말이 씩씩하면 길하리라.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L36-3",
+    "hexagram_id": 36,
+    "name_hanja": "明夷",
+    "line_number": 3,
+    "source": "九三은 明夷于南狩야 得其大首ㅣ니 不可疾貞이니라",
+    "translation_ko": "구삼은 남쪽으로 사냥하여 밝음이 상함에 그 큰 머리를 얻으니, 급히 바르게 할 수 없다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L36-4",
+    "hexagram_id": 36,
+    "name_hanja": "明夷",
+    "line_number": 4,
+    "source": "六四 入于左腹야 獲明夷之心야 于出門庭이로다",
+    "translation_ko": "육사는 왼쪽 배로 들어가서 명이의 마음을 얻어 문정으로 나아간다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L36-5",
+    "hexagram_id": 36,
+    "name_hanja": "明夷",
+    "line_number": 5,
+    "source": "六五 箕子之明夷니 利貞니라",
+    "translation_ko": "육오는 기자의 명이이니, 곧게 지키면 이롭다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L36-6",
+    "hexagram_id": 36,
+    "name_hanja": "明夷",
+    "line_number": 6,
+    "source": "上六은 不明야 晦니 初登于天고 後入于地로다",
+    "translation_ko": "상육은 밝지 못하여 어두우니, 처음에는 하늘에 올랐다가 뒤에는 땅으로 들어간다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L37-1",
+    "hexagram_id": 37,
+    "name_hanja": "家人",
+    "line_number": 1,
+    "source": "初九 閑有家ㅣ면 悔ㅣ 亡리라",
+    "translation_ko": "초구는 집안을 막으면 뉘우침이 없어진다.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L37-2",
+    "hexagram_id": 37,
+    "name_hanja": "家人",
+    "line_number": 2,
+    "source": "六二 无攸遂ㅣ오 在中饋면 貞吉리라",
+    "translation_ko": "육이는 나아가 이룰 바가 없으니, 안에서 음식을 맡으면 곧게 지켜 길하리라.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L37-3",
+    "hexagram_id": 37,
+    "name_hanja": "家人",
+    "line_number": 3,
+    "source": "九三은 家人이 嗃嗃니 悔厲ㅣ나 吉니 婦子ㅣ 嘻嘻면 終吝리라",
+    "translation_ko": "구삼은 집안사람들이 엄격하니 뉘우치고 위태로우나 길하고, 부인과 자식이 희희낙락하면 마침내 부끄러움이 있으리라",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L37-4",
+    "hexagram_id": 37,
+    "name_hanja": "家人",
+    "line_number": 4,
+    "source": "六四 富家ㅣ니 大吉니라",
+    "translation_ko": "육사는 집을 부유하게 하니, 크게 길하다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L37-5",
+    "hexagram_id": 37,
+    "name_hanja": "家人",
+    "line_number": 5,
+    "source": "九五 王假有家ㅣ니 勿恤야 吉리라",
+    "translation_ko": "구오는 왕이 집안을 가지는 데 이르니, 근심하지 말면 길하리라.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L37-6",
+    "hexagram_id": 37,
+    "name_hanja": "家人",
+    "line_number": 6,
+    "source": "上九 有孚코 威如ㅣ면 終吉리라",
+    "translation_ko": "상구는 미더움이 있고 위엄스러우면 마침내 길하리라",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L38-1",
+    "hexagram_id": 38,
+    "name_hanja": "睽",
+    "line_number": 1,
+    "source": "初九 悔ㅣ 亡니 喪馬고 勿逐야도 自復이니 見惡人면 无咎ㅣ리라",
+    "translation_ko": "초구는 뉘우침이 없어진다. 말을 잃었으나 쫓지 않아도 스스로 돌아온다. 악인을 만나면 허물이 없을 것이다.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L38-2",
+    "hexagram_id": 38,
+    "name_hanja": "睽",
+    "line_number": 2,
+    "source": "九二 遇主于巷면 无咎ㅣ리라",
+    "translation_ko": "구이는 주인을 골목에서 만나면 허물이 없으리라.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L38-3",
+    "hexagram_id": 38,
+    "name_hanja": "睽",
+    "line_number": 3,
+    "source": "六三은 見輿曳코 其牛ㅣ 掣ㅣ며 其人이 天且劓니 无初코 有終이리라",
+    "translation_ko": "육삼은 수레가 끌리는 것을 보고, 그 소가 잡아당겨지며, 그 사람이 이마에 먹칠하고 코가 베어지니, 처음은 없으나 마침내 끝이 있으리라.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L38-4",
+    "hexagram_id": 38,
+    "name_hanja": "睽",
+    "line_number": 4,
+    "source": "九四 睽孤야 遇元夫야 交孚ㅣ니 厲나 无咎ㅣ리라",
+    "translation_ko": "구사는 어긋남에 외로우나, 으뜸 남편을 만나 서로 미더우니, 위태로우나 허물이 없으리라.",
+    "modality": "conditional_comm",
+    "evidence": "위아래 두 양이 지성으로써 서로 합하면 어느 때인들 행할 수 없으며, 어느 위태로움인들 건널 수 없겠는가"
+  },
+  {
+    "id": "L38-5",
+    "hexagram_id": 38,
+    "name_hanja": "睽",
+    "line_number": 5,
+    "source": "六五 悔亡니 厥宗이 噬膚ㅣ면 往애 何咎ㅣ리오",
+    "translation_ko": "육오. 뉘우침이 없어진다. 그 종족이 살을 물어뜯으면 나아가는 데 무슨 허물이 있겠는가.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L38-6",
+    "hexagram_id": 38,
+    "name_hanja": "睽",
+    "line_number": 6,
+    "source": "上九 睽孤야 見豕負塗와 載鬼一車ㅣ라 先張之弧ㅣ라가 後說之弧야 匪寇ㅣ라 婚媾ㅣ니 往遇雨면 則吉리라",
+    "translation_ko": "상구는 어긋남이 외로우니, 돼지가 진흙을 등에 진 것을 보며 귀신을 한 수레에 실은 것을 보는 것이다. 먼저 활을 당기다가 뒤에 활을 벗기니, 도적이 아니라 혼인하는 이이니, 나아가 비를 만나면 곧 길하리라.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L39-1",
+    "hexagram_id": 39,
+    "name_hanja": "蹇",
+    "line_number": 1,
+    "source": "初六은 往면 蹇코 來면 譽리라",
+    "translation_ko": "초육은 나아가면 곤궁하고 오면 명예로우리라",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L39-2",
+    "hexagram_id": 39,
+    "name_hanja": "蹇",
+    "line_number": 2,
+    "source": "六二 王臣蹇蹇이 匪躬之故ㅣ라",
+    "translation_ko": "육이는 왕의 신하가 거듭 곤궁함이니, 자기 몸의 까닭이 아니다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L39-3",
+    "hexagram_id": 39,
+    "name_hanja": "蹇",
+    "line_number": 3,
+    "source": "九三은 往면 蹇코 來면 反이리라",
+    "translation_ko": "구삼은 나아가면 곤궁하고 돌아오면 돌아옴이리라",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L39-4",
+    "hexagram_id": 39,
+    "name_hanja": "蹇",
+    "line_number": 4,
+    "source": "六四 往면 蹇코 來면 連이리라",
+    "translation_ko": "육사는 나아가면 곤궁하고, 돌아오면 연결되리라.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L39-5",
+    "hexagram_id": 39,
+    "name_hanja": "蹇",
+    "line_number": 5,
+    "source": "九五 大蹇에 朋來로다",
+    "translation_ko": "구오는 큰 어려움에 벗이 온다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L39-6",
+    "hexagram_id": 39,
+    "name_hanja": "蹇",
+    "line_number": 6,
+    "source": "上六은 往면 蹇코 來면 碩이라 吉리니 利見大人니라",
+    "translation_ko": "상육은 나아가면 곤궁하고 돌아오면 크니 길하리니 대인을 만나면 이롭다.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L40-1",
+    "hexagram_id": 40,
+    "name_hanja": "解",
+    "line_number": 1,
+    "source": "初六은 无咎니라",
+    "translation_ko": "초육은 허물이 없다.",
+    "modality": "conditional_comm",
+    "evidence": "근심과 어려움이 이미 풀려서 편안하고 고요하여 일이 없으니, 오직 스스로 처함이 마땅함을 얻으면 허물이 없음이 된다"
+  },
+  {
+    "id": "L40-2",
+    "hexagram_id": 40,
+    "name_hanja": "解",
+    "line_number": 2,
+    "source": "九二 田獲三狐야 得黃矢니 貞야 吉토다",
+    "translation_ko": "구이는 사냥하여 세 마리의 여우를 잡아 누런 화살을 얻으니, 곧게 지키면 길하다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L40-3",
+    "hexagram_id": 40,
+    "name_hanja": "解",
+    "line_number": 3,
+    "source": "六三은 負且乘이라 致寇至니 貞이라도 吝이리라",
+    "translation_ko": "육삼은 짐을 지고 또 수레를 탐이라 도적이 이르게 함이니 곧게 지켜도 부끄러우리라",
+    "modality": "conditional_comm",
+    "evidence": "소인이 높은 자리를 훔쳐 차지하면 비록 힘써 바른 일을 하나 기질이 비천하고 낮아서 본래 위에 있을 것이 아니니 끝내 부끄러울 만하다"
+  },
+  {
+    "id": "L40-4",
+    "hexagram_id": 40,
+    "name_hanja": "解",
+    "line_number": 4,
+    "source": "九四 解而拇ㅣ면 朋至야 斯孚ㅣ리라",
+    "translation_ko": "구사는 엄지발가락을 풀면 벗이 이르러 이에 미더움이 있으리라",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L40-5",
+    "hexagram_id": 40,
+    "name_hanja": "解",
+    "line_number": 5,
+    "source": "六五 君子ㅣ 維有解ㅣ면 吉니 有孚于小人이리라",
+    "translation_ko": "육오는 군자가 오직 풀어냄이 있으면 길하니, 소인에게서 미더움이 있을 것이다.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L40-6",
+    "hexagram_id": 40,
+    "name_hanja": "解",
+    "line_number": 6,
+    "source": "上六은 公用射隼于高墉之上야 獲之니 无不利로다",
+    "translation_ko": "상육은 공이 높은 담 위에서 솔개를 쏘아 잡으니 이롭지 않음이 없다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L41-1",
+    "hexagram_id": 41,
+    "name_hanja": "損",
+    "line_number": 1,
+    "source": "初九 已事ㅣ어든 遄往이라 无咎ㅣ리니 酌損之니라",
+    "translation_ko": "초구는 일을 마치거든 빨리 가는 것이니 허물이 없을 것이다. 헤아려서 덜어내는 것이다.",
+    "modality": "conditional_text",
+    "evidence": "어든"
+  },
+  {
+    "id": "L41-2",
+    "hexagram_id": 41,
+    "name_hanja": "損",
+    "line_number": 2,
+    "source": "九二 利貞코 征이면 凶니 弗損이라 益之리라",
+    "translation_ko": "구이는 곧게 지키면 이롭다. 나아가면 흉하니, 스스로를 손상하지 않으면 그를 더하게 되리라.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L41-3",
+    "hexagram_id": 41,
+    "name_hanja": "損",
+    "line_number": 3,
+    "source": "六三은 三人行앤 則損一人코 一人行앤 則得其友ㅣ로다",
+    "translation_ko": "육삼은 세 사람이 가면 한 사람을 덜고, 한 사람이 가면 그 벗을 얻는다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L41-4",
+    "hexagram_id": 41,
+    "name_hanja": "損",
+    "line_number": 4,
+    "source": "六四 損其疾호 使遄이면 有喜야 无咎ㅣ리라",
+    "translation_ko": "육사는 그 병을 덜어내되 빠르게 하면 기쁨이 있어 허물이 없으리라",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L41-5",
+    "hexagram_id": 41,
+    "name_hanja": "損",
+    "line_number": 5,
+    "source": "六五 或益之면 十朋之라 龜도 弗克違리니 元吉니라",
+    "translation_ko": "육오. 혹 이를 보태면 열 벗이 이를 도우리라. 거북도 능히 어기지 못하리니 크게 길하니라.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L41-6",
+    "hexagram_id": 41,
+    "name_hanja": "損",
+    "line_number": 6,
+    "source": "上九 弗損코 益之면 无咎코 貞吉니 利有攸往이니 得臣이 无家ㅣ리라",
+    "translation_ko": "상구. 덜어내지 않고 보태주면 허물이 없고 곧게 지키면 길하니, 나아갈 바가 있으면 이로우니, 신하를 얻되 집안이 없으리라.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L42-1",
+    "hexagram_id": 42,
+    "name_hanja": "益",
+    "line_number": 1,
+    "source": "初九 利用爲大作이니 元吉이라 无咎ㅣ리라",
+    "translation_ko": "초구는 큰 일을 하는 데 쓰면 이로우니, 크게 길하여 허물이 없으리라.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L42-2",
+    "hexagram_id": 42,
+    "name_hanja": "益",
+    "line_number": 2,
+    "source": "六二 或益之면 十朋之라 龜도 弗克違나 永貞이면 吉니 王用享于帝라도 吉리라",
+    "translation_ko": "육이는 혹 그를 더해주면 열 벗의 것이라. 거북도 능히 어기지 못하나니, 영원히 곧게 지키면 길하니, 왕이 이로써 상제에게 향사하여도 길하리라.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L42-3",
+    "hexagram_id": 42,
+    "name_hanja": "益",
+    "line_number": 3,
+    "source": "六三은 益之用凶事앤 无咎ㅣ어니와 有孚中行이라 告公用圭리라",
+    "translation_ko": "육삼은 益을 흉한 일에 쓰면 허물이 없으니, 미더움이 있어 치우치지 않게 행하여 공에게 알리되 규를 쓴다.",
+    "modality": "conditional_comm",
+    "evidence": "아래에서 제멋대로 스스로 맡으면 위에서 반드시 꺼리고 미워할 것이니, 비록 흉한 어려움을 당하여 의리상 행할 만하나, 그러나 반드시 그 미더움과 정성이 있고 행하는 바가 치우치지 않은 도에 합하면, 정성스러운 뜻이 "
+  },
+  {
+    "id": "L42-4",
+    "hexagram_id": 42,
+    "name_hanja": "益",
+    "line_number": 4,
+    "source": "六四 中行이면 告公從리니 利用爲依며 遷國이니라",
+    "translation_ko": "육사는 치우치지 않게 행하면 공에게 알려 따름을 얻으리니, 의지가 되어 나라를 옮기는 데 쓰면 이롭다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L42-5",
+    "hexagram_id": 42,
+    "name_hanja": "益",
+    "line_number": 5,
+    "source": "九五 有孚惠心이라 勿問야도 元吉니 有孚야 惠我德리라",
+    "translation_ko": "구오. 미더움이 있어 마음을 베푸니, 묻지 않아도 크게 길하다. 미더움이 있어 나의 덕을 베푼다.",
+    "modality": "conditional_comm",
+    "evidence": "구오의 덕과 재주와 지위로써 마음속으로 지극히 정성스럽게 만물을 혜택으로 더하는 데 있으면, 그 지극히 선하고 크게 길함을 묻지 않아도 알 수 있다"
+  },
+  {
+    "id": "L42-6",
+    "hexagram_id": 42,
+    "name_hanja": "益",
+    "line_number": 6,
+    "source": "上九 莫益之라 或擊之리니 立心勿恒이니 凶니라",
+    "translation_ko": "상구. 아무도 그를 더해주지 않는다. 혹 그를 치리니, 마음을 세움에 항상됨이 없으니 흉하다.",
+    "modality": "conditional_comm",
+    "evidence": "'마음을 세움에 항상함이 없으면 흉하다'는 것은 성인이 사람을 경계하여 마음을 간직함에 오로지 이로움만을 할 수 없다 하여 '항상함이 없다'고 이르니, 이와 같으면 흉한 도라 하시니 마땅히 빨리 고쳐야 할 바이다"
+  },
+  {
+    "id": "L43-1",
+    "hexagram_id": 43,
+    "name_hanja": "夬",
+    "line_number": 1,
+    "source": "初九 壯于前趾니 往야 不勝이면 爲咎ㅣ리라",
+    "translation_ko": "초구는 앞 발가락에서 세니, 나아가서 이기지 못하면 허물이 될 것이다.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L43-2",
+    "hexagram_id": 43,
+    "name_hanja": "夬",
+    "line_number": 2,
+    "source": "九二 惕號ㅣ니 莫夜애 有戎이라도 勿恤이로다",
+    "translation_ko": "구이는 두려워하며 경계하니, 밤중에 병사가 있더라도 근심하지 말라.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L43-3",
+    "hexagram_id": 43,
+    "name_hanja": "夬",
+    "line_number": 3,
+    "source": "九三은 壯于頄야 有凶코 獨行遇雨ㅣ니 君子 夬夬라 若濡有慍이면 无咎ㅣ리라",
+    "translation_ko": "구삼은 광대뼈에 강함이 있어 흉함이 있고, 홀로 가다가 비를 만나니, 군자는 결단하고 또 결단한다. 만약 젖어서 분함이 있으면 허물이 없으리라.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L43-4",
+    "hexagram_id": 43,
+    "name_hanja": "夬",
+    "line_number": 4,
+    "source": "九四 臀无膚ㅣ며 其行次且ㅣ니 牽羊면 悔ㅣ 亡련마 聞言야도 不信리로다",
+    "translation_ko": "구사는 볼기에 살갗이 없으며, 그 행함이 머뭇거리니, 양을 끌면 뉘우침이 없어지겠으나, 말을 들어도 믿지 않는다.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L43-5",
+    "hexagram_id": 43,
+    "name_hanja": "夬",
+    "line_number": 5,
+    "source": "九五 莧陸夬夬면 中行애 无咎ㅣ리라",
+    "translation_ko": "구오, 마치현을 꺾듯이 꺾으면 중행에 허물이 없으리라.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L43-6",
+    "hexagram_id": 43,
+    "name_hanja": "夬",
+    "line_number": 6,
+    "source": "上六은 无號ㅣ니 終有凶니라",
+    "translation_ko": "상육은 부르짖음이 없으니, 마침내 흉함이 있다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L44-1",
+    "hexagram_id": 44,
+    "name_hanja": "姤",
+    "line_number": 1,
+    "source": "初六은 繫于金柅면 貞이 吉코 有攸往이면 見凶리니 羸豕ㅣ 孚蹢躅니라",
+    "translation_ko": "초육은 쇠로 된 바퀴멈춤쇠에 묶이면 곧게 지키면 길하고, 나아갈 바가 있으면 흉함을 보리니, 여윈 돼지가 미더이 뛰놀기 때문이니라",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L44-2",
+    "hexagram_id": 44,
+    "name_hanja": "姤",
+    "line_number": 2,
+    "source": "九二 包有魚ㅣ면 无咎리니 不利賓니라",
+    "translation_ko": "구이는 포(包)에 물고기가 있으면 허물이 없으리니, 손님에게는 이롭지 않다.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L44-3",
+    "hexagram_id": 44,
+    "name_hanja": "姤",
+    "line_number": 3,
+    "source": "九三은 臀无膚ㅣ나 其行은 次且ㅣ니 厲면 无大咎ㅣ리라",
+    "translation_ko": "구삼은 볼기에 살이 없으나, 그 행함은 머뭇거리니, 위태로움을 알면 큰 허물이 없으리라.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L44-4",
+    "hexagram_id": 44,
+    "name_hanja": "姤",
+    "line_number": 4,
+    "source": "九四 包无魚ㅣ니 起凶리라",
+    "translation_ko": "구사는 포(包)에 물고기가 없으니, 흉함이 일어날 것이다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L44-5",
+    "hexagram_id": 44,
+    "name_hanja": "姤",
+    "line_number": 5,
+    "source": "九五 以杞包瓜ㅣ니 含章이면 有隕自天이리라",
+    "translation_ko": "구오는 기나무로 오이를 싸니, 장미함을 품으면 하늘로부터 떨어짐이 있으리라.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L44-6",
+    "hexagram_id": 44,
+    "name_hanja": "姤",
+    "line_number": 6,
+    "source": "上九 姤其角이라 吝니 无咎ㅣ니라",
+    "translation_ko": "상구는 그 뿔로 만난다. 부끄러우나 허물이 없다.",
+    "modality": "conditional_comm",
+    "evidence": "사람이 서로 만남은 낮추고 굽혀서 서로 따르며, 화순하게 서로 사귀기 때문에 능히 합할 수 있는 것인데, 상구(上九)는 높고 항거하며 강함이 극에 이르렀으니, 사람이 누가 더불어 하겠는가? 이로써 만남을 구하면 진실"
+  },
+  {
+    "id": "L45-1",
+    "hexagram_id": 45,
+    "name_hanja": "萃",
+    "line_number": 1,
+    "source": "初六은 有孚ㅣ나 不終이면 乃亂乃萃릴 若號면 一握爲笑리니 勿恤코 往면 无咎ㅣ리라",
+    "translation_ko": "초육은 미더움이 있으나 끝까지 하지 못하면 이에 어지럽고 이에 모이게 될 것이니, 만약 부르짖으면 한 무리가 웃음거리가 될 것이니, 근심하지 말고 나아가면 허물이 없을 것이다.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L45-2",
+    "hexagram_id": 45,
+    "name_hanja": "萃",
+    "line_number": 2,
+    "source": "六二 引면 吉야 无咎리니 孚乃利用禴이리라",
+    "translation_ko": "육이는 끌어당기면 길하고 허물이 없으리니, 미더움이 있으면 이에 간략한 제사를 쓰는 것이 이롭다.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L45-3",
+    "hexagram_id": 45,
+    "name_hanja": "萃",
+    "line_number": 3,
+    "source": "六三은 萃如嗟如ㅣ라 无攸利니 往면 无咎ㅣ어니와 小吝니라",
+    "translation_ko": "육삼은 모이려 하나 탄식함이라. 이로운 바가 없으니, 나아가면 허물이 없으나 조금 부끄러움이 있느니라.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L45-4",
+    "hexagram_id": 45,
+    "name_hanja": "萃",
+    "line_number": 4,
+    "source": "九四 大吉이라 无咎ㅣ리라",
+    "translation_ko": "구사는 크게 길하면 허물이 없으리라.",
+    "modality": "conditional_comm",
+    "evidence": "큼은 두루 미침의 뜻이니, 미치지 않는 바가 없은 연후에야 큼이 되니, 바르지 않은 바가 없으면 크게 길함이 되고, 크게 길하면 허물이 없다"
+  },
+  {
+    "id": "L45-5",
+    "hexagram_id": 45,
+    "name_hanja": "萃",
+    "line_number": 5,
+    "source": "九五 萃有位코 无咎나 匪孚ㅣ어든 元永貞이면 悔亡리라",
+    "translation_ko": "구오. 모임에 자리가 있으니 허물이 없으나, 미더움이 아니거든 으뜸되고 오래가며 곧게 지키면 뉘우침이 사라질 것이다.",
+    "modality": "conditional_text",
+    "evidence": "어든"
+  },
+  {
+    "id": "L45-6",
+    "hexagram_id": 45,
+    "name_hanja": "萃",
+    "line_number": 6,
+    "source": "上六은 齎咨涕洟니 无咎ㅣ니라",
+    "translation_ko": "상육은 탄식하며 눈물과 콧물을 흘리니 허물이 없느니라",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L46-1",
+    "hexagram_id": 46,
+    "name_hanja": "升",
+    "line_number": 1,
+    "source": "初六은 允升이니 大吉니라",
+    "translation_ko": "초육은 믿고 올라가니 크게 길하다.",
+    "modality": "conditional_comm",
+    "evidence": "이효는 덕으로 말하면 강하고 치우치지 않으며, 힘으로 말하면 임무를 맡은 자이니, 초효의 음유함으로 또 응하고 도와주는 이가 없어 스스로 올라갈 수 없고, 강하고 치우치지 않은 어진 이를 따라 나아가면 이는 강하고 "
+  },
+  {
+    "id": "L46-2",
+    "hexagram_id": 46,
+    "name_hanja": "升",
+    "line_number": 2,
+    "source": "九二 孚乃利用禴이니 无咎ㅣ리라",
+    "translation_ko": "구이는 미더움이 있으면 제사에 간소한 예를 쓰는 것이 이로우니, 허물이 없으리라.",
+    "modality": "conditional_comm",
+    "evidence": "이와 같이 하면 허물이 없음을 얻는다"
+  },
+  {
+    "id": "L46-3",
+    "hexagram_id": 46,
+    "name_hanja": "升",
+    "line_number": 3,
+    "source": "九三은 升虛邑이로다",
+    "translation_ko": "구삼은 빈 고을로 올라간다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L46-4",
+    "hexagram_id": 46,
+    "name_hanja": "升",
+    "line_number": 4,
+    "source": "六四 王用亨于岐山이면 吉코 无咎리라",
+    "translation_ko": "육사. 왕이 기산에서 형통함을 쓰면 길하고 허물이 없으리라.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L46-5",
+    "hexagram_id": 46,
+    "name_hanja": "升",
+    "line_number": 5,
+    "source": "六五 貞이라 吉리니 升階로다",
+    "translation_ko": "육오는 곧게 지키면 길하니, 계단을 올라감이로다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L46-6",
+    "hexagram_id": 46,
+    "name_hanja": "升",
+    "line_number": 6,
+    "source": "上六은 冥升이니 利于不息之貞니라",
+    "translation_ko": "상육은 어둡게 오름이니, 쉬지 않는 곧음에 이롭다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L47-1",
+    "hexagram_id": 47,
+    "name_hanja": "困",
+    "line_number": 1,
+    "source": "初六은 臀困于株木이라 入于幽谷야 三歲라도 不覿이로다",
+    "translation_ko": "초육은 볼기가 그루터기에 곤궁하여 깊은 골짜기에 들어가니, 삼 년이라도 만나지 못하느니라",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L47-2",
+    "hexagram_id": 47,
+    "name_hanja": "困",
+    "line_number": 2,
+    "source": "九二 困于酒食이나 朱紱이 方來리니 利用亨祀ㅣ니 征이면 凶니 无咎ㅣ니라",
+    "translation_ko": "구이는 술과 음식에 곤궁하나, 붉은 무릎가리개가 장차 올 것이니, 제사 지냄에 쓰면 이로우니, 나아가면 흉하나 허물이 없느니라.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L47-3",
+    "hexagram_id": 47,
+    "name_hanja": "困",
+    "line_number": 3,
+    "source": "六三은 困于石며 據于蒺藜ㅣ라 入于其宮이라도 不見其妻ㅣ니 凶토다",
+    "translation_ko": "육삼은 돌에 곤궁하며 가시덤불에 의지하는 것이다. 그 집에 들어가도 그 아내를 보지 못하니 흉하다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L47-4",
+    "hexagram_id": 47,
+    "name_hanja": "困",
+    "line_number": 4,
+    "source": "九四 來徐徐 困于金車니 吝나 有終이리라",
+    "translation_ko": "구사. 오는 것이 더디고 더디니, 금거에 곤궁하다. 부끄러우나 마침내 이룸이 있으리라.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L47-5",
+    "hexagram_id": 47,
+    "name_hanja": "困",
+    "line_number": 5,
+    "source": "九五 劓刖이니 困于赤紱나 乃徐有說리니 利用祭祀ㅣ니라",
+    "translation_ko": "구오는 코가 베이고 발이 잘리니, 붉은 끈에 곤궁하나 이에 서서히 벗어남이 있으리니, 제사 지내는 데 쓰면 이로우니라.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L47-6",
+    "hexagram_id": 47,
+    "name_hanja": "困",
+    "line_number": 6,
+    "source": "上六은 困于葛藟와 于臲卼이니 曰動悔라야 有悔면 征야 吉리라",
+    "translation_ko": "상육은 칡덩굴에 곤궁하고 위태롭게 흔들림에 곤궁하니, 스스로 말하기를 '움직이면 뉘우침이 있다'고 하여 뉘우침이 있으면 나아가면 길하리라",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L48-1",
+    "hexagram_id": 48,
+    "name_hanja": "井",
+    "line_number": 1,
+    "source": "初六은 井泥不食이라 舊井에 无禽이로다",
+    "translation_ko": "초육은 우물이 진흙투성이라 먹지 못하니, 낡은 우물에 새가 없도다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L48-2",
+    "hexagram_id": 48,
+    "name_hanja": "井",
+    "line_number": 2,
+    "source": "九二 井谷이라 射鮒ㅣ오 甕敝漏ㅣ로다",
+    "translation_ko": "구이는 우물이 골짜기가 되어 붕어에게 물을 쏟아주고, 독이 깨져 새는 것이다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L48-3",
+    "hexagram_id": 48,
+    "name_hanja": "井",
+    "line_number": 3,
+    "source": "九三은 井渫不食야 爲我心惻야 可用汲이니 王明면 並受其福리라",
+    "translation_ko": "구삼은 우물을 깨끗이 하였으나 먹지 않아 나의 마음이 슬프니, 길어 쓸 만하다. 왕이 밝으면 함께 그 복을 받으리라.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L48-4",
+    "hexagram_id": 48,
+    "name_hanja": "井",
+    "line_number": 4,
+    "source": "六四 井甃ㅣ면 无咎ㅣ리라",
+    "translation_ko": "육사는 우물을 벽돌로 쌓으면 허물이 없으리라.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L48-5",
+    "hexagram_id": 48,
+    "name_hanja": "井",
+    "line_number": 5,
+    "source": "九五 井冽寒泉食이로다",
+    "translation_ko": "구오는 우물이 차고 맑으며 찬 샘물을 먹는다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L48-6",
+    "hexagram_id": 48,
+    "name_hanja": "井",
+    "line_number": 6,
+    "source": "上六은 井收勿幕고 有孚ㅣ라 元吉이니라",
+    "translation_ko": "상육은 우물을 거두되 덮지 말고 미더움이 있으면 크게 길하다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L49-1",
+    "hexagram_id": 49,
+    "name_hanja": "革",
+    "line_number": 1,
+    "source": "初九 鞏用黃牛之革이니라",
+    "translation_ko": "초구는 누런 소의 가죽으로 굳게 묶는다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L49-2",
+    "hexagram_id": 49,
+    "name_hanja": "革",
+    "line_number": 2,
+    "source": "六二 已日이어 乃革之니 征이면 吉야 无咎리라",
+    "translation_ko": "육이는 이미 날이 되어서야 이에 고치니, 나아가면 길하여 허물이 없으리라.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L49-3",
+    "hexagram_id": 49,
+    "name_hanja": "革",
+    "line_number": 3,
+    "source": "九三은 征이면 凶니 貞厲홀디니 革言이 三就면 有孚ㅣ리라",
+    "translation_ko": "구삼은 나아가면 흉하니 곧게 지키되 위태로움이 있을 것이니, 혁명의 말이 세 번 이루어지면 미더움이 있을 것이다.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L49-4",
+    "hexagram_id": 49,
+    "name_hanja": "革",
+    "line_number": 4,
+    "source": "九四 悔亡니 有孚ㅣ면 改命야 吉리라",
+    "translation_ko": "구사. 뉘우침이 없어진다. 미더움이 있으면 명을 고쳐서 길하리라.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L49-5",
+    "hexagram_id": 49,
+    "name_hanja": "革",
+    "line_number": 5,
+    "source": "九五 大人이 虎變이니 未占에 有孚ㅣ니라",
+    "translation_ko": "구오: 대인이 호랑이처럼 변하니, 점치지 않아도 미더움이 있다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L49-6",
+    "hexagram_id": 49,
+    "name_hanja": "革",
+    "line_number": 6,
+    "source": "上六은 君子 豹變이오 小人은 革面이니 征이면 凶코 居貞이면 吉리라",
+    "translation_ko": "상육은 군자는 표범처럼 변하고, 소인은 얼굴을 바꾸니, 나아가면 흉하고 머물러 곧게 지키면 길하리라",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L50-1",
+    "hexagram_id": 50,
+    "name_hanja": "鼎",
+    "line_number": 1,
+    "source": "初六은 鼎이 顚趾나 利出否니 得妾면 以其子无咎ㅣ리라",
+    "translation_ko": "초육은 솥이 발을 뒤집으나 나쁜 것을 내는 데 이로우니, 첩을 얻으면 그 자식으로써 허물이 없으리라.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L50-2",
+    "hexagram_id": 50,
+    "name_hanja": "鼎",
+    "line_number": 2,
+    "source": "九二 鼎有實이나 我仇ㅣ 有疾니 不我能卽이면 吉리라",
+    "translation_ko": "구이는 솥에 실함이 있으나, 나의 짝이 병이 있으니, 나에게 나아올 수 없으면 길하리라.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L50-3",
+    "hexagram_id": 50,
+    "name_hanja": "鼎",
+    "line_number": 3,
+    "source": "九三은 鼎耳ㅣ 革야 其行이 塞야 雉膏 不食나 方雨야 虧悔ㅣ 終吉이리라",
+    "translation_ko": "구삼은 솥의 귀가 변하여 그 행함이 막혀서 꿩의 기름을 먹지 못하나, 장차 비가 내려 부족함의 뉘우침이 사라지고 마침내 길하리라.",
+    "modality": "conditional_comm",
+    "evidence": "삼은 비록 치우치지 않지는 않으나 손의 체이므로 지나치게 강함의 잘못이 없으니, 만약 지나치게 강하면 어찌 능히 마침내 길하겠는가."
+  },
+  {
+    "id": "L50-4",
+    "hexagram_id": 50,
+    "name_hanja": "鼎",
+    "line_number": 4,
+    "source": "九四 鼎이 折足야 覆公餗니 其形이 渥이라 凶토다",
+    "translation_ko": "구사. 솥이 다리가 부러져 공의 음식을 엎지르니, 그 모습이 젖어 있다. 흉하다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L50-5",
+    "hexagram_id": 50,
+    "name_hanja": "鼎",
+    "line_number": 5,
+    "source": "六五 鼎黃耳金鉉이니 利貞니라",
+    "translation_ko": "육오는 솥의 누런 귀와 쇠 고리이니, 곧게 지키면 이롭다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L50-6",
+    "hexagram_id": 50,
+    "name_hanja": "鼎",
+    "line_number": 6,
+    "source": "上九 鼎玉鉉이니 大吉야 无不利니라",
+    "translation_ko": "상구는 솥의 옥으로 된 쇠고리이니, 크게 길하여 이롭지 않음이 없다.",
+    "modality": "conditional_comm",
+    "evidence": "이루어진 공의 도에 거함은 오직 잘 처신할 따름이니, 강함과 부드러움이 마땅함에 맞고 움직임과 고요함이 지나치지 않으면 크게 길하여 이롭지 않음이 없다"
+  },
+  {
+    "id": "L51-1",
+    "hexagram_id": 51,
+    "name_hanja": "震",
+    "line_number": 1,
+    "source": "初九 震來虩虩이라아 後에 笑言啞啞이리니 吉니라",
+    "translation_ko": "초구는 진동이 오니 두려워하고 두려워하다가, 뒤에 웃으며 말하기를 화락하니 길하다.",
+    "modality": "conditional_comm",
+    "evidence": "진동이 옴을 알고 진동의 시작을 당하여, 만약 능히 이를 두려워하여 주선하고 돌아보며 헤아려서 두려워하며 감히 편안히 머물지 않으면, 마침내 반드시 그 편안함과 길함을 보전할 것이다"
+  },
+  {
+    "id": "L51-2",
+    "hexagram_id": 51,
+    "name_hanja": "震",
+    "line_number": 2,
+    "source": "六二 震來厲ㅣ라 億喪貝야 躋于九陵이니 勿逐면 七日得리라",
+    "translation_ko": "육이는 진이 와서 위태로우니, 헤아려 보니 재물을 잃을 것이라. 구릉에 올라가되, 쫓지 않으면 칠 일 만에 얻으리라.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L51-3",
+    "hexagram_id": 51,
+    "name_hanja": "震",
+    "line_number": 3,
+    "source": "六三은 震蘇蘇ㅣ니 震行면 无眚리라",
+    "translation_ko": "육삼은 진동하여 소소하니, 진동하여 행하면 재앙이 없으리라.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L51-4",
+    "hexagram_id": 51,
+    "name_hanja": "震",
+    "line_number": 4,
+    "source": "九四 震이 遂泥라",
+    "translation_ko": "구사는 震이 마침내 진흙에 빠진다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L51-5",
+    "hexagram_id": 51,
+    "name_hanja": "震",
+    "line_number": 5,
+    "source": "六五 震이 往來ㅣ 厲니 億야 无喪有事ㅣ니라",
+    "translation_ko": "육오는 震이 나아가고 돌아옴이 위태로우니, 헤아려서 가진 일을 잃지 않음이니라",
+    "modality": "conditional_comm",
+    "evidence": "진실로 가운데를 잃지 않으면 비록 위태로움이 있더라도 흉함에 이르지 않는다"
+  },
+  {
+    "id": "L51-6",
+    "hexagram_id": 51,
+    "name_hanja": "震",
+    "line_number": 6,
+    "source": "上六은 震이 索索야 視ㅣ 矍矍이니 征이면 凶니 震不于其躬이오 于其隣이면 无咎ㅣ리니 婚媾 有言이리라",
+    "translation_ko": "상육은 진동이 흩어지고 시선이 두리번거리니, 나아가면 흉하다. 진동이 그 몸에 있지 않고 그 이웃에 있으면 허물이 없을 것이니, 혼인 관계에 말이 있으리라.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L52-1",
+    "hexagram_id": 52,
+    "name_hanja": "艮",
+    "line_number": 1,
+    "source": "初六은 艮其趾라 无咎니 利永貞니라",
+    "translation_ko": "초육은 그 발가락을 그치게 하니 허물이 없으며, 길이 곧게 지키면 이롭다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L52-2",
+    "hexagram_id": 52,
+    "name_hanja": "艮",
+    "line_number": 2,
+    "source": "六二 艮其腓니 不拯其隨ㅣ라 其心不快로다",
+    "translation_ko": "육이는 그 종아리를 그치게 하니, 그 따르는 것을 구제하지 못하는지라, 그 마음이 유쾌하지 못하도다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L52-3",
+    "hexagram_id": 52,
+    "name_hanja": "艮",
+    "line_number": 3,
+    "source": "九三은 艮其限이라 列其夤이니 厲ㅣ 薰心이로다",
+    "translation_ko": "구삼은 그 허리를 그치게 하여 그 척추를 갈라놓으니, 위태로움이 마음을 훈증하는구나.",
+    "modality": "conditional_comm",
+    "evidence": "그침의 도는 마땅함을 얻음을 귀하게 여기니, 행하고 그침을 때에 맞게 하지 못하고 한 곳에 정하여 그 굳세고 강함이 이와 같으면 세상에 처함이 어긋나고 빗나가 사물과 어긋나 끊어지리니, 그 위태로움이 심하다"
+  },
+  {
+    "id": "L52-4",
+    "hexagram_id": 52,
+    "name_hanja": "艮",
+    "line_number": 4,
+    "source": "六四 艮其身이니 无咎ㅣ니라",
+    "translation_ko": "육사는 그 몸을 그치게 하니, 허물이 없다.",
+    "modality": "conditional_comm",
+    "evidence": "그러므로 사물을 그치게 하지 못하고, 오직 스스로 그 몸을 그치게 하면 허물이 없을 수 있으니, 허물이 없을 수 있는 까닭은 바름에 그치기 때문이다"
+  },
+  {
+    "id": "L52-5",
+    "hexagram_id": 52,
+    "name_hanja": "艮",
+    "line_number": 5,
+    "source": "六五 艮其輔ㅣ라 言有序ㅣ니 悔亡리라",
+    "translation_ko": "육오는 그 턱을 그치게 하니, 말에 차례가 있으면 뉘우침이 없어진다.",
+    "modality": "conditional_comm",
+    "evidence": "말을 가볍게 발하여 차례가 없으면 뉘우침이 있고, 보좌함에서 그치면 뉘우침이 없어지니, 차례가 있다는 것은 중절하여 차례와 순서가 있음이다"
+  },
+  {
+    "id": "L52-6",
+    "hexagram_id": 52,
+    "name_hanja": "艮",
+    "line_number": 6,
+    "source": "上九 敦艮이니 吉니라",
+    "translation_ko": "상구는 돈독하게 그침이니 길하다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L53-1",
+    "hexagram_id": 53,
+    "name_hanja": "漸",
+    "line_number": 1,
+    "source": "初六은 鴻漸于干이니 小子ㅣ 厲야 有言이나 无咎ㅣ니라",
+    "translation_ko": "초육은 기러기가 물가로 나아가니, 어린아이가 위태로워하여 말이 있으나 허물이 없느니라",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L53-2",
+    "hexagram_id": 53,
+    "name_hanja": "漸",
+    "line_number": 2,
+    "source": "六二 鴻漸于磐이라 飮食이 衎衎니 吉니라",
+    "translation_ko": "육이는 기러기가 반석으로 나아감이라. 먹고 마심이 즐거우니 길하니라.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L53-3",
+    "hexagram_id": 53,
+    "name_hanja": "漸",
+    "line_number": 3,
+    "source": "九三은 鴻漸于陸이니 夫征이면 不復고 婦孕이라도 不育야 凶니 利禦寇니라",
+    "translation_ko": "구삼은 기러기가 육지로 나아가니, 지아비가 나아가면 돌아오지 못하고 지어미가 임신하여도 기르지 못하여 흉하니, 도적을 막는 것이 이롭다.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L53-4",
+    "hexagram_id": 53,
+    "name_hanja": "漸",
+    "line_number": 4,
+    "source": "六四 鴻漸于木이니 或得其桷이면 无咎ㅣ리라",
+    "translation_ko": "육사는 기러기가 나무에 나아가니, 혹 그 평평한 가지를 얻으면 허물이 없으리라.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L53-5",
+    "hexagram_id": 53,
+    "name_hanja": "漸",
+    "line_number": 5,
+    "source": "九五 鴻漸于陵이니 婦ㅣ 三歲 不孕나 終莫之勝이라 吉리라",
+    "translation_ko": "구오. 기러기가 언덕으로 나아가니, 부인이 삼 년 동안 잉태하지 못하나 마침내 이를 이기는 것이 없으리라. 길하리라.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L53-6",
+    "hexagram_id": 53,
+    "name_hanja": "漸",
+    "line_number": 6,
+    "source": "上九 鴻漸于(陸)[逵]ㅣ니 其羽ㅣ 可用爲儀니 吉니라",
+    "translation_ko": "상구는 기러기가 큰길로 나아가니, 그 깃털을 의장으로 삼을 만하니 길하다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L54-1",
+    "hexagram_id": 54,
+    "name_hanja": "歸妹",
+    "line_number": 1,
+    "source": "初九 歸妹以娣니 跛能履라 征이면 吉리라",
+    "translation_ko": "초구는 시집가는 누이가 제(娣)가 되니, 절름발이가 능히 밟음이라. 나아가면 길하리라.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L54-2",
+    "hexagram_id": 54,
+    "name_hanja": "歸妹",
+    "line_number": 2,
+    "source": "九二 眇能視니 利幽人之貞니라",
+    "translation_ko": "구이는 애꾸눈이지만 볼 수 있으니, 어두운 곳에 있는 사람이 곧게 지키면 이롭다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L54-3",
+    "hexagram_id": 54,
+    "name_hanja": "歸妹",
+    "line_number": 3,
+    "source": "六三은 歸妹以須ㅣ니 反歸以娣니라",
+    "translation_ko": "육삼은 귀매하되 기다림으로써 하니, 돌이켜 귀매하되 첩으로써 한다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L54-4",
+    "hexagram_id": 54,
+    "name_hanja": "歸妹",
+    "line_number": 4,
+    "source": "九四 歸妹愆期니 遲歸ㅣ 有時니라",
+    "translation_ko": "구사는 귀매하되 기약을 어기니, 늦게 시집감에 때가 있느니라.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L54-5",
+    "hexagram_id": 54,
+    "name_hanja": "歸妹",
+    "line_number": 5,
+    "source": "六五 帝乙歸妹니 其君之袂ㅣ 不如其娣之袂ㅣ 良니 月幾望이면 吉리라",
+    "translation_ko": "육오는 제을이 누이를 시집보내니, 그 임금의 소매가 그 제의 소매만 못함이 좋으니, 달이 거의 보름에 이르면 길하리라",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L54-6",
+    "hexagram_id": 54,
+    "name_hanja": "歸妹",
+    "line_number": 6,
+    "source": "上六은 女ㅣ 承筐无實이라 士ㅣ 刲羊无血이니 无攸利니라",
+    "translation_ko": "상육은 여자가 광주리를 받들되 실속이 없고, 남자가 양을 잡되 피가 없으니, 이로운 바가 없다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L55-1",
+    "hexagram_id": 55,
+    "name_hanja": "豊",
+    "line_number": 1,
+    "source": "初九 遇其配主호 雖旬이나 无咎니 往면 有尙이리라",
+    "translation_ko": "초구는 그 짝 주인을 만나니, 비록 균등하나 허물이 없으니, 나아가면 숭상함이 있으리라.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L55-2",
+    "hexagram_id": 55,
+    "name_hanja": "豊",
+    "line_number": 2,
+    "source": "六二 豊其蔀ㅣ라 日中見斗ㅣ니 往면 得疑疾리니 有孚發若면 吉리라",
+    "translation_ko": "육이는 그 가림막을 크게 하니, 한낮에 북두성을 보게 되니, 나아가면 의심과 미움을 얻을 것이니, 미더움이 있어 발하면 길하리라.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L55-3",
+    "hexagram_id": 55,
+    "name_hanja": "豊",
+    "line_number": 3,
+    "source": "九三은 豊其沛斾라 日中見沬ㅣ오 折其右肱이니 无咎ㅣ니라",
+    "translation_ko": "구삼은 그 패패를 풍성하게 하니, 한낮에 매(沬)를 보고, 그 오른팔을 꺾으니, 허물이 없다.",
+    "modality": "conditional_comm",
+    "evidence": "사람이 함에 있어 잃은 바가 있으면 곧 허물 돌릴 바가 있어 말하기를 '이것으로 말미암아 이것에 이르렀다'고 하나, 만약 움직이고자 하되 오른팔이 없고 하고자 하되 위에 의지할 바가 없으면 곧 할 수 없을 뿐이니, "
+  },
+  {
+    "id": "L55-4",
+    "hexagram_id": 55,
+    "name_hanja": "豊",
+    "line_number": 4,
+    "source": "九四 豊其蔀ㅣ라 日中見斗ㅣ니 遇其夷主면 吉리라",
+    "translation_ko": "구사는 그 가림막을 크게 하니, 한낮에 북두성을 보게 되니, 그 같은 주인을 만나면 길하리라.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L55-5",
+    "hexagram_id": 55,
+    "name_hanja": "豊",
+    "line_number": 5,
+    "source": "六五 來章이면 有慶譽야 吉리라",
+    "translation_ko": "육오는 장미한 이를 오게 하면 경사와 명예가 있어 길하다.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L55-6",
+    "hexagram_id": 55,
+    "name_hanja": "豊",
+    "line_number": 6,
+    "source": "上六은 豊其屋고 蔀其家ㅣ라 闚其戶니 閴其无人야 三歲라도 不覿ㅣ로소니 凶니라",
+    "translation_ko": "상육은 그 집을 크게 하고 그 집을 가렸다. 그 문을 엿보니 고요하여 그 사람이 없어 삼 년이라도 만나지 못하니 흉하다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L56-1",
+    "hexagram_id": 56,
+    "name_hanja": "旅",
+    "line_number": 1,
+    "source": "初六은 旅瑣瑣니 斯其所取災니라",
+    "translation_ko": "초육은 旅에서 쇄쇄하니, 이것이 재앙을 취하는 바이다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L56-2",
+    "hexagram_id": 56,
+    "name_hanja": "旅",
+    "line_number": 2,
+    "source": "六二 旅卽次야 懷其資고 得童僕貞이로다",
+    "translation_ko": "육이는 나그네가 여관에 나아가 그 재물을 품에 간직하고 어린 종의 곧음을 얻는다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L56-3",
+    "hexagram_id": 56,
+    "name_hanja": "旅",
+    "line_number": 3,
+    "source": "九三은 旅焚其次고 喪其童僕貞이니 厲니라",
+    "translation_ko": "구삼은 나그네가 그 거처를 불태우고 그 동복의 곧음을 잃으니 위태롭다.",
+    "modality": "conditional_comm",
+    "evidence": "이와 같으면 위태로운 도이다"
+  },
+  {
+    "id": "L56-4",
+    "hexagram_id": 56,
+    "name_hanja": "旅",
+    "line_number": 4,
+    "source": "九四 旅于處고 得其資斧나 我心은 不快로다",
+    "translation_ko": "구사는 旅에서 처소에 머물고 그 재물과 도끼를 얻었으나, 나의 마음은 유쾌하지 않다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L56-5",
+    "hexagram_id": 56,
+    "name_hanja": "旅",
+    "line_number": 5,
+    "source": "六五 射雉一矢亡이라 終以譽命이리라",
+    "translation_ko": "육오는 꿩을 쏘아 한 화살에 맞히니, 마침내 명예와 복록을 얻으리라.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L56-6",
+    "hexagram_id": 56,
+    "name_hanja": "旅",
+    "line_number": 6,
+    "source": "上九 鳥焚其巢ㅣ니 旅人이 先笑後號咷ㅣ라 喪牛于易니 凶니라",
+    "translation_ko": "상구는 새가 그 둥지를 불사르니, 나그네가 먼저 웃고 뒤에 울부짖는다. 소를 易에서 잃으니 흉하다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L57-1",
+    "hexagram_id": 57,
+    "name_hanja": "巽",
+    "line_number": 1,
+    "source": "初六은 進退니 利武人之貞이니라",
+    "translation_ko": "초육은 나아가고 물러남이니, 武人의 곧고 바름이 이롭다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L57-2",
+    "hexagram_id": 57,
+    "name_hanja": "巽",
+    "line_number": 2,
+    "source": "九二 巽在牀下ㅣ니 用史巫紛若면 吉코 无咎리라",
+    "translation_ko": "구이는 손이 평상 아래에 있으니, 사(史)와 무(巫)를 쓰되 분분하게 하면 길하고 허물이 없으리라.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L57-3",
+    "hexagram_id": 57,
+    "name_hanja": "巽",
+    "line_number": 3,
+    "source": "九三은 頻巽이니 吝니라",
+    "translation_ko": "구삼은 자주 손하니 부끄러움이다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L57-4",
+    "hexagram_id": 57,
+    "name_hanja": "巽",
+    "line_number": 4,
+    "source": "六四 悔ㅣ 亡니 田獲三品이로다",
+    "translation_ko": "육사는 뉘우침이 없어지니, 사냥하여 세 가지 품등을 얻는다.",
+    "modality": "conditional_comm",
+    "evidence": "천하의 일을 진실로 잘 처하면 뉘우침이 혹 공으로 될 수 있다"
+  },
+  {
+    "id": "L57-5",
+    "hexagram_id": 57,
+    "name_hanja": "巽",
+    "line_number": 5,
+    "source": "九五 貞이면 吉야 悔ㅣ 亡야 无不利ㅣ니 无初有終이라 先庚三日며 後庚三日이면 吉리라",
+    "translation_ko": "구오는 곧게 지키면 길하여 뉘우침이 없어지고 이롭지 않음이 없으니, 처음은 없고 마침이 있다. 경일보다 사흘 앞서고 경일보다 사흘 뒤하면 길하리라.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L57-6",
+    "hexagram_id": 57,
+    "name_hanja": "巽",
+    "line_number": 6,
+    "source": "上九 巽在牀下야 喪其資斧ㅣ니 貞에 凶니라",
+    "translation_ko": "상구는 손이 평상 아래에 있어 그 자부를 잃으니, 곧게 지켜도 흉하다.",
+    "modality": "conditional_comm",
+    "evidence": "위에 거하면서 손함을 지나쳐서 스스로 잃음에 이르면, 바른 도에서는 흉함이 된다"
+  },
+  {
+    "id": "L58-1",
+    "hexagram_id": 58,
+    "name_hanja": "兌",
+    "line_number": 1,
+    "source": "初九 和兌니 吉니라",
+    "translation_ko": "초구는 화합하여 기뻐하니 길하다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L58-2",
+    "hexagram_id": 58,
+    "name_hanja": "兌",
+    "line_number": 2,
+    "source": "九二 孚兌니 吉코 悔ㅣ 亡니라",
+    "translation_ko": "구이는 미더움으로 기뻐하니, 길하고 뉘우침이 없어진다.",
+    "modality": "conditional_comm",
+    "evidence": "그것을 기뻐하면 마땅히 뉘우침이 있을 것이다"
+  },
+  {
+    "id": "L58-3",
+    "hexagram_id": 58,
+    "name_hanja": "兌",
+    "line_number": 3,
+    "source": "六三은 來兌니 凶니라",
+    "translation_ko": "육삼은 나아가 기뻐하니 흉하다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L58-4",
+    "hexagram_id": 58,
+    "name_hanja": "兌",
+    "line_number": 4,
+    "source": "九四 商兌未寧이니 介疾이면 有喜리라",
+    "translation_ko": "구사는 기쁨을 상도함이 편안하지 못하니, 병폐를 끊어내면 기쁨이 있으리라.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L58-5",
+    "hexagram_id": 58,
+    "name_hanja": "兌",
+    "line_number": 5,
+    "source": "九五 孚于剝이면 有厲ㅣ리라",
+    "translation_ko": "구오는 剝에 미더움을 두면 위태로움이 있을 것이다.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L58-6",
+    "hexagram_id": 58,
+    "name_hanja": "兌",
+    "line_number": 6,
+    "source": "上六은 引兌라",
+    "translation_ko": "상육은 끌어당겨 기쁘게 함이다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L59-1",
+    "hexagram_id": 59,
+    "name_hanja": "渙",
+    "line_number": 1,
+    "source": "初六은 用拯호 馬ㅣ 壯니 吉니라",
+    "translation_ko": "초육은 구제함을 쓰되 말이 장건하니 길하다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L59-2",
+    "hexagram_id": 59,
+    "name_hanja": "渙",
+    "line_number": 2,
+    "source": "九二 渙애 奔其机면 悔ㅣ 亡리라",
+    "translation_ko": "구이는 흩어짐에 그 기(机)로 달려가면 뉘우침이 없어진다.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L59-3",
+    "hexagram_id": 59,
+    "name_hanja": "渙",
+    "line_number": 3,
+    "source": "六三은 渙애 其躬이 无悔니라",
+    "translation_ko": "육삼은 흩어짐에 그 몸이 뉘우침이 없다.",
+    "modality": "conditional_comm",
+    "evidence": "삼효는 흩어짐의 때에 있으면서 홀로 응함이 있으니, 흩어짐의 뉘우침이 없다"
+  },
+  {
+    "id": "L59-4",
+    "hexagram_id": 59,
+    "name_hanja": "渙",
+    "line_number": 4,
+    "source": "六四 渙애 其群이라 元吉이니 渙애 有丘ㅣ 匪夷所思ㅣ리라",
+    "translation_ko": "육사는 흩어짐에 그 무리를 흩어뜨리니 크게 길하다. 흩어짐에 언덕이 있음은 평상의 생각이 미치는 바가 아니다.",
+    "modality": "conditional_comm",
+    "evidence": "천하가 흩어지고 흐트러졌는데 그들로 하여금 무리 지어 모이게 할 수 있으면 크게 좋은 길함이라 이를 만하다"
+  },
+  {
+    "id": "L59-5",
+    "hexagram_id": 59,
+    "name_hanja": "渙",
+    "line_number": 5,
+    "source": "九五 渙애 汗其大號ㅣ면 渙애 王居ㅣ니 无咎ㅣ리라",
+    "translation_ko": "구오. 흩어짐에 땀처럼 그 큰 호령을 내리면, 흩어짐에 왕의 거처가 되니 허물이 없으리라.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L59-6",
+    "hexagram_id": 59,
+    "name_hanja": "渙",
+    "line_number": 6,
+    "source": "上九 渙애 其血이 去며 逖(惕)에 出면 无咎ㅣ리라",
+    "translation_ko": "상구는 흩어짐에 그 피가 가고 두려움에서 벗어나면 허물이 없으리라",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L60-1",
+    "hexagram_id": 60,
+    "name_hanja": "節",
+    "line_number": 1,
+    "source": "初九 不出戶庭이면 无咎ㅣ리라",
+    "translation_ko": "초구는 문과 뜰을 나가지 않으면 허물이 없으리라.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L60-2",
+    "hexagram_id": 60,
+    "name_hanja": "節",
+    "line_number": 2,
+    "source": "九二 不出門庭이라 凶니라",
+    "translation_ko": "구이는 문정을 나가지 않으니 흉하다.",
+    "modality": "conditional_comm",
+    "evidence": "만약 강하고 치우치지 않은 도로써 서로 합하면, 절제의 공을 이룰 수 있거늘, 오직 그 덕을 잃고 때를 잃었기에, 이로써 흉한 것이니, 5효와 합하지 않음은 곧 바르지 않은 절제이다"
+  },
+  {
+    "id": "L60-3",
+    "hexagram_id": 60,
+    "name_hanja": "節",
+    "line_number": 3,
+    "source": "六三은 不節若이면 則嗟若리니 无咎ㅣ니라",
+    "translation_ko": "육삼은 절제하지 않으면 탄식하게 되니, 허물이 없다.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L60-4",
+    "hexagram_id": 60,
+    "name_hanja": "節",
+    "line_number": 4,
+    "source": "六四 安節이니 亨니라",
+    "translation_ko": "육사는 편안히 절제하니, 형통하다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L60-5",
+    "hexagram_id": 60,
+    "name_hanja": "節",
+    "line_number": 5,
+    "source": "九五 甘節이라 吉니 往면 有尙리라",
+    "translation_ko": "구오. 달게 절제함이니 길하다. 나아가면 숭상함이 있을 것이다.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L60-6",
+    "hexagram_id": 60,
+    "name_hanja": "節",
+    "line_number": 6,
+    "source": "上六은 苦節이니 貞이면 凶코 悔면 亡리라",
+    "translation_ko": "상육은 괴로운 절제이니, 곧게 지키면 흉하고 뉘우치면 망함이 없어지리라",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L61-1",
+    "hexagram_id": 61,
+    "name_hanja": "中孚",
+    "line_number": 1,
+    "source": "初九 虞면 吉니 有他ㅣ면 不燕리라",
+    "translation_ko": "초구는 헤아리면 길하니, 다른 것이 있으면 편안하지 못할 것이다.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L61-2",
+    "hexagram_id": 61,
+    "name_hanja": "中孚",
+    "line_number": 2,
+    "source": "九二 鳴鶴이 在陰이어 其子ㅣ 和之로다 我有好爵야 吾與爾靡之노라",
+    "translation_ko": "구이. 학이 울음이 어두운 곳에 있는데, 그 새끼가 화답한다. 내가 좋은 술잔을 가지고 있으니, 내가 너와 더불어 그것을 기울이겠다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L61-3",
+    "hexagram_id": 61,
+    "name_hanja": "中孚",
+    "line_number": 3,
+    "source": "六三은 得敵야 或鼓, 或罷, 或泣, 或歌ㅣ로다",
+    "translation_ko": "육삼은 적을 얻어서 혹은 북을 치고, 혹은 그만두고, 혹은 울고, 혹은 노래한다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L61-4",
+    "hexagram_id": 61,
+    "name_hanja": "中孚",
+    "line_number": 4,
+    "source": "六四 月幾望이니 馬匹이 亡면 无咎ㅣ리라",
+    "translation_ko": "육사는 달이 거의 보름에 이르니, 짝 말이 없어지면 허물이 없으리라.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L61-5",
+    "hexagram_id": 61,
+    "name_hanja": "中孚",
+    "line_number": 5,
+    "source": "九五 有孚ㅣ 攣如ㅣ면 无咎ㅣ리라",
+    "translation_ko": "구오 미더움이 있어 얽매인 듯하면 허물이 없으리라",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L61-6",
+    "hexagram_id": 61,
+    "name_hanja": "中孚",
+    "line_number": 6,
+    "source": "上九 翰音이 登于天이니 貞야 凶토다",
+    "translation_ko": "상구는 깃털 소리가 하늘에 오르니, 곧게 지켜도 흉하다.",
+    "modality": "conditional_comm",
+    "evidence": "그 극단이 깃털 소리가 하늘에 올라 들리는 데에 이르니, 이에 곧게 지키되 변할 줄 알지 못하면 흉함을 알 수 있다"
+  },
+  {
+    "id": "L62-1",
+    "hexagram_id": 62,
+    "name_hanja": "小過",
+    "line_number": 1,
+    "source": "初六은 飛鳥ㅣ라 以凶이니라",
+    "translation_ko": "초육은 나는 새이니, 이로써 흉하다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L62-2",
+    "hexagram_id": 62,
+    "name_hanja": "小過",
+    "line_number": 2,
+    "source": "六二 過其祖야 遇其妣니 不及其君이오 遇其臣이면 无咎ㅣ리라",
+    "translation_ko": "육이는 그 조(祖)를 지나쳐서 그 비(妣)를 만나니, 그 군(君)에 미치지 못하고 그 신(臣)을 만나면 허물이 없으리라.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L62-3",
+    "hexagram_id": 62,
+    "name_hanja": "小過",
+    "line_number": 3,
+    "source": "九三은 弗過防之면 從或戕之라 凶리라",
+    "translation_ko": "구삼은 지나치게 막지 않으면 따르는 자가 혹 해치리니 흉하리라",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L62-4",
+    "hexagram_id": 62,
+    "name_hanja": "小過",
+    "line_number": 4,
+    "source": "九四 无咎니 弗過야 遇之니 往이면 厲ㅣ라 必戒며 勿用永貞이니라",
+    "translation_ko": "구사. 허물이 없으니, 지나치지 않고 만나는 것이니, 나아가면 위태로우니, 반드시 경계하며, 영원히 곧게 지킴을 쓰지 말 것이니라.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L62-5",
+    "hexagram_id": 62,
+    "name_hanja": "小過",
+    "line_number": 5,
+    "source": "六五 密雲不雨 自我西郊ㅣ니 公이 弋取彼在穴이로다",
+    "translation_ko": "육오. 빽빽한 구름이 비를 내리지 못하니, 우리 서쪽 교외로부터이다. 공이 활을 쏘아 저 구멍에 있는 것을 취하도다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L62-6",
+    "hexagram_id": 62,
+    "name_hanja": "小過",
+    "line_number": 6,
+    "source": "上六은 弗遇야 過之니 飛鳥ㅣ 離之라 凶니 是謂災眚이라",
+    "translation_ko": "상육은 만나지 못하고 지나치니, 나는 새가 이를 떠나는 것이라. 흉하니, 이를 일컬어 재앙과 허물이라.",
+    "modality": "conditional_comm",
+    "evidence": "육(六)은 음이면서 동하는 체로 지나침의 극에 처하여 이치와 만나지 못하고 움직임이 모두 지나치니, 그 이치를 어기고 떠남이 날아가는 새의 빠름과 같으니 흉한 까닭이다"
+  },
+  {
+    "id": "L63-1",
+    "hexagram_id": 63,
+    "name_hanja": "旣濟",
+    "line_number": 1,
+    "source": "初九 曳其輪며 濡其尾면 无咎ㅣ리라",
+    "translation_ko": "초구는 그 바퀴를 끌며 그 꼬리를 적시면 허물이 없으리라",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L63-2",
+    "hexagram_id": 63,
+    "name_hanja": "旣濟",
+    "line_number": 2,
+    "source": "六二 婦喪其茀이니 勿逐면 七日에 得리라",
+    "translation_ko": "육이는 부인이 그 너울을 잃었으니, 쫓지 말면 칠 일에 얻으리라.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L63-3",
+    "hexagram_id": 63,
+    "name_hanja": "旣濟",
+    "line_number": 3,
+    "source": "九三은 高宗이 伐鬼方야 三年克之니 小人勿用이니라",
+    "translation_ko": "구삼은 고종이 귀방을 쳐서 삼 년 만에 이겼으니, 소인은 쓰지 말아야 한다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L63-4",
+    "hexagram_id": 63,
+    "name_hanja": "旣濟",
+    "line_number": 4,
+    "source": "六四 (繻)[濡]에 有衣袽코 終日戒니라",
+    "translation_ko": "육사는 물이 새는 데 옷 누더기가 있고, 종일토록 경계한다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L63-5",
+    "hexagram_id": 63,
+    "name_hanja": "旣濟",
+    "line_number": 5,
+    "source": "九五 東隣殺牛ㅣ 不如西隣之禴祭ㅣ 實受其福이니라",
+    "translation_ko": "구오. 동쪽 이웃이 소를 잡는 것이 서쪽 이웃의 약제만 못하니, 실로 그 복을 받는다.",
+    "modality": "none",
+    "evidence": null
+  },
+  {
+    "id": "L63-6",
+    "hexagram_id": 63,
+    "name_hanja": "旣濟",
+    "line_number": 6,
+    "source": "上六은 濡其首ㅣ라 厲니라",
+    "translation_ko": "상육은 그 머리를 적시니 위태롭다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L64-1",
+    "hexagram_id": 64,
+    "name_hanja": "未濟",
+    "line_number": 1,
+    "source": "初六은 濡其尾니 吝니라",
+    "translation_ko": "초육은 그 꼬리를 적시니 부끄러움이다.",
+    "modality": "conditional_comm",
+    "evidence": "그 재주와 힘을 헤아리지 않고 나아가서 마침내 능히 건너지 못하면 부끄러움이 될 만하다"
+  },
+  {
+    "id": "L64-2",
+    "hexagram_id": 64,
+    "name_hanja": "未濟",
+    "line_number": 2,
+    "source": "九二 曳其輪이면 貞야 吉리라",
+    "translation_ko": "구이는 그 수레바퀴를 끌면 곧게 지켜 길하리라",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L64-3",
+    "hexagram_id": 64,
+    "name_hanja": "未濟",
+    "line_number": 3,
+    "source": "六三은 未濟에 征이면 凶나 利涉大川니라",
+    "translation_ko": "육삼은 미제에 나아가면 흉하나, 큰 내를 건너면 이롭다.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L64-4",
+    "hexagram_id": 64,
+    "name_hanja": "未濟",
+    "line_number": 4,
+    "source": "九四 貞이면 吉야 悔ㅣ 亡리니 震用伐鬼方야 三年에 有賞于大國ㅣ로다",
+    "translation_ko": "구사는 곧게 지키면 길하여 뉘우침이 없어질 것이니, 떨쳐 일어나 귀방을 치되 삼 년에 대국에서 상을 받으리라.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  },
+  {
+    "id": "L64-5",
+    "hexagram_id": 64,
+    "name_hanja": "未濟",
+    "line_number": 5,
+    "source": "六五 貞이라 吉야 无悔니 君子之光이 有孚ㅣ라 吉니라",
+    "translation_ko": "육오는 곧고 바르면 길하고 뉘우침이 없으니, 군자의 빛이 미더움이 있어 길하다.",
+    "modality": "unmarked",
+    "evidence": null
+  },
+  {
+    "id": "L64-6",
+    "hexagram_id": 64,
+    "name_hanja": "未濟",
+    "line_number": 6,
+    "source": "上九 有孚于飮酒ㅣ면 无咎ㅣ어니와 濡其首ㅣ면 有孚에 失是리라",
+    "translation_ko": "상구는 미더움이 있어 술을 마시면 허물이 없으나, 그 머리를 적시면 미더움이 있음에 이것을 잃는다.",
+    "modality": "conditional_text",
+    "evidence": "면"
+  }
+]

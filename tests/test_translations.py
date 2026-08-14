@@ -76,6 +76,25 @@ async def test_450건이_빠짐없이_채워졌다():
 
 
 @pytest.mark.asyncio
+async def test_효_표시가_한글로_통일됐다():
+    """'初六은'과 '구삼은'이 섞이면 상담 에이전트가 인용할 때 표기가 갈린다."""
+    from scripts.load_translations import LINE_MARKERS
+
+    async with AsyncSessionLocal() as session:
+        gua, hyo = await _translated_counts(session)
+        if gua == 0 and hyo == 0:
+            pytest.skip("번역 적재 전이다 (load_translations.py 미실행)")
+
+        bad = []
+        for l in (await session.execute(select(Line))).scalars().all():
+            ko = l.statement_ko or ""
+            for hanja in LINE_MARKERS:
+                if ko.startswith(hanja):
+                    bad.append(f"괘{l.hexagram_id} {l.line_number}효: '{hanja}'")
+        assert not bad, "한자 효 표시가 남은 항목 %d건\n  %s" % (len(bad), "\n  ".join(bad[:10]))
+
+
+@pytest.mark.asyncio
 async def test_용어표_핵심어가_일관되게_쓰였다():
     """원문에 그 한자가 있으면 번역문에 정한 우리말이 있어야 한다."""
     source = {h["hexagram_id"]: h for h in json.load(open(DATA, encoding="utf-8"))}

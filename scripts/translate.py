@@ -2,7 +2,7 @@
 
 지시서(pilot/HANDOFF.md, pilot/PROMPT.md) 및 리팩토링 요건을 준수합니다.
 1. 모델 ID·엔드포인트·소요시간 메타데이터를 각 레코드에 기록
-2. Gemini/Claude 공통 조건: response_mime_type 미사용, max_output_tokens=2048 통일
+2. Gemini/Claude 공통 조건: response_mime_type 미사용, 출력 상한 8192 통일
 3. Claude 모델명 임의 기본값 제거 (미지정 시 명시적 오류 발생)
 4. 개별 실패 시 전체 중단 대신 실패 기록 후 계속 진행 (내결함성)
 5. 멀티스레드 병렬 처리 지원 (--concurrency, 기본 1)
@@ -10,6 +10,7 @@
 """
 
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -78,6 +79,32 @@ SYSTEM_PROMPT = """당신은 조선 유학의 현토체(懸吐體) 주역 원문
 }"""
 
 
+def build_system_prompt(glossary_path: Optional[str]) -> Dict[str, Any]:
+    """확정 용어표를 시스템 프롬프트의 '■ 용어표' 자리에 끼워 넣는다.
+
+    새 절을 덧붙이지 않고 원래 자리를 채우는 이유는, 파일럿과 프롬프트 구조를
+    같게 두기 위해서다. 표만 15항목에서 확정본으로 넓어진다(HANDOFF C-2).
+    돌린 표가 무엇이었는지 나중에 대조할 수 있도록 해시를 함께 돌려준다.
+    """
+    if not glossary_path:
+        return {"prompt": SYSTEM_PROMPT, "glossary": None}
+
+    block = Path(glossary_path).read_text(encoding="utf-8").strip()
+    head, sep, rest = SYSTEM_PROMPT.partition("■ 용어표 (고정)\n")
+    if not sep:
+        raise ValueError("시스템 프롬프트에서 '■ 용어표 (고정)' 절을 찾지 못했다")
+    _old_table, out_sep, tail = rest.partition("\n■ 출력")
+    prompt = head + sep + block + out_sep + tail
+    return {
+        "prompt": prompt,
+        "glossary": {
+            "path": glossary_path,
+            "terms": len([l for l in block.splitlines() if l.strip()]),
+            "sha256": hashlib.sha256(block.encode("utf-8")).hexdigest()[:12],
+        },
+    }
+
+
 def build_user_prompt(item: Dict[str, Any]) -> str:
     """pilot/PROMPT.md 규격에 맞게 사용자 메시지를 조립합니다."""
     lines = [
@@ -110,7 +137,7 @@ def clean_json_response(raw_text: str) -> str:
 
 
 class VertexGeminiTranslator:
-    def __init__(self, model_name: str, project_id: str, location: str):
+    def __init__(self, model_name: str, project_id: str, location: str, system_prompt: str = SYSTEM_PROMPT):
         from google import genai
         from google.genai import types
 
@@ -125,7 +152,7 @@ class VertexGeminiTranslator:
         self.endpoint_desc = f"vertexai:{location}"
         self.config = types.GenerateContentConfig(
             temperature=0.0,
-            system_instruction=SYSTEM_PROMPT,
+            system_instruction=system_prompt,
             max_output_tokens=MAX_OUTPUT_TOKENS,
         )
 
@@ -141,7 +168,8 @@ class VertexGeminiTranslator:
 
 
 class ClaudeTranslator:
-    def __init__(self, model_name: str, project_id: Optional[str] = None, region: Optional[str] = None):
+    def __init__(self, model_name: str, project_id: Optional[str] = None, region: Optional[str] = None,
+                 system_prompt: str = SYSTEM_PROMPT):
         import anthropic
 
         api_key = os.getenv("ANTHROPIC_API_KEY")
@@ -158,13 +186,14 @@ class ClaudeTranslator:
             self.endpoint_desc = f"vertexai:{region}"
 
         self.model_name = model_name
+        self.system_prompt = system_prompt
 
     def translate(self, prompt: str) -> Dict[str, Any]:
         response = self.client.messages.create(
             model=self.model_name,
             max_tokens=MAX_OUTPUT_TOKENS,
             temperature=0.0,
-            system=SYSTEM_PROMPT,
+            system=self.system_prompt,
             messages=[{"role": "user", "content": prompt}],
         )
         raw_text = response.content[0].text if response.content else ""
@@ -172,7 +201,7 @@ class ClaudeTranslator:
         return json.loads(cleaned)
 
 
-def get_translator(provider: str, model: Optional[str] = None):
+def get_translator(provider: str, model: Optional[str] = None, system_prompt: str = SYSTEM_PROMPT):
     project_id = settings.GOOGLE_CLOUD_PROJECT or os.getenv("GOOGLE_CLOUD_PROJECT")
 
     if provider == "gemini":
@@ -181,7 +210,8 @@ def get_translator(provider: str, model: Optional[str] = None):
         model_name = model or settings.GEMINI_MODEL or os.getenv("GEMINI_MODEL", "gemini-2.5-pro")
         location = settings.GEMINI_LOCATION or os.getenv("GEMINI_LOCATION", "us-central1")
         print(f"[설정] Provider: Gemini (Vertex AI) | Model: {model_name} | Location: {location} | Project: {project_id}")
-        return VertexGeminiTranslator(model_name=model_name, project_id=project_id, location=location)
+        return VertexGeminiTranslator(model_name=model_name, project_id=project_id, location=location,
+                                     system_prompt=system_prompt)
 
     elif provider == "claude":
         model_name = model or settings.CLAUDE_MODEL or os.getenv("CLAUDE_MODEL")
@@ -190,7 +220,8 @@ def get_translator(provider: str, model: Optional[str] = None):
                 "Claude 모델명이 설정되지 않았습니다. .env의 CLAUDE_MODEL 또는 --model 인자로 명시해 주십시오."
             )
         location = settings.CLAUDE_LOCATION or os.getenv("CLAUDE_LOCATION", "us-east5")
-        t = ClaudeTranslator(model_name=model_name, project_id=project_id, region=location)
+        t = ClaudeTranslator(model_name=model_name, project_id=project_id, region=location,
+                             system_prompt=system_prompt)
         print(f"[설정] Provider: Claude ({t.endpoint_desc}) | Model: {model_name} | Region: {location} | Project: {project_id}")
         return t
 
@@ -258,6 +289,7 @@ def process_single_item(
                 "timestamp": datetime.now(timezone.utc).isoformat(),
                 "attempt": attempt,
                 "status": "success",
+                "glossary": getattr(translator, "glossary_meta", None),
             }
             return res
         except Exception as e:
@@ -297,6 +329,7 @@ def run_batch(
     concurrency: int = 1,
     delay: float = 0.2,
     max_retries: int = 3,
+    glossary: Optional[str] = None,
 ) -> None:
     items: List[Dict[str, Any]] = json.loads(input_file.read_text(encoding="utf-8"))
     if limit:
@@ -309,7 +342,12 @@ def run_batch(
     print(f"동시 실행 수(Concurrency): {concurrency}")
     print(f"========================================================\n")
 
-    translator = get_translator(provider, model)
+    sp = build_system_prompt(glossary)
+    if sp["glossary"]:
+        g = sp["glossary"]
+        print(f"용어표: {g['path']} ({g['terms']}항목, sha {g['sha256']})")
+    translator = get_translator(provider, model, system_prompt=sp["prompt"])
+    translator.glossary_meta = sp["glossary"]
     existing = load_existing_results(output_file)
     print(f"기존 저장된 완료 건수: {len(existing)}건")
 
@@ -375,6 +413,7 @@ def main():
     parser.add_argument("-l", "--limit", type=int, default=None, help="실행 항목 수 제한")
     parser.add_argument("-c", "--concurrency", type=int, default=1, help="동시 실행 워커 수 (기본: 1)")
     parser.add_argument("-d", "--delay", type=float, default=0.1, help="호출 간 딜레이(초)")
+    parser.add_argument("--glossary", default=None, help="확정 용어표 파일 (프롬프트의 용어표 자리에 들어간다)")
     parser.add_argument("--retries", type=int, default=3, help="실패 시 재시도 횟수")
 
     args = parser.parse_args()
@@ -395,6 +434,7 @@ def main():
         concurrency=args.concurrency,
         delay=args.delay,
         max_retries=args.retries,
+        glossary=args.glossary,
     )
 
 

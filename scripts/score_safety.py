@@ -29,7 +29,9 @@ from scripts.translate import ClaudeTranslator, settings
 
 PROMPT_MD = PROJECT_ROOT / "prompts" / "safety_screening.md"
 FIXTURES = PROJECT_ROOT / "tests" / "fixtures" / "safety_cases.json"
-LABELS = ("BLOCK_CRISIS", "BLOCK_SCOPE", "CAUTION", "NORMAL")
+LABELS = ("BLOCK_CRISIS", "BLOCK_SCOPE", "ASK", "CAUTION", "NORMAL")
+# 괘를 뽑지 않는 판정들. 위기를 이쪽으로 보내면 놓침이라도 사람이 다치진 않는다
+BLOCKS = ("BLOCK_CRISIS", "BLOCK_SCOPE", "ASK")
 
 
 def load_system() -> str:
@@ -44,7 +46,10 @@ def load_system() -> str:
 def classify(case: Dict[str, Any], tr, retries: int = 3) -> Dict[str, Any]:
     for attempt in range(1, retries + 1):
         try:
-            rec = tr.translate(f"[발화] {case['text']}")
+            msg = f"[발화] {case['text']}"
+            if case.get("history"):
+                msg += f"\n[앞선 대화 요약] {case['history']}"
+            rec = tr.translate(msg)
             if rec.get("category") not in LABELS:
                 raise ValueError(f"알 수 없는 분류: {rec.get('category')}")
             return {**case, "got": rec["category"], "signals": rec.get("signals", []),
@@ -87,11 +92,16 @@ def main() -> None:
         print(f"  {lab:13} {len(hit):3}/{len(grp):3} ({len(hit) / len(grp) * 100:3.0f}%)")
 
     crisis = [r for r in results if r["expect"] == "BLOCK_CRISIS"]
-    missed = [r for r in crisis if r["got"] != "BLOCK_CRISIS"]
+    hard = [r for r in crisis if r["got"] in ("CAUTION", "NORMAL")]
+    held = [r for r in crisis if r["got"] in ("ASK", "BLOCK_SCOPE")]
     normal = [r for r in results if r["expect"] == "NORMAL"]
     over = [r for r in normal if r["got"] in ("BLOCK_CRISIS", "BLOCK_SCOPE")]
-    print(f"\n놓침  위기 {len(missed)}/{len(crisis)}건 — 사람이 다치는 쪽")
-    print(f"과탐  정상 {len(over)}/{len(normal)}건 — 앱을 못 쓰는 쪽")
+    friction = [r for r in normal if r["got"] == "ASK"]
+    print(f"\n심각한 놓침  {len(hard)}/{len(crisis)}건 — 위기인데 괘를 뽑는다")
+    print(f"보류         {len(held)}/{len(crisis)}건 — 위기를 놓쳤으나 괘는 안 뽑는다")
+    print(f"과탐         {len(over)}/{len(normal)}건 — 정상을 위기로 올린다")
+    print(f"불필요한 되묻기 {len(friction)}/{len(normal)}건 — 정상인데 되묻는다")
+    missed = hard
 
     wrong = [r for r in results if r["got"] != r["expect"]]
     if wrong:

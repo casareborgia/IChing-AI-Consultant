@@ -47,6 +47,48 @@ E. 적재와 검증    ← 에이전트
 
 ---
 
+## A0. 환경 — 2026-08-14 실측
+
+호출 경로는 **Vertex AI 단일 경로**로 확정했다. Gemini와 Claude 둘 다 Vertex로 부른다.
+인증이 ADC 하나로 끝나고, 실행 조건(temperature 등)을 두 모델에 같은 방식으로
+먹일 수 있어 비교 오염이 줄어든다. Anthropic API 직접 호출은 쓰지 않는다.
+
+확인된 것:
+
+| 항목 | 상태 |
+|---|---|
+| 번역 대상 450건 | `data/hexagrams.json` 실측 일치 (괘사 64 + 효 386) |
+| `judgment_ko`·`statement_ko` 컬럼 | 이미 있음 → **마이그레이션 불필요** |
+| GCP 프로젝트 | `southern-engine-495314-p2` |
+| ADC | 있음 + quota project 설정 완료 |
+| Vertex AI API | 활성화 완료 (`aiplatform.googleapis.com`) |
+| Gemini | ✅ `gemini-2.5-pro` / `us-central1` 호출 성공 확인 |
+| Claude | ❌ 404 — Model Garden 사용 신청 전 |
+
+**남은 것 — 이게 안 되면 B를 시작할 수 없다:**
+
+Model Garden에서 **Claude 모델 사용 신청/약관 동의**를 사람이 해야 한다.
+에이전트가 대신 누르지 않는다. 신청 전에는 `anthropic` 퍼블리셔 모델이 전부 404다.
+
+리전·모델 ID 실측 (2026-08-14, 이 프로젝트 기준):
+
+- `gemini-2.5-pro` @ `us-central1` — 200
+- `gemini-3-pro`, `gemini-3-pro-preview`, `gemini-3-flash` — 404 (이 프로젝트엔 없다)
+- Claude는 승인 후 실제 리전·ID를 다시 확인할 것. `us-east5`로 넣어 본 값은 승인 전이라
+  판정 불가였다. **승인되면 파일럿을 돌리기 전에 ID를 확정하고 여기에 적어 둔다.**
+
+에이전트가 걸릴 함정:
+
+- `gcloud`가 venv의 Python 3.9로 뜨면 로드 자체가 실패한다.
+  `CLOUDSDK_PYTHON=/opt/homebrew/bin/python3.11`을 걸고 쓴다. (Python SDK 호출은 3.9로 정상)
+- `core/config.py`의 `Settings`는 `extra="ignore"`다. `.env`에 `GOOGLE_CLOUD_PROJECT`를
+  넣기만 하면 **읽히지 않는다.** 필드를 추가해야 한다.
+- **리전이 모델마다 다르다.** Claude는 서빙 리전이 한정돼 있어 Gemini와 같은 리전을
+  쓰지 못할 수 있다. location을 전역 상수 하나로 두지 말고 모델별로 잡는다.
+- 모델 ID는 API를 켠 뒤 `gcloud ai model-garden models list`로 **실제 목록을 보고 고정한다.**
+  짐작으로 쓰지 말 것. 고정한 ID를 `runs/*.json`에 같이 적어 둔다 —
+  나중에 450건을 어느 모델로 돌렸는지 대조할 근거가 된다.
+
 ## A. 준비
 
 1. `main`에서 브랜치를 딴다: `feature/step3-translation`
@@ -57,7 +99,11 @@ E. 적재와 검증    ← 에이전트
    - 출력은 JSON 배열로 파일 저장. **DB에 직접 쓰지 않는다.**
    - 실패·재시도·부분 저장을 견딜 것. 450건 도중에 끊겨도 이어서 돌 수 있어야 한다.
 
-호출은 Vertex AI를 직접 쓴다. **Antigravity 내장 에이전트 크레딧으로 450건을 돌리지 말 것**
+4. 의존성을 추가한다. `requirements.txt`에 Vertex 호출용 SDK가 아직 없다.
+   `core/config.py`에 `GOOGLE_CLOUD_PROJECT` 등 필드를 넣고 `.env.example`도 같이 갱신한다
+   (실값은 `.env`에만, `.env`는 gitignore 대상이다).
+
+호출은 A0대로 Vertex AI를 직접 쓴다. **Antigravity 내장 에이전트 크레딧으로 450건을 돌리지 말 것**
 (월 한도가 거의 소진된 상태다).
 
 ## B. 파일럿 실행

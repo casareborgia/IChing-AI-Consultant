@@ -49,7 +49,7 @@ async def _get_past_sessions(session: AsyncSession, user_id: Optional[str], limi
     stmt = (
         select(CounselSession, JournalEntry.summary)
         .outerjoin(JournalEntry, CounselSession.id == JournalEntry.session_id)
-        .where(CounselSession.user_id == user_id, CounselSession.status == "completed")
+        .where(CounselSession.user_id == user_id, CounselSession.status != "safety_redirect")
         .order_by(CounselSession.created_at.desc())
         .limit(limit)
     )
@@ -62,6 +62,7 @@ async def _get_past_sessions(session: AsyncSession, user_id: Optional[str], limi
             "summary": summary or "",
         })
     return past
+
 
 
 async def run_turn(

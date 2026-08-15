@@ -1,9 +1,20 @@
-from typing import Optional, List
+from typing import List, Literal, Optional
 from pydantic import BaseModel, Field
+
+
+class SafetyVerdict(BaseModel):
+    """[0] 안전 스크리닝 에이전트 출력 스키마"""
+    category: Literal["BLOCK_CRISIS", "BLOCK_SCOPE", "ASK", "CAUTION", "NORMAL"] = Field(
+        ..., description="안전 분류 카테고리"
+    )
+    ask: Optional[str] = Field(None, description="ASK 판정 시 사용자에게 되물을 명확화 질문")
+    signals: List[str] = Field(default_factory=list, description="감지된 위험/주의 키워드 또는 신호")
+    reason: str = Field("", description="판정 이유 및 근거")
 
 
 class IntakeOutput(BaseModel):
     """[1] 정리 에이전트 출력 스키마"""
+
     clarified_question: str = Field(..., description="명확하게 재구성된 고민 내용")
     topic_category: str = Field(..., description="고민의 주제 카테고리 (예: 관계, 커리어, 결단 등)")
     is_duplicate_question: bool = Field(False, description="중복 질의(재삼독) 여부")

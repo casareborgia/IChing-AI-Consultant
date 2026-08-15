@@ -25,7 +25,9 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from scripts.translate import ClaudeTranslator, settings
+from core.config import settings
+from core.llm import AnthropicClient as ClaudeTranslator
+from core.prompts import load_system_prompt
 
 PROMPT_MD = PROJECT_ROOT / "prompts" / "safety_screening.md"
 FIXTURES = PROJECT_ROOT / "tests" / "fixtures" / "safety_cases.json"
@@ -35,12 +37,8 @@ BLOCKS = ("BLOCK_CRISIS", "BLOCK_SCOPE", "ASK")
 
 
 def load_system() -> str:
-    md = PROMPT_MD.read_text(encoding="utf-8")
-    i = md.find("## 시스템 프롬프트")
-    m = re.search(r"```[^\n]*\n(.*?)```", md[i:], re.DOTALL)
-    if not m:
-        raise ValueError("시스템 프롬프트 블록을 찾지 못했다")
-    return m.group(1).rstrip("\n")
+    return load_system_prompt("safety_screening")
+
 
 
 def classify(case: Dict[str, Any], tr, retries: int = 3) -> Dict[str, Any]:

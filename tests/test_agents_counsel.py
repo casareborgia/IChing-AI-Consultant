@@ -62,6 +62,59 @@ async def test_상한_전에는_실패해도_대화를_잇는다():
     assert res.needs_followup is True
 
 
+class SeparatedQuestionLLM:
+    """질문을 별도 필드에만 담는 모델. 실제로 이렇게 나왔다."""
+
+    def complete_json(self, user: str, *, system: str = "", **kwargs) -> dict:
+        return {
+            "message": "지금 마음이 두 갈래로 나뉘어 있는 것 같습니다. 그 망설임은 성급함이 아니라 신중함일 수 있어요.",
+            "needs_followup": True,
+            "followup_question": "무엇이 가장 마음에 걸리시나요?",
+            "is_final": False,
+        }
+
+
+class InlineQuestionLLM:
+    """질문을 답변 안에 자연스럽게 넣는 모델 (바람직한 형태)."""
+
+    def complete_json(self, user: str, *, system: str = "", **kwargs) -> dict:
+        return {
+            "message": "그 망설임은 신중함일 수 있어요. 지금 가장 걸리는 건 무엇인가요?",
+            "needs_followup": True,
+            "followup_question": "지금 가장 걸리는 건 무엇인가요?",
+            "is_final": False,
+        }
+
+
+@pytest.mark.asyncio
+async def test_되묻기가_사용자_문장_안에_반드시_들어간다():
+    """followup_question은 화면에 나가지 않는다. message에 없으면 되묻기가 사라진다."""
+    res = await run_counsel_turn("...", INTERP, turn_number=1, client=SeparatedQuestionLLM())
+    assert "?" in res.message
+    assert "무엇이 가장 마음에 걸리시나요?" in res.message
+
+
+@pytest.mark.asyncio
+async def test_이미_질문이_있으면_덧붙이지_않는다():
+    res = await run_counsel_turn("...", INTERP, turn_number=1, client=InlineQuestionLLM())
+    assert res.message.count("지금 가장 걸리는 건 무엇인가요?") == 1
+
+
+@pytest.mark.asyncio
+async def test_마무리_턴에는_질문을_붙이지_않는다():
+    class ClosingLLM:
+        def complete_json(self, user: str, *, system: str = "", **kwargs) -> dict:
+            return {
+                "message": "스스로 정리하셨다니 다행입니다. 언제든 다시 오셔도 좋습니다.",
+                "needs_followup": False,
+                "followup_question": "무엇이 가장 걸리시나요?",
+                "is_final": True,
+            }
+
+    res = await run_counsel_turn("고맙습니다", INTERP, turn_number=3, client=ClosingLLM())
+    assert "무엇이 가장 걸리시나요?" not in res.message
+
+
 @pytest.mark.asyncio
 async def test_CAUTION_문구는_한_번만_붙는다():
     res = await run_counsel_turn(

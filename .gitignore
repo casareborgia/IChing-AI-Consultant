@@ -29,3 +29,7 @@ pilot/blind_sheet.md
 # 구 현토본 원본이 있던 자리. 2026-08-15 Kanripo 표점본으로 이관하며 지웠다.
 # 다시 받더라도 리포에 넣지 않는다 — 영리 사용을 막는 약관이 붙어 있다.
 data/source/
+
+# 실제 모델로 돌린 대화록 (재현 가능하고 용량만 차지한다)
+data/transcripts/
+data/.cache/

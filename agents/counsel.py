@@ -77,6 +77,25 @@ async def run_counsel_turn(
         is_fin = True
         f_q = None
 
+    # 되묻기는 사용자에게 보이는 문장 안에 있어야 한다.
+    #
+    # `followup_question`은 이 함수 밖 어디에서도 쓰이지 않는다 — 파이프라인은
+    # `message`만 화면으로 내보낸다. 그래서 모델이 질문을 별도 필드에만 담으면
+    # 되묻기가 통째로 사라진다. 실제로 그렇게 되어 있었고, 실제 대화 세 턴에
+    # 물음표가 하나도 없었다. "되묻고 깊어지는 대화"가 제품의 정의인데 화면에
+    # 질문이 없었던 것이다.
+    #
+    # 자연스러운 문장은 프롬프트가 만들고, 여기서는 최소선만 지킨다.
+    #
+    # 조건이 둘인 이유가 있다. 실제 대화 36턴을 보니 물음표 없이 되묻는 경우가
+    # 있었다 — "어떤 모습인지 궁금합니다", "한번 돌아보면 좋을 것 같아요". 물음표만
+    # 보고 붙이면 이런 답변에 같은 질문이 두 번 나간다. 반대로 정확히 일치하는지만
+    # 보면, 프롬프트를 안 따른 답변에서 되묻기가 통째로 사라진다. 둘 다 없을 때만
+    # 붙인다 — 질문이 아예 없는 게 확실한 자리다.
+    if needs_f and not is_fin and f_q and f_q.strip():
+        if f_q.strip() not in msg and "?" not in msg:
+            msg = msg.rstrip() + "\n\n" + f_q.strip()
+
     if caution_append:
         from agents.safety import caution_append_message
 

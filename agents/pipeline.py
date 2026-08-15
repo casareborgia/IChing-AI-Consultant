@@ -22,6 +22,8 @@ from agents.safety import format_safety_response, screen
 from core.hexagram_engine import rebuild_cast
 from core.llm import LLMClient
 from core.models.counsel import CounselSession, CounselTurn, JournalEntry
+from core.models.hexagram import Hexagram
+from core.prompts import load_prompt_block
 from core.reading import build_evidence
 from schemas.counsel import HexagramInterpretationSchema, SafetyVerdict
 
@@ -76,6 +78,55 @@ async def _get_past_sessions(
             "summary": summary or "",
         })
     return past
+
+
+async def _get_previous_reading(session: AsyncSession, ref_id: Optional[str]) -> Optional[Dict[str, Any]]:
+    """재삼독으로 지목된 이전 세션에서 그때 얻은 괘를 꺼낸다.
+
+    되묻기만 하고 끝내면 대화가 막힌다. 지난번 괘를 물려받아야 이어서 상담할 수
+    있고, 그것이 "이전 상담을 다시 보여준다"는 원칙이기도 하다.
+    """
+    if not ref_id:
+        return None
+
+    turn = (
+        await session.execute(
+            select(CounselTurn)
+            .where(CounselTurn.session_id == ref_id, CounselTurn.original_hexagram_id.isnot(None))
+            .order_by(CounselTurn.turn_number.asc())
+            .limit(1)
+        )
+    ).scalar_one_or_none()
+    if turn is None:
+        return None
+
+    hexagram = (
+        await session.execute(select(Hexagram).where(Hexagram.id == turn.original_hexagram_id))
+    ).scalar_one_or_none()
+    summary = (
+        await session.execute(select(JournalEntry.summary).where(JournalEntry.session_id == ref_id))
+    ).scalar_one_or_none()
+
+    return {
+        "hexagram_id": turn.original_hexagram_id,
+        "transformed_hexagram_id": turn.transformed_hexagram_id,
+        "changing_lines": list(turn.changing_lines or []),
+        "name_full": (hexagram.name_full if hexagram else None) or f"제{turn.original_hexagram_id}괘",
+        "summary": summary or "",
+    }
+
+
+def _format_duplicate_message(prev: Dict[str, Any]) -> str:
+    """재삼독 안내 문구를 조립한다. 내부 식별자는 넣지 않는다."""
+    reading = f"제{prev['hexagram_id']}괘 {prev['name_full']}"
+    if prev.get("transformed_hexagram_id"):
+        reading += f"(지괘 제{prev['transformed_hexagram_id']}괘)"
+    recall = f"\n\n그때 나눈 이야기는 이러했습니다 — {prev['summary']}" if prev.get("summary") else ""
+    return (
+        load_prompt_block("duplicate_response", "## 재삼독 안내")
+        .replace("{reading}", reading)
+        .replace("{recall}", recall)
+    )
 
 
 
@@ -274,17 +325,28 @@ async def run_turn(
             c_session.duplicate_session_ref = intake_res.duplicate_session_ref
             c_session.status = "active"
 
-        # 3-1. 재삼독 (동일 질문 중복) 감지 시 -> 괘를 뽑지 않고 이전 세션 회고로 유도
-        if intake_res.is_duplicate_question:
-            c_session.status = "completed"
-            dup_msg = (
-                f"이전에 이미 같은 고민(세션: {intake_res.duplicate_session_ref})으로 괘를 헤아려 보신 기록이 있습니다.\n\n"
-                "주역(몽괘)에서는 같은 물음을 거듭 묻기보다(再三瀆), 먼저 얻은 지혜를 삶에서 어떻게 실천하고 돌아보았는지를 더 중히 여깁니다.\n\n"
-                "지난 상담 이후 상황이나 마음에 어떤 새로운 변화나 갈림길이 생기셨는지 먼저 말씀해 주시겠어요?"
-            )
+        # 3-1. 재삼독 (동일 질문 중복) -> 새로 뽑지 않고 지난번 괘를 물려받는다.
+        #
+        # 되묻기만 하고 끝내면 안 된다. 예전에는 이 분기가 괘 없는 턴을 남겨서,
+        # 사용자가 "무엇이 달라졌나" 물음에 답해도 다음 턴이 다시 이 분기로 들어와
+        # 똑같은 문구를 글자 하나 안 틀리고 반복했다. 빠져나갈 길이 없었다.
+        #
+        # 지난번 괘를 이 턴에 기록해 두면 다음 턴은 후속 상담 경로로 간다 —
+        # 새 괘를 뽑지 않으면서 대화는 이어진다. 몽괘 원칙이 막으려던 것은
+        # 재뽑기지 대화가 아니다.
+        #
+        # 지목된 세션에서 괘를 찾지 못하면(그 세션도 되묻기만 하다 끝난 경우 등)
+        # 보여줄 것이 없으므로 중복으로 치지 않고 정상적으로 뽑는다.
+        prev_reading = await _get_previous_reading(session, intake_res.duplicate_session_ref)
+
+        if intake_res.is_duplicate_question and prev_reading:
+            dup_msg = _format_duplicate_message(prev_reading)
             new_turn = CounselTurn(
                 session_id=sid,
                 turn_number=turn_no,
+                original_hexagram_id=prev_reading["hexagram_id"],
+                transformed_hexagram_id=prev_reading["transformed_hexagram_id"],
+                changing_lines=prev_reading["changing_lines"],
                 user_message=message,
                 agent_response=dup_msg,
                 needs_followup=True,
@@ -300,8 +362,16 @@ async def run_turn(
                 needs_followup=True,
                 is_final=False,
                 is_duplicate=True,
+                hexagram_id=prev_reading["hexagram_id"],
+                transformed_hexagram_id=prev_reading["transformed_hexagram_id"],
+                changing_lines=prev_reading["changing_lines"],
                 safety_category=safety_res.category,
             )
+
+        if intake_res.is_duplicate_question:
+            # 중복이라 했으나 보여줄 괘가 없다. 기록만 남기고 평소대로 진행한다.
+            c_session.is_duplicate = False
+            c_session.duplicate_session_ref = None
 
         # 3-2. 괘 도출 및 해석
         interp_res, evidence, chunks = await run_interpret(

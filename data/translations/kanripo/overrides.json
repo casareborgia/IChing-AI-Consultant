@@ -1,0 +1,23 @@
+{
+  "_설명": "적재 시 기본 파일(claude) 대신 gemini 값을 쓸 항목. 450건 대조에서 나온 결함만 담는다.",
+  "_대조": "data/translations/kanripo/diff.md",
+  "_저본": "Kanripo 표점본 (data/hexagrams_kanripo.json, 판정 50건 반영)",
+  "_비고": [
+    "구 배치 overrides는 13건이었다. 한자 미번역 9건은 프롬프트에 '한자를 남기지 말 것'",
+    "규칙(6항)을 넣어 거의 사라졌고(450건 중 2건), 悔 뭉갬 1건도 없어졌다.",
+    "眚 4건은 프롬프트에서 손대지 않은 영역이라 그대로 남아 여기서 교체한다.",
+    "",
+    "元(21건)·終(12건) 용어표 위반은 구 배치와 수치까지 같다. 元亨을 '크게 형통'으로",
+    "옮기는 것은 결함이 아니라 허용된 판단으로 보아 구 overrides도 손대지 않았다. 따른다.",
+    "",
+    "L34-4는 넣지 않았다. 효 표시 九四.는 적재 시 normalize_marker가 '구사.'로 고치고,",
+    "본문은 claude의 '바퀴통'(壯于大輿之輹)이 gemini의 '바퀴살'보다 정확하다."
+  ],
+  "overrides": [
+    {"id": "H5",    "from": "data/translations/kanripo/gemini.json", "reason": "괘명 한자 잔존 — '需는 미더움이 있으니'"},
+    {"id": "L6-2",  "from": "data/translations/kanripo/gemini.json", "reason": "無眚을 '허물이 없다'로 뭉갬 — 眚은 재앙, 咎와 구분된다"},
+    {"id": "H25",   "from": "data/translations/kanripo/gemini.json", "reason": "有眚을 '허물이 있다'로 뭉갬"},
+    {"id": "L25-6", "from": "data/translations/kanripo/gemini.json", "reason": "有眚을 '허물이 있다'로 뭉갬"},
+    {"id": "L51-3", "from": "data/translations/kanripo/gemini.json", "reason": "無眚을 '허물이 없다'로 뭉갬"}
+  ]
+}

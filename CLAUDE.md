@@ -75,11 +75,17 @@ RAG 대상 1,752건 — 정전 주석 1,238(효사 421·소상전 399·단전 21
 - 파이프라인 (순서대로 돌린다)
   ```
   fetch_kanripo.py → parse_kanripo.py → apply_decisions.py → verify_kanripo.py
-  build_rag_chunks.py -i data/hexagrams_kanripo.json
-  build_batch_items.py -i data/hexagrams_kanripo.json
+  build_rag_chunks.py   -i data/hexagrams_kanripo.json   → embed_chunks.py
+  build_batch_items.py  -i data/hexagrams_kanripo.json   → translate.py → load_translations.py
+  seed_hexagrams.py                                      # 원문 필드
   ```
   `parse_kanripo.py`는 원본 그대로를 내고, 판정 반영은 `apply_decisions.py`가 얹는
   별도 단계다. 파서를 다시 돌리면 판정도 다시 얹어야 한다.
+
+  **원문 필드는 `seed_hexagrams.py`만 넣는다.** `load_translations.py`는 번역
+  필드(`judgment_ko`·`statement_ko`)만 건드린다. 저본을 바꾸고 seed를 안 돌리면
+  DB에 번역은 새 저본, 원문은 옛 저본이 남는다 — 실제로 그렇게 됐던 적이 있고
+  `tests/test_translations.py`가 그걸 잡는다.
 - `scripts/review_kanripo_diff.py` — 구/신 대조표. 판정을 바꿀 때 근거를 여기서 뽑는다
 
 ## 기술 스택

@@ -13,12 +13,24 @@ from sqlalchemy import func, select
 from core.db import AsyncSessionLocal
 from core.models.rag import InterpretationChunk
 
-DATA = os.path.join(os.path.dirname(__file__), "..", "data", "hexagrams.json")
+ROOT = os.path.join(os.path.dirname(__file__), "..")
+DATA = os.path.join(ROOT, "data", "hexagrams_kanripo.json")
+CHUNKS = os.path.join(ROOT, "data", "rag_chunks_kanripo.json")
 
 ALLOWED_SOURCE_TYPES = {
-    "guasa_comm", "tanjon", "tanjon_comm", "daesang", "daesang_comm",
+    "gwa_intro", "guasa_comm", "tanjon", "tanjon_comm", "daesang", "daesang_comm",
     "line_comm", "sosang", "sosang_comm",
 }
+
+
+def _expected_count() -> int:
+    """청크 파일에서 센다. 숫자를 박아두면 청크가 늘 때마다 테스트가 깨진다.
+
+    파일과 맞대면 "DB를 다시 적재하지 않았다"는 것까지 잡힌다 — 하드코딩된
+    숫자는 그걸 못 잡는다. 실제로 저본 이관 때 1,751 → 1,752로 늘면서
+    이 테스트가 깨졌고, 숫자만 고쳤다면 같은 일이 또 생겼을 것이다.
+    """
+    return len(json.load(open(CHUNKS, encoding="utf-8")))
 
 
 async def _count(session):
@@ -32,7 +44,10 @@ async def test_청크가_모두_적재되고_임베딩됐다():
         if n == 0:
             pytest.skip("청크 적재 전이다 (embed_chunks.py 미실행)")
 
-        assert n == 1751, f"청크 {n}건 (기대 1751)"
+        expected = _expected_count()
+        assert n == expected, (
+            f"청크 {n}건 (파일은 {expected}건) — "
+            "청크를 다시 만들었으면 embed_chunks.py도 다시 돌려야 한다")
 
         no_vec = (await session.execute(
             select(func.count()).select_from(InterpretationChunk)

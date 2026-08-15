@@ -1,9 +1,14 @@
+import json
+import os
+
 import pytest
 from sqlalchemy import select
 from core.db import AsyncSessionLocal
 from core.hexagram_engine import HEXAGRAM_ID_TO_BINARY
 from core.models.hexagram import Hexagram, Line
 from core.models.counsel import CounselSession, CounselTurn
+
+DATA = os.path.join(os.path.dirname(__file__), "..", "data", "hexagrams_kanripo.json")
 
 
 @pytest.mark.asyncio
@@ -34,9 +39,18 @@ async def test_db_seeded_hexagrams_and_lines():
         assert len(qian_lines) == 7  # 초효~상효(6개) + 용구(1개) = 7개
 
         # 4. 용구(7효) 효사와 소상전이 분리 적재됐는지 검증 (파서가 붙여놓던 부분)
+        #
+        # 문자열을 박아두지 않는다. 저본을 바꾸면 원문 표기가 통째로 달라지는데
+        # (현토본 `見群龍호 无首면 吉리라` → 표점본 `見群龍無首，吉。`) 그때마다
+        # 이 테스트가 깨진다. 검사하려는 것은 표기가 아니라 **효사와 소상전이
+        # 한 필드에 붙어 있지 않은가**이므로, 저본 파일과 맞대는 편이 맞다.
+        source = {h["hexagram_id"]: h for h in json.load(open(DATA, encoding="utf-8"))}
+        src_yonggu = next(x for x in source[1]["lines"] if x["position"] == 7)
         yonggu = qian_lines[6]
-        assert yonggu.statement_text == "用九 見群龍호 无首면 吉리라"
-        assert yonggu.small_xiang_text == "用九 天德은 不可爲首也ㅣ라"
+        assert yonggu.statement_text == src_yonggu["original"]
+        assert yonggu.small_xiang_text == src_yonggu["sosang"]
+        assert yonggu.small_xiang_text not in yonggu.statement_text, \
+            "소상전이 효사 필드에 붙어 있다"
 
 
 @pytest.mark.asyncio

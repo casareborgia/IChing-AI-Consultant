@@ -1,3 +1,4 @@
+import argparse
 import asyncio
 import json
 import os
@@ -47,8 +48,10 @@ def compute_binary_code(lines_list: list) -> str:
     return "".join(code_bits)
 
 
-async def seed_hexagrams():
-    json_path = os.path.join(os.path.dirname(__file__), "..", "data", "hexagrams.json")
+async def seed_hexagrams(input_path=None):
+    root = os.path.realpath(os.path.join(os.path.dirname(__file__), ".."))
+    rel = input_path or os.path.join("data", "hexagrams_kanripo.json")
+    json_path = rel if os.path.isabs(rel) else os.path.join(root, rel)
     if not os.path.exists(json_path):
         print(f"Error: {json_path} not found.")
         return
@@ -131,4 +134,11 @@ async def seed_hexagrams():
 
 
 if __name__ == "__main__":
-    asyncio.run(seed_hexagrams())
+    # 원문 필드(judgment_text·statement_text·small_xiang_text)를 넣는 유일한 자리다.
+    # load_translations.py는 번역 필드만 갱신하므로, 저본을 바꾸면 여기도 다시
+    # 돌려야 한다. 안 돌리면 DB에 번역은 새 저본, 원문은 옛 저본이 남는다.
+    ap = argparse.ArgumentParser(description="괘·효 원문 적재")
+    ap.add_argument("-i", "--input", default=None,
+                    help="괘 구조 JSON (기본: data/hexagrams_kanripo.json)")
+    args = ap.parse_args()
+    asyncio.run(seed_hexagrams(args.input))

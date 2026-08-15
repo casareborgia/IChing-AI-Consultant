@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     # --- LLM Providers & Models ---
     LLM_PROVIDER: str = "anthropic"  # "anthropic" | "ollama" | "gemini"
     OLLAMA_BASE_URL: str = "http://localhost:11434"
-    OLLAMA_MODEL: str = "gemma2:latest"
+    OLLAMA_MODEL: str = "gemma4:26b"  # 서비스 후보 모델. `ollama list`의 이름과 맞아야 한다
 
     # --- Vertex AI (3단계 번역 및 레거시) ---
     # 리전을 모델별로 나눠 둔 것은 취향이 아니다. Claude는 Vertex 서빙 리전이

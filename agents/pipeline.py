@@ -19,8 +19,10 @@ from agents.intake import run_intake
 from agents.interpret import run_interpret
 from agents.journal import write_journal
 from agents.safety import format_safety_response, screen
+from core.hexagram_engine import rebuild_cast
 from core.llm import LLMClient
 from core.models.counsel import CounselSession, CounselTurn, JournalEntry
+from core.reading import build_evidence
 from schemas.counsel import HexagramInterpretationSchema, SafetyVerdict
 
 
@@ -41,8 +43,18 @@ class TurnResult:
     journal_summary: Optional[str] = None
 
 
-async def _get_past_sessions(session: AsyncSession, user_id: Optional[str], limit: int = 10) -> List[Dict[str, Any]]:
-    """사용자의 최근 과거 세션과 저널 요약을 조회합니다."""
+async def _get_past_sessions(
+    session: AsyncSession,
+    user_id: Optional[str],
+    limit: int = 10,
+    exclude_session_id: Optional[str] = None,
+) -> List[Dict[str, Any]]:
+    """사용자의 최근 과거 세션과 저널 요약을 조회합니다.
+
+    `exclude_session_id`는 지금 진행 중인 세션을 뺀다. 되묻기(ASK)를 거친 세션은
+    이미 DB에 있어서, 빼지 않으면 정리 에이전트가 자기 자신을 보고 "같은 질문을
+    또 한다"고 판정한다.
+    """
     if not user_id:
         return []
 
@@ -53,6 +65,8 @@ async def _get_past_sessions(session: AsyncSession, user_id: Optional[str], limi
         .order_by(CounselSession.created_at.desc())
         .limit(limit)
     )
+    if exclude_session_id:
+        stmt = stmt.where(CounselSession.id != exclude_session_id)
     rows = (await session.execute(stmt)).all()
     past = []
     for cs, summary in rows:
@@ -127,6 +141,18 @@ async def run_turn(
         latched_crisis=latched_crisis,
     )
 
+    # 2-0. 스크리닝 실패 -> 괘도 상담도 없이 중립 안내. 세션 상태는 건드리지 않는다.
+    #      통신 장애 한 번에 세션이 닫히거나 위기/범위밖 문구가 나가면 안 된다.
+    if safety_res.category == "ERROR":
+        return TurnResult(
+            session_id=c_session.id if c_session else "",
+            turn_number=len(turns) + 1,
+            user_facing_message=format_safety_response(safety_res) or "",
+            needs_followup=True,
+            is_final=False,
+            safety_category="ERROR",
+        )
+
     # 2-1. 위기 발화 (BLOCK_CRISIS) -> 즉시 핫라인 안내 분기 및 세션 래치
     if safety_res.category == "BLOCK_CRISIS":
         sid = c_session.id if c_session else str(uuid.uuid4())
@@ -197,23 +223,56 @@ async def run_turn(
             safety_category=safety_res.category,
         )
 
-    # 3. [1] 신규 세션인 경우: Intake (정리 및 재삼독 감지) & [2] Interpret (괘 도출)
-    if not c_session:
-        past_list = await _get_past_sessions(session, user_id)
-        intake_res = await run_intake(message, past_sessions=past_list, client=clients.get("intake"))
+    # 이전 대화 이력 (되묻기만 오간 세션에서도 상담사가 맥락을 잃지 않도록 먼저 조립한다)
+    history_items: List[Dict[str, str]] = []
+    for t in turns:
+        history_items.append({"role": "user", "message": t.user_message})
+        history_items.append({"role": "counselor", "message": t.agent_response})
 
-        sid = str(uuid.uuid4())
-        c_session = CounselSession(
-            id=sid,
-            user_id=user_id,
-            raw_question=message,
-            clarified_question=intake_res.clarified_question,
-            topic_category=intake_res.topic_category,
-            is_duplicate=intake_res.is_duplicate_question,
-            duplicate_session_ref=intake_res.duplicate_session_ref,
-            status="active",
+    turn_no = len(turns) + 1
+
+    # 3. 아직 괘가 없는 세션 -> [1] Intake (정리·재삼독) + [2] Interpret (괘 도출)
+    #
+    #    갈림의 기준은 "세션이 새것인가"가 아니라 "이 세션에 괘가 있는가"다.
+    #    되묻기(ASK)는 세션을 먼저 만들어 두므로, 세션 유무로 가르면 사용자가
+    #    되물음에 답한 턴이 이 블록을 건너뛴다. 그러면 뽑은 적 없는 괘로
+    #    상담이 나간다 — 실제로 1번 괘가 그렇게 나가고 있었다.
+    has_reading = any(t.original_hexagram_id for t in turns)
+
+    if not has_reading:
+        past_list = await _get_past_sessions(
+            session, user_id, exclude_session_id=c_session.id if c_session else None
         )
-        session.add(c_session)
+
+        # 되묻기를 거쳤다면 앞선 발화까지 함께 넘긴다. 이번 발화만 보면
+        # "네, 이직 얘기예요" 같은 답변만 남아 고민을 정리할 수 없다.
+        intake_source = "\n".join([t.user_message for t in turns] + [message])
+        intake_res = await run_intake(
+            intake_source,
+            past_sessions=past_list,
+            client=clients.get("intake"),
+        )
+
+        if c_session is None:
+            sid = str(uuid.uuid4())
+            c_session = CounselSession(
+                id=sid,
+                user_id=user_id,
+                raw_question=message,
+                clarified_question=intake_res.clarified_question,
+                topic_category=intake_res.topic_category,
+                is_duplicate=intake_res.is_duplicate_question,
+                duplicate_session_ref=intake_res.duplicate_session_ref,
+                status="active",
+            )
+            session.add(c_session)
+        else:
+            sid = c_session.id
+            c_session.clarified_question = intake_res.clarified_question
+            c_session.topic_category = intake_res.topic_category
+            c_session.is_duplicate = intake_res.is_duplicate_question
+            c_session.duplicate_session_ref = intake_res.duplicate_session_ref
+            c_session.status = "active"
 
         # 3-1. 재삼독 (동일 질문 중복) 감지 시 -> 괘를 뽑지 않고 이전 세션 회고로 유도
         if intake_res.is_duplicate_question:
@@ -225,7 +284,7 @@ async def run_turn(
             )
             new_turn = CounselTurn(
                 session_id=sid,
-                turn_number=1,
+                turn_number=turn_no,
                 user_message=message,
                 agent_response=dup_msg,
                 needs_followup=True,
@@ -236,7 +295,7 @@ async def run_turn(
 
             return TurnResult(
                 session_id=sid,
-                turn_number=1,
+                turn_number=turn_no,
                 user_facing_message=dup_msg,
                 needs_followup=True,
                 is_final=False,
@@ -244,7 +303,7 @@ async def run_turn(
                 safety_category=safety_res.category,
             )
 
-        # 3-2. 정상 신규 세션 -> [2] 괘 도출 및 해석
+        # 3-2. 괘 도출 및 해석
         interp_res, evidence, chunks = await run_interpret(
             session,
             intake_res.clarified_question,
@@ -253,20 +312,19 @@ async def run_turn(
             client=clients.get("interpret"),
         )
 
-        # 3-3. [3] 1턴 상담 대화 생성
-        caution_append = (safety_res.category == "CAUTION")
+        # 3-3. [3] 상담 대화 생성
         counsel_turn_res = await run_counsel_turn(
             message,
             interp_res,
-            conversation_history=[],
-            turn_number=1,
+            conversation_history=history_items,
+            turn_number=turn_no,
             client=clients.get("counsel"),
-            caution_append=caution_append,
+            caution_append=(safety_res.category == "CAUTION"),
         )
 
         new_turn = CounselTurn(
             session_id=sid,
-            turn_number=1,
+            turn_number=turn_no,
             original_hexagram_id=interp_res.original_hexagram_id,
             transformed_hexagram_id=interp_res.transformed_hexagram_id,
             changing_lines=interp_res.changing_lines,
@@ -285,7 +343,7 @@ async def run_turn(
 
         return TurnResult(
             session_id=sid,
-            turn_number=1,
+            turn_number=turn_no,
             user_facing_message=counsel_turn_res.message,
             needs_followup=counsel_turn_res.needs_followup,
             is_final=counsel_turn_res.is_final,
@@ -296,58 +354,39 @@ async def run_turn(
             journal_summary=journal_summary,
         )
 
-    # 4. 기존 세션의 후속 턴 진행
-    next_turn_num = len(turns) + 1
-    # 1턴의 괘 정보 복원
-    first_turn = turns[0]
-    orig_hex_id = first_turn.original_hexagram_id or 1
-    trans_hex_id = first_turn.transformed_hexagram_id
-    ch_lines = first_turn.changing_lines or []
-
-    # 이전 대화 히스토리 조립
-    history_items = []
-    for t in turns:
-        history_items.append({"role": "user", "message": t.user_message})
-        history_items.append({"role": "counselor", "message": t.agent_response})
-
-    # 후속 턴용 괘 근거 및 해석 스키마 복원
-    from core.hexagram_engine import cast_hexagram
-    from core.reading import build_evidence
-
-    # 1턴의 효 정보를 기반으로 확정 근거 재생성
-    # manual_lines가 1턴과 일치하도록 복원
-    mock_cast = cast_hexagram(method="coin")
-    try:
-        evidence = await build_evidence(session, mock_cast)
-        summary_text = evidence.summary_korean
-    except Exception:
-        summary_text = f"제{orig_hex_id}괘 상담 지속 중"
+    # 4. 이미 괘가 있는 세션 -> 그 괘를 되살려 상담을 잇는다
+    #
+    #    다시 뽑지 않는다. 본괘 ID와 동효 위치만으로 그때의 6효가 하나로
+    #    결정되므로, 저장된 값에서 같은 괘를 그대로 복원할 수 있다.
+    #    예전에는 여기서 cast_hexagram()을 새로 불러 매 턴 다른 괘가 나왔고,
+    #    상담사는 A괘의 괘사를 들고 B괘 이야기를 했다.
+    reading_turn = next(t for t in turns if t.original_hexagram_id)
+    cast = rebuild_cast(reading_turn.original_hexagram_id, reading_turn.changing_lines or [])
+    evidence = await build_evidence(session, cast)
 
     interp_stub = HexagramInterpretationSchema(
-        original_hexagram_id=orig_hex_id,
-        transformed_hexagram_id=trans_hex_id,
-        changing_lines=ch_lines,
-        raw_text=summary_text,
+        original_hexagram_id=cast.original_hexagram_id,
+        transformed_hexagram_id=cast.transformed_hexagram_id,
+        changing_lines=cast.changing_lines,
+        raw_text=evidence.summary_korean,
         contextual_mapping=c_session.clarified_question or c_session.raw_question,
     )
 
-
-    caution_append = (safety_res.category == "CAUTION")
     counsel_turn_res = await run_counsel_turn(
         message,
         interp_stub,
         conversation_history=history_items,
-        turn_number=next_turn_num,
+        turn_number=turn_no,
         client=clients.get("counsel"),
-        caution_append=caution_append,
+        caution_append=(safety_res.category == "CAUTION"),
     )
 
     new_turn = CounselTurn(
         session_id=c_session.id,
-        turn_number=next_turn_num,
-        original_hexagram_id=orig_hex_id,
-        transformed_hexagram_id=trans_hex_id,
-        changing_lines=ch_lines,
+        turn_number=turn_no,
+        original_hexagram_id=cast.original_hexagram_id,
+        transformed_hexagram_id=cast.transformed_hexagram_id,
+        changing_lines=cast.changing_lines,
         user_message=message,
         agent_response=counsel_turn_res.message,
         needs_followup=counsel_turn_res.needs_followup,
@@ -363,13 +402,13 @@ async def run_turn(
 
     return TurnResult(
         session_id=c_session.id,
-        turn_number=next_turn_num,
+        turn_number=turn_no,
         user_facing_message=counsel_turn_res.message,
         needs_followup=counsel_turn_res.needs_followup,
         is_final=counsel_turn_res.is_final,
-        hexagram_id=orig_hex_id,
-        transformed_hexagram_id=trans_hex_id,
-        changing_lines=ch_lines,
+        hexagram_id=cast.original_hexagram_id,
+        transformed_hexagram_id=cast.transformed_hexagram_id,
+        changing_lines=cast.changing_lines,
         safety_category=safety_res.category,
         journal_summary=journal_summary,
     )

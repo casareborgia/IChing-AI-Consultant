@@ -3,11 +3,20 @@ from pydantic import BaseModel, Field
 
 
 class SafetyVerdict(BaseModel):
-    """[0] 안전 스크리닝 에이전트 출력 스키마"""
-    category: Literal["BLOCK_CRISIS", "BLOCK_SCOPE", "ASK", "CAUTION", "NORMAL"] = Field(
-        ..., description="안전 분류 카테고리"
+    """[0] 안전 스크리닝 에이전트 출력 스키마
+
+    ERROR는 모델이 내리는 판정이 아니라 스크리닝 자체가 실패했다는 내부 상태다.
+    실패를 다섯 판정 중 하나로 뭉개면 통신 장애가 엉뚱한 안내로 나간다 —
+    진로 상담하러 온 사람이 의료·법률 전문가를 찾아가라는 답을 받는 식으로.
+    """
+    category: Literal["BLOCK_CRISIS", "BLOCK_SCOPE", "ASK", "CAUTION", "NORMAL", "ERROR"] = Field(
+        ..., description="안전 분류 카테고리 (ERROR는 스크리닝 실패를 뜻하는 내부 상태)"
     )
     ask: Optional[str] = Field(None, description="ASK 판정 시 사용자에게 되물을 명확화 질문")
+    context: Optional[Literal["minor", "violence"]] = Field(
+        None,
+        description="BLOCK_CRISIS일 때 어느 연락처를 위에 놓을지. 판정에는 영향을 주지 않는다",
+    )
     signals: List[str] = Field(default_factory=list, description="감지된 위험/주의 키워드 또는 신호")
     reason: str = Field("", description="판정 이유 및 근거")
 

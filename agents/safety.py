@@ -6,52 +6,76 @@
 - 내부 라벨/점수는 절대 사용자에게 노출하지 않음
 """
 
+from functools import lru_cache
 from typing import Optional
 
 from core.llm import LLMClient, get_client
-from core.prompts import load_system_prompt
+from core.prompts import load_prompt_block, load_system_prompt
 from schemas.counsel import SafetyVerdict
 
 VALID_CATEGORIES = {"BLOCK_CRISIS", "BLOCK_SCOPE", "ASK", "CAUTION", "NORMAL"}
+VALID_CONTEXTS = {"minor", "violence"}
 
-# 사용자 노출용 기본 응답 문구들
-CRISIS_DEFAULT_MESSAGE = """지금 남겨주신 말씀을 그냥 지나칠 수 없었습니다.
-혼자 감당하기 어려운 무거운 마음과 순간에는, 주역의 괘를 헤아리기보다 전문가의 따뜻한 손길을 먼저 마주하는 것이 가장 중요합니다.
-
-지금 바로 24시간 언제든 무료로 도움을 받을 수 있는 곳이 있습니다:
-
-* 자살예방 상담전화: ☎ 109 (24시간 무료)
-* 정신건강 위기상담전화: ☎ 1577-0199 (24시간 무료)
-* 청소년 상담전화: ☎ 1388 (24시간 무료)
-* 여성긴급전화: ☎ 1366 (24시간 무료)
-
-당신의 삶과 안전은 그 어떤 것보다 소중합니다. 잠시 숨을 고르시고, 위의 번호로 마음을 나누어 보시기를 간곡히 권합니다."""
-
-SCOPE_DEFAULT_MESSAGE = """질문해 주신 내용은 전문적인 진단과 검토가 필요한 영역(의료/약물, 법률, 세무, 금융 등)에 해당합니다.
-
-주역은 삶의 변화와 마음가짐을 성찰하는 도구이지만, 전문적인 판단이나 치료를 대신할 수는 없습니다. 안전하고 정확한 해결을 위해 해당 분야의 전문 기관이나 전문가(의사, 변호사 등)와 상의하시기를 권해드립니다."""
-
-SYSTEM_ERROR_MESSAGE = """죄송합니다. 일시적인 시스템 연결 지연으로 인해 답변을 준비하지 못했습니다.
-잠시 후 다시 말씀해 주시거나 새로고침 후 이용해 주시기 바랍니다."""
-
-CAUTION_APPEND_MESSAGE = """\n\n> 💡 참고 안내: 주역의 괘와 상담 내용은 상황을 바라보는 새로운 관점과 성찰을 돕기 위한 참고 자료입니다. 마음의 큰 부담이나 지속적인 어려움이 있으실 때는 전문 심리상담이나 의료 기관의 도움도 함께 고려해 보세요."""
+# 화면에 나가는 문구는 전부 prompts/safety_response.md에 있다. 여기에 복사해 두지
+# 않는다 — 복사본이 있으면 .md를 고쳐도 화면은 그대로다. 실제로 그런 상태였고,
+# 그래서 .md가 정의한 청소년·폭력 우선 문구가 한 번도 나가지 않았다.
+_TEMPLATE_HEADINGS = {
+    "crisis": "### 기본 템플릿",
+    "crisis_minor": "### 청소년 정황 우선 템플릿",
+    "crisis_violence": "### 폭력 피해 정황 우선 템플릿",
+    "scope": "## 2. BLOCK_SCOPE",
+    "caution": "## 3. CAUTION",
+    "ask": "## 4. ASK",
+    "error": "## 5. SYSTEM_ERROR",
+}
 
 
-def format_safety_response(verdict: SafetyVerdict, *, is_error: bool = False) -> Optional[str]:
+@lru_cache(maxsize=None)
+def get_template(key: str) -> str:
+    """prompts/safety_response.md에서 문구 하나를 읽어온다."""
+    if key not in _TEMPLATE_HEADINGS:
+        raise KeyError(f"알 수 없는 안전 문구 키: {key}")
+    return load_prompt_block("safety_response", _TEMPLATE_HEADINGS[key])
+
+
+def _crisis_template_key(context: Optional[str]) -> str:
+    """어느 위기 문구를 쓸지 고른다.
+
+    미성년자 정황이면 1388을, 폭력 피해 정황이면 1366을 맨 위에 놓는다
+    (CLAUDE.md 위기 대응 연락처 절). 정황이 불분명하면 기본 문구다 —
+    억지로 고르는 것보다 109를 앞세운 일반 안내가 낫다.
+    """
+    if context == "minor":
+        return "crisis_minor"
+    if context == "violence":
+        return "crisis_violence"
+    return "crisis"
+
+
+def caution_append_message() -> str:
+    """CAUTION일 때 상담 답변 끝에 덧붙이는 문구."""
+    return "\n\n" + get_template("caution")
+
+
+def format_safety_response(verdict: SafetyVerdict) -> Optional[str]:
     """SafetyVerdict에 따라 사용자에게 직접 노출할 안내 문구를 반환합니다.
 
     NORMAL 또는 CAUTION인 경우 즉각적인 차단 메시지가 없으므로 None을 반환합니다.
+
+    문구는 오직 판정에서만 나온다. 예전에는 `is_error` 인자로 오류 문구를 따로
+    골랐는데, 부르는 쪽이 그 인자를 넘기지 않으면 통신 장애가 BLOCK_SCOPE 문구로
+    나갔다. 갈래를 판정 하나로 모아 그 함정을 없앤다.
     """
-    if is_error:
-        return SYSTEM_ERROR_MESSAGE
+    if verdict.category == "ERROR":
+        return get_template("error")
 
     if verdict.category == "BLOCK_CRISIS":
-        return CRISIS_DEFAULT_MESSAGE
+        return get_template(_crisis_template_key(verdict.context))
     elif verdict.category == "BLOCK_SCOPE":
-        return SCOPE_DEFAULT_MESSAGE
+        return get_template("scope")
     elif verdict.category == "ASK":
         question = verdict.ask or "조금 더 구체적으로 어떤 상황인지 말씀해 주실 수 있나요?"
-        return f"남겨주신 고민을 주역의 괘로 깊이 들여다보기에 앞서, 한 가지 여쭙고 싶은 점이 있습니다.\n\n{question}\n\n생각나시는 대로 편하게 말씀해 주시면, 그 마음의 맥락을 담아 괘를 헤아려 드리겠습니다."
+        return get_template("ask").replace("{ask_question}", question)
     return None
 
 
@@ -94,16 +118,25 @@ async def screen(
         if cat not in VALID_CATEGORIES:
             raise ValueError(f"유효하지 않은 안전 카테고리 응답: {cat}")
 
+        # 안내처 힌트는 판정에 관여하지 않는다. 모르는 값이 오면 조용히 버리고
+        # 기본 문구로 간다 — 여기서 예외를 던지면 위기 발화가 통째로 실패한다.
+        ctx = data.get("context")
+        if ctx not in VALID_CONTEXTS:
+            ctx = None
+
         return SafetyVerdict(
             category=cat,
             ask=data.get("ask"),
+            context=ctx,
             signals=data.get("signals", []),
             reason=data.get("reason", ""),
         )
     except Exception as e:
-        # LLM 호출 실패 시 보수적으로 닫는 쪽(BLOCK_SCOPE 또는 별도 에러 처리)으로 반환
+        # 스크리닝이 실패하면 괘를 뽑지 않는다(닫는 쪽). 다만 낙인은 남기지 않는다 —
+        # BLOCK_CRISIS로 올리면 통신 장애에 자살예방 핫라인이 뜨고, BLOCK_SCOPE로
+        # 내리면 진로 고민에 "의사·변호사와 상의하라"는 답이 나간다. 둘 다 아니다.
         return SafetyVerdict(
-            category="BLOCK_SCOPE",
+            category="ERROR",
             signals=["screening_error"],
             reason=f"안전 스크리닝 중 오류 발생: {e}",
         )

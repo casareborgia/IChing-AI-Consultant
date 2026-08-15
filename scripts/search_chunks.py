@@ -1,6 +1,6 @@
 """RAG 청크를 의미 검색한다 (4단계 확인용, 이후 에이전트가 쓸 조회 경로).
 
-    python scripts/search_chunks.py "직장을 옮겨야 할지 모르겠다"
+    python scripts/search_chunks.py "직장을 옮겨야 할지 모르겠다" --hexagram 47
     python scripts/search_chunks.py "기다려야 할까" --hexagram 5 -k 5
 
 질의는 **RETRIEVAL_QUERY**로 임베딩한다. 적재는 RETRIEVAL_DOCUMENT였다.
@@ -26,7 +26,9 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("query")
     ap.add_argument("-k", type=int, default=5)
-    ap.add_argument("--hexagram", type=int, default=1, help="이 괘로 좁힌다 (기본 1)")
+    # 기본값을 두지 않는다. 1을 기본으로 두었더니 괘를 안 붙인 검색이 조용히
+    # 건괘 안에서만 돌면서 전체를 훑은 것처럼 보였다.
+    ap.add_argument("--hexagram", type=int, required=True, help="이 괘로 좁힌다 (필수)")
     ap.add_argument("--source-type", default=None, help="sosang_comm 등으로 좁힌다")
     args = ap.parse_args()
 

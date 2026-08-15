@@ -286,3 +286,32 @@ def cast_hexagram(
         lines=line_results,
         focus_rule=focus_rule,
     )
+
+
+def rebuild_cast(
+    original_hexagram_id: int,
+    changing_lines: Optional[List[int]] = None,
+) -> HexagramCastResult:
+    """이미 뽑힌 괘를 그대로 되살린다. 다시 뽑지 않는다.
+
+    본괘 ID와 동효 위치만 있으면 6효의 수치가 하나로 결정된다 — 동효인 양은 9,
+    동효인 음은 6, 변하지 않는 양은 7, 음은 8이다. 그래서 세션이 이어질 때
+    `cast_hexagram()`을 다시 부를 이유가 없다. 다시 부르면 같은 질문에 새 괘가
+    나오고, 그건 재삼독 금지 원칙을 어기는 것이기도 하다.
+    """
+    binary = hexagram_id_to_binary(original_hexagram_id)
+    changing = set(changing_lines or [])
+
+    invalid = [p for p in changing if p not in range(1, 7)]
+    if invalid:
+        raise ValueError(f"동효 위치는 1~6이어야 합니다: {invalid}")
+
+    line_values: List[int] = []
+    for pos in range(1, 7):
+        is_yang = binary[pos - 1] == "1"
+        if pos in changing:
+            line_values.append(9 if is_yang else 6)
+        else:
+            line_values.append(7 if is_yang else 8)
+
+    return cast_hexagram(manual_lines=line_values)

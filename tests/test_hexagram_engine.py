@@ -1,3 +1,5 @@
+import itertools
+
 import pytest
 from core.hexagram_engine import (
     HEXAGRAM_BINARY_TO_ID,
@@ -5,6 +7,7 @@ from core.hexagram_engine import (
     calculate_focus_rule,
     cast_hexagram,
     hexagram_id_to_binary,
+    rebuild_cast,
 )
 from schemas.hexagram_engine import FocusType
 
@@ -113,3 +116,31 @@ def test_cast_hexagram_random():
                 assert 1 <= res.transformed_hexagram_id <= 64
             else:
                 assert res.transformed_hexagram_id is None
+
+
+def test_rebuild_cast_왕복_전수():
+    """본괘 ID와 동효만으로 원래 괘가 하나로 복원되는지 64괘 × 모든 동효 조합 전수 검증.
+
+    상담이 여러 턴 이어져도 괘를 다시 뽑지 않으려면 이 복원이 정확해야 한다.
+    """
+    count = 0
+    for hex_id in range(1, 65):
+        for r in range(7):
+            for combo in itertools.combinations(range(1, 7), r):
+                rebuilt = rebuild_cast(hex_id, list(combo))
+                assert rebuilt.original_hexagram_id == hex_id
+                assert rebuilt.changing_lines == list(combo)
+                # 같은 효 값으로 다시 뽑으면 지괘·포커스까지 동일해야 한다
+                same = cast_hexagram(manual_lines=[l.value for l in rebuilt.lines])
+                assert same.transformed_hexagram_id == rebuilt.transformed_hexagram_id
+                assert same.focus_rule.focus_type == rebuilt.focus_rule.focus_type
+                assert same.focus_rule.target_line_numbers == rebuilt.focus_rule.target_line_numbers
+                count += 1
+    assert count == 64 * 64  # 64괘 × 동효 조합 2^6
+
+
+def test_rebuild_cast_잘못된_동효_위치():
+    with pytest.raises(ValueError):
+        rebuild_cast(1, [0])
+    with pytest.raises(ValueError):
+        rebuild_cast(1, [7])  # 7은 용구/용육 자리이지 동효 위치가 아니다

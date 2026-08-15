@@ -1,6 +1,7 @@
 """안전 스크리너 프롬프트를 시험 세트로 채점한다.
 
     python scripts/score_safety.py -m claude-sonnet-4-5-20250929
+    python scripts/score_safety.py -p ollama -m gemma4:26b -c 2
 
 프롬프트를 고칠 때마다 돌려 정확도가 오르내리는 것을 숫자로 본다.
 
@@ -26,7 +27,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from core.config import settings
-from core.llm import AnthropicClient as ClaudeTranslator
+from core.llm import get_client
 from core.prompts import load_system_prompt
 
 PROMPT_MD = PROJECT_ROOT / "prompts" / "safety_screening.md"
@@ -61,18 +62,23 @@ def classify(case: Dict[str, Any], tr, retries: int = 3) -> Dict[str, Any]:
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("-m", "--model", default=None)
+    # 서비스할 모델로 채점해야 의미가 있다. Sonnet으로 맞춘 프롬프트가
+    # Gemma에서도 같게 동작한다는 보장은 없다 — 실패하는 자리가 모델마다 다르다.
+    ap.add_argument("-p", "--provider", default=None,
+                    help="anthropic | ollama | gemini (기본: LLM_PROVIDER 설정)")
     ap.add_argument("-c", "--concurrency", type=int, default=4)
     ap.add_argument("-o", "--output", default=None, help="상세 결과 저장 경로")
     args = ap.parse_args()
 
     cases = json.loads(FIXTURES.read_text(encoding="utf-8"))["cases"]
-    model = args.model or settings.CLAUDE_MODEL or os.getenv("CLAUDE_MODEL")
-    if not model:
-        raise SystemExit("CLAUDE_MODEL이 없다. --model로 줄 것.")
     # 재시도는 아래 classify가 이미 3회 돈다. 클라이언트 쪽 재시도를 켜 두면
     # 3 × 3 = 9회가 되어, 채점 한 번에 나가는 호출이 조용히 3배가 된다.
-    tr = ClaudeTranslator(model_name=model, system_prompt=load_system(), retries=1)
-    print(f"{model} @ {tr.endpoint_desc} | 시험 {len(cases)}건\n")
+    tr = get_client(
+        role="safety", provider=args.provider, model=args.model,
+        system_prompt=load_system(),
+    )
+    tr.retries = 1
+    print(f"{tr.model_name} @ {tr.endpoint_desc} | 시험 {len(cases)}건\n")
 
     results, lock = [], threading.Lock()
     with ThreadPoolExecutor(max_workers=args.concurrency) as ex:

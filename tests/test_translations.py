@@ -18,7 +18,7 @@ from sqlalchemy import func, select
 from core.db import AsyncSessionLocal
 from core.models.hexagram import Hexagram, Line
 
-DATA = os.path.join(os.path.dirname(__file__), "..", "data", "hexagrams.json")
+DATA = os.path.join(os.path.dirname(__file__), "..", "data", "hexagrams_kanripo.json")
 
 # 번역문에 반드시 이 우리말로 나타나야 하는 핵심어.
 # 확정 용어표(pilot/GLOSSARY.md)에서 뜻이 갈릴 여지가 없는 것만 골랐다.
@@ -43,7 +43,11 @@ async def _translated_counts(session):
 
 @pytest.mark.asyncio
 async def test_원문이_변하지_않았다():
-    """DB의 원문이 data/hexagrams.json과 한 글자도 다르지 않아야 한다."""
+    """DB의 원문이 data/hexagrams_kanripo.json과 한 글자도 다르지 않아야 한다.
+
+    원문은 seed_hexagrams.py가 넣는다. load_translations.py는 번역 필드만
+    건드리므로, 저본을 바꾸고 seed를 다시 돌리지 않으면 여기서 걸린다.
+    """
     source = {h["hexagram_id"]: h for h in json.load(open(DATA, encoding="utf-8"))}
 
     async with AsyncSessionLocal() as session:

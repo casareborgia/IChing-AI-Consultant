@@ -14,6 +14,11 @@ class Settings(BaseSettings):
     OLLAMA_BASE_URL: str = "http://localhost:11434"
     OLLAMA_MODEL: str = "gemma4:26b"  # 서비스 후보 모델. `ollama list`의 이름과 맞아야 한다
 
+    # LM Studio. 같은 모델이라도 런타임이 다르다 — Apple Silicon에서는 MLX가
+    # GGUF보다 빠른 것이 보통이라, 모델뿐 아니라 런타임도 후보로 놓고 재야 한다.
+    LMSTUDIO_BASE_URL: str = "http://localhost:1234"
+    LMSTUDIO_MODEL: str = "google/gemma-4-e4b"
+
     # --- Vertex AI (3단계 번역 및 레거시) ---
     # 리전을 모델별로 나눠 둔 것은 취향이 아니다. Claude는 Vertex 서빙 리전이
     # 한정되어 있어 Gemini와 같은 리전을 쓰지 못할 수 있다. 하나로 합치지 말 것.

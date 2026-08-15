@@ -164,6 +164,90 @@ async def test_위기_발화_즉시_차단_및_래치_유지():
 
 
 @pytest.mark.asyncio
+async def test_주역_자체를_묻는_질문에는_괘를_뽑지_않는다(monkeypatch):
+    """묻는 사람은 괘를 뽑은 적이 없다.
+
+    그런데도 뽑아서 답하면 "지금 보신 괘는…"처럼 사실이 아닌 전제를 사용자에게
+    돌려주게 된다. 실제 대화록에서 그렇게 나가고 있었다.
+    """
+    from core.hexagram_engine import cast_hexagram
+
+    def _no_cast(*args, **kwargs):
+        raise AssertionError("정보 질문인데 괘를 뽑았습니다")
+
+    monkeypatch.setattr("agents.interpret.cast_hexagram", _no_cast)
+
+    clients = {
+        "safety": MockLLMDispatcher({"default": {"category": "NORMAL"}}),
+        "intake": MockLLMDispatcher({"default": {
+            "request_type": "question",
+            "clarified_question": "대흉이 무슨 뜻인지",
+            "topic_category": "주역 문의",
+            "is_duplicate_question": False,
+            "duplicate_session_ref": None,
+        }}),
+        "counsel": MockLLMDispatcher({"default": {
+            "message": "대흉은 지금 이 길이 위험하다는 신호입니다. 물어보고 싶은 고민이 있으시면 그때 괘를 헤아려 드리겠습니다.",
+            "needs_followup": True,
+            "followup_question": "어떤 고민이 있으신가요?",
+            "is_final": False,
+        }}),
+    }
+
+    async with AsyncSessionLocal() as session:
+        res = await run_turn(
+            session, user_id="meta_user",
+            message="괘에 대흉이라고 나오면 그건 무슨 뜻인가요?",
+            clients=clients,
+        )
+
+    assert res.hexagram_id is None, "정보 질문에는 괘가 없어야 한다"
+    assert res.changing_lines is None
+    assert "대흉은" in res.user_facing_message
+
+
+@pytest.mark.asyncio
+async def test_사연이_섞이면_상담으로_본다(monkeypatch):
+    """'대흉이 뭔가요? 제 인생도 끝난 걸까요'는 정보 질문이 아니다."""
+    from core.rag import RetrievedChunk
+
+    async def mock_search(*args, **kwargs):
+        return [RetrievedChunk(
+            chunk_id="c", hexagram_id=1, line_number=None, source_type="guasa_comm",
+            category="annotation", content="원문", content_ko="번역", similarity=0.7,
+        )]
+
+    monkeypatch.setattr("agents.interpret.search_chunks", mock_search)
+
+    clients = {
+        "safety": MockLLMDispatcher({"default": {"category": "NORMAL"}}),
+        "intake": MockLLMDispatcher({"default": {
+            "request_type": "counsel",
+            "clarified_question": "지금 상황이 끝난 것인지",
+            "topic_category": "내면/심리",
+            "is_duplicate_question": False,
+            "duplicate_session_ref": None,
+        }}),
+        "interpret": MockLLMDispatcher({"default": {"contextual_mapping": "매핑"}}),
+        "counsel": MockLLMDispatcher({"default": {
+            "message": "끝이라고 느끼시는군요. 무엇이 그렇게 느끼게 하나요?",
+            "needs_followup": True, "followup_question": "무엇이 그렇게 느끼게 하나요?",
+            "is_final": False,
+        }}),
+    }
+
+    async with AsyncSessionLocal() as session:
+        res = await run_turn(
+            session, user_id="mixed_user",
+            message="대흉이 뭔가요? 제 인생도 끝난 걸까요",
+            manual_lines=[7, 7, 7, 7, 7, 7],
+            clients=clients,
+        )
+
+    assert res.hexagram_id == 1, "사연이 섞이면 상담이므로 괘를 뽑는다"
+
+
+@pytest.mark.asyncio
 async def test_위기_이후_새_세션에서도_괘를_뽑지_않는다():
     """래치는 사람 단위여야 한다.
 

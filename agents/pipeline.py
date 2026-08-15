@@ -415,7 +415,39 @@ async def run_turn(
             c_session.is_duplicate = False
             c_session.duplicate_session_ref = None
 
-        # 3-2. 괘 도출 및 해석
+        # 3-2. 주역 자체를 묻는 질문이면 괘를 뽑지 않는다.
+        #
+        # 묻는 사람은 괘를 뽑은 적이 없다. 그런데도 뽑아서 답하면 "지금 보신 괘는…"
+        # 같은, 사실이 아닌 전제를 사용자에게 돌려주게 된다. 실제로 그렇게 나가고 있었다.
+        if intake_res.request_type == "question":
+            counsel_turn_res = await run_counsel_turn(
+                message, None,
+                conversation_history=history_items,
+                turn_number=turn_no,
+                client=clients.get("counsel"),
+                caution_append=(safety_res.category == "CAUTION"),
+            )
+            new_turn = CounselTurn(
+                session_id=sid,
+                turn_number=turn_no,
+                user_message=message,
+                agent_response=counsel_turn_res.message,
+                needs_followup=counsel_turn_res.needs_followup,
+                is_final=counsel_turn_res.is_final,
+            )
+            session.add(new_turn)
+            await session.commit()
+
+            return TurnResult(
+                session_id=sid,
+                turn_number=turn_no,
+                user_facing_message=counsel_turn_res.message,
+                needs_followup=counsel_turn_res.needs_followup,
+                is_final=counsel_turn_res.is_final,
+                safety_category=safety_res.category,
+            )
+
+        # 3-3. 괘 도출 및 해석
         interp_res, evidence, chunks = await run_interpret(
             session,
             intake_res.clarified_question,

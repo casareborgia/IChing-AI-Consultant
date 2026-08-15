@@ -67,6 +67,41 @@ STUB_CHUNKS = [
 ]
 
 
+class RecordingClient:
+    """호출 실패를 기록하는 껍데기.
+
+    에이전트들은 LLM 실패를 안에서 삼키고 미리 준비한 문장을 돌려준다(설계상
+    그게 맞다 — 사용자에게 예외를 보여줄 수는 없다). 그래서 에이전트의 반환값만
+    보면 모델이 아무것도 못 냈을 때도 '형식 통과'로 세게 된다. 실제로 26B 측정에서
+    0토큰짜리 호출이 통과로 집계됐다. 클라이언트 층에서 직접 세야 한다.
+    """
+
+    def __init__(self, inner):
+        self.inner = inner
+        self.failures = 0
+        self.last_error: Optional[str] = None
+
+    @property
+    def model_name(self):
+        return self.inner.model_name
+
+    @property
+    def endpoint_desc(self):
+        return self.inner.endpoint_desc
+
+    @property
+    def last_timing(self):
+        return getattr(self.inner, "last_timing", None)
+
+    def complete_json(self, user: str, **kwargs) -> Dict[str, Any]:
+        try:
+            return self.inner.complete_json(user, **kwargs)
+        except Exception as e:  # noqa: BLE001
+            self.failures += 1
+            self.last_error = f"{type(e).__name__}: {e}"
+            raise
+
+
 class Check:
     """한 건에 대한 판정 결과."""
 
@@ -76,6 +111,7 @@ class Check:
         self.violations: List[str] = []
         self.seconds = 0.0
         self.error: Optional[str] = None
+        self.timing: Optional[Dict[str, float]] = None   # Ollama가 준 시간 분해
 
     @property
     def constraint_ok(self) -> bool:
@@ -105,15 +141,25 @@ async def run_intake_cases(cases: List[Dict], client) -> List[Check]:
         valid_ids = {p["session_id"] for p in past}
         t0 = time.time()
         try:
+            _f0 = getattr(client, 'failures', 0)
             res = await run_intake(case["message"], past_sessions=past, client=client)
             chk.seconds = time.time() - t0
-            chk.format_ok = True
+            chk.timing = getattr(client, "last_timing", None)
+            chk.format_ok = getattr(client, "failures", 0) == _f0
+            if not chk.format_ok:
+                chk.error = f"모델 호출 실패 — {getattr(client, 'last_error', '')[:80]}"
+                out.append(chk)
+                continue
 
             if not (res.clarified_question or "").strip():
                 chk.violations.append("clarified_question이 비었다")
             if not (res.topic_category or "").strip():
                 chk.violations.append("topic_category가 비었다")
             _text_checks(res.clarified_question, where="정리된 질문", violations=chk.violations)
+
+            want = case.get("expect_request_type")
+            if want and res.request_type != want:
+                chk.violations.append(f"request_type이 {want}여야 하는데 {res.request_type}")
 
             ref = res.duplicate_session_ref
             if ref and ref not in valid_ids:
@@ -141,12 +187,18 @@ async def run_interpret_cases(cases: List[Dict], client, session) -> List[Check]
             chk = Check(case["id"])
             t0 = time.time()
             try:
+                _f0 = getattr(client, 'failures', 0)
                 res, evidence, _ = await run_interpret(
                     session, case["clarified_question"],
                     manual_lines=case["manual_lines"], client=client,
                 )
                 chk.seconds = time.time() - t0
-                chk.format_ok = True
+                chk.timing = getattr(client, "last_timing", None)
+                chk.format_ok = getattr(client, "failures", 0) == _f0
+                if not chk.format_ok:
+                    chk.error = f"모델 호출 실패 — {getattr(client, 'last_error', '')[:80]}"
+                    out.append(chk)
+                    continue
 
                 if not (res.contextual_mapping or "").strip():
                     chk.violations.append("contextual_mapping이 비었다")
@@ -176,6 +228,7 @@ async def run_counsel_cases(cases: List[Dict], client) -> List[Check]:
         chk = Check(case["id"])
         t0 = time.time()
         try:
+            _f0 = getattr(client, 'failures', 0)
             res = await run_counsel_turn(
                 case["user_message"], interp,
                 conversation_history=case.get("history") or [],
@@ -183,7 +236,12 @@ async def run_counsel_cases(cases: List[Dict], client) -> List[Check]:
                 client=client,
             )
             chk.seconds = time.time() - t0
-            chk.format_ok = True
+            chk.timing = getattr(client, "last_timing", None)
+            chk.format_ok = getattr(client, "failures", 0) == _f0
+            if not chk.format_ok:
+                chk.error = f"모델 호출 실패 — {getattr(client, 'last_error', '')[:80]}"
+                out.append(chk)
+                continue
 
             msg = res.message or ""
             if not msg.strip():
@@ -228,11 +286,14 @@ async def run_journal_cases(cases: List[Dict], client, session) -> List[Check]:
             await session.commit()
 
             t0 = time.time()
+            _f0 = getattr(client, 'failures', 0)
             entry = await write_journal(session, sid, client=client)
             chk.seconds = time.time() - t0
-            chk.format_ok = True
-
-            if not (entry.summary or "").strip():
+            chk.timing = getattr(client, "last_timing", None)
+            chk.format_ok = getattr(client, "failures", 0) == _f0
+            if not chk.format_ok:
+                chk.error = f"모델 호출 실패 — {getattr(client, 'last_error', '')[:80]}"
+            elif not (entry.summary or "").strip():
                 chk.violations.append("summary가 비었다")
             if not (entry.key_insights or "").strip():
                 chk.violations.append("key_insights가 비었다")
@@ -249,64 +310,111 @@ async def run_journal_cases(cases: List[Dict], client, session) -> List[Check]:
     return out
 
 
-def report(name: str, checks: List[Check]) -> Tuple[int, int, int, float]:
+def _median(xs):
+    xs = sorted(xs)
+    return xs[len(xs) // 2] if xs else 0.0
+
+
+def report(name: str, checks: List[Check]) -> Dict[str, Any]:
     n = len(checks)
     fmt = sum(1 for c in checks if c.format_ok)
     con = sum(1 for c in checks if c.constraint_ok)
     secs = [c.seconds for c in checks if c.seconds]
-    med = sorted(secs)[len(secs) // 2] if secs else 0.0
-    print(f"  {name:8} 형식 {fmt:2}/{n:<2}  제약 {con:2}/{n:<2}  지연 중앙 {med:5.1f}s")
+    med, worst = _median(secs), (max(secs) if secs else 0.0)
+
+    line = f"  {name:10} 형식 {fmt:3}/{n:<3} 제약 {con:3}/{n:<3} 지연 중앙 {med:6.1f}s 최장 {worst:6.1f}s"
+
+    # Ollama가 시간 분해를 줬다면 어디에 쓰였는지 갈라 본다
+    tms = [c.timing for c in checks if c.timing]
+    if tms:
+        load = _median([t["load"] for t in tms])
+        pin = _median([t["prompt_seconds"] for t in tms])
+        gen = _median([t["gen_seconds"] for t in tms])
+        ptok = _median([t["prompt_tokens"] for t in tms])
+        gtok = _median([t["gen_tokens"] for t in tms])
+        gtps = _median([t["gen_tps"] for t in tms])
+        line += (f"\n             ├ 로드 {load:5.1f}s  입력 {pin:5.1f}s ({ptok:.0f}토큰)"
+                 f"  생성 {gen:5.1f}s ({gtok:.0f}토큰, {gtps:.0f} tok/s)")
+        reloads = sum(1 for t in tms if t["load"] > 1.0)
+        if reloads:
+            line += f"\n             └ 모델 재로드 {reloads}/{len(tms)}건 — 메모리에서 밀려났다는 뜻"
+    print(line)
+
     for c in checks:
         if c.error:
             print(f"      {c.case_id} 실패 — {c.error[:100]}")
         elif c.violations:
             print(f"      {c.case_id} {' · '.join(c.violations)}")
-    return n, fmt, con, med
+    return {"n": n, "format": fmt, "constraint": con, "median": med, "worst": worst}
+
+
+async def warmup(client) -> None:
+    """첫 호출은 모델 로드가 섞여 대표성이 없다. 재고 버린다."""
+    try:
+        client.complete_json('{"ping":1}만 출력하십시오.', system="JSON만 출력합니다.")
+    except Exception:
+        pass
+
+
+async def run_all(data: Dict, client, session, picked: List[str]) -> Dict[str, List[Check]]:
+    out = {}
+    for name in picked:
+        if name == "intake":
+            out[name] = await run_intake_cases(data["intake"], client)
+        elif name == "interpret":
+            out[name] = await run_interpret_cases(data["interpret"], client, session)
+        elif name == "counsel":
+            out[name] = await run_counsel_cases(data["counsel"], client)
+        elif name == "journal":
+            out[name] = await run_journal_cases(data["journal"], client, session)
+    return out
 
 
 async def main_async(args) -> None:
     data = json.loads(FIXTURES.read_text(encoding="utf-8"))
     picked = [args.agent] if args.agent else ["intake", "interpret", "counsel", "journal"]
+    models = [m.strip() for m in args.model.split(",")] if args.model else [None]
 
-    results: Dict[str, List[Check]] = {}
     async with AsyncSessionLocal() as session:
-        for name in picked:
-            client = get_client(role=name, provider=args.provider, model=args.model)
-            if name == "intake":
-                results[name] = await run_intake_cases(data["intake"], client)
-            elif name == "interpret":
-                results[name] = await run_interpret_cases(data["interpret"], client, session)
-            elif name == "counsel":
-                results[name] = await run_counsel_cases(data["counsel"], client)
-            elif name == "journal":
-                results[name] = await run_journal_cases(data["journal"], client, session)
+        for model in models:
+            client = get_client(role="counsel", provider=args.provider, model=model)
+            print(f"\n{'=' * 66}\n{client.model_name} @ {client.endpoint_desc}  ({args.repeat}회 반복)\n{'=' * 66}")
 
-    probe = get_client(role="counsel", provider=args.provider, model=args.model)
-    print(f"\n{probe.model_name} @ {probe.endpoint_desc}\n")
-    totals = [report(n, results[n]) for n in picked]
+            # 예열은 한 모델당 한 번. 이후 반복은 메모리에 올라온 상태를 잰다.
+            await warmup(client)
 
-    tn = sum(t[0] for t in totals)
-    tf = sum(t[1] for t in totals)
-    tc = sum(t[2] for t in totals)
-    turn_cost = sum(t[3] for n, t in zip(picked, totals) if n in ("counsel",))
-    print(f"\n  {'합계':8} 형식 {tf:2}/{tn:<2}  제약 {tc:2}/{tn:<2}")
-    if turn_cost:
-        print(f"\n  상담 1턴 예상 지연: 안전 + 상담 = 약 {turn_cost * 2:.0f}초 (안전이 상담과 비슷하다고 볼 때)")
+            merged: Dict[str, List[Check]] = {n: [] for n in picked}
+            for r in range(args.repeat):
+                run_client = RecordingClient(
+                    get_client(role="counsel", provider=args.provider, model=model))
+                got = await run_all(data, run_client, session, picked)
+                for n, cs in got.items():
+                    merged[n].extend(cs)
 
-    if args.output:
-        Path(args.output).write_text(json.dumps(
-            {n: [{"id": c.case_id, "format_ok": c.format_ok, "violations": c.violations,
-                  "seconds": round(c.seconds, 2), "error": c.error} for c in cs]
-             for n, cs in results.items()}, ensure_ascii=False, indent=2), encoding="utf-8")
-        print(f"\n상세 → {args.output}")
+            summaries = {n: report(n, merged[n]) for n in picked}
+            tn = sum(v["n"] for v in summaries.values())
+            tf = sum(v["format"] for v in summaries.values())
+            tc = sum(v["constraint"] for v in summaries.values())
+            print(f"\n  {'합계':10} 형식 {tf:3}/{tn:<3} 제약 {tc:3}/{tn:<3}")
+            if "counsel" in summaries:
+                print(f"  상담 1턴(안전+상담) 추정: 약 {summaries['counsel']['median'] * 2:.0f}초")
 
-    sys.exit(1 if tf < tn else 0)
+            if args.output:
+                tag = (client.model_name or "model").replace(":", "-").replace("/", "-")
+                path = Path(args.output).with_name(Path(args.output).stem + f"_{tag}.json")
+                path.write_text(json.dumps(
+                    {n: [{"id": c.case_id, "format_ok": c.format_ok, "violations": c.violations,
+                          "seconds": round(c.seconds, 2), "timing": c.timing, "error": c.error}
+                         for c in cs] for n, cs in merged.items()},
+                    ensure_ascii=False, indent=2), encoding="utf-8")
+                print(f"  상세 → {path}")
 
 
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("-p", "--provider", default=None, help="anthropic | ollama | gemini")
-    ap.add_argument("-m", "--model", default=None)
+    ap.add_argument("-m", "--model", default=None, help="쉼표로 여러 개 지정 가능")
+    ap.add_argument("-r", "--repeat", type=int, default=1, help="모델당 반복 횟수")
     ap.add_argument("-a", "--agent", default=None,
                     choices=["intake", "interpret", "counsel", "journal"])
     ap.add_argument("-o", "--output", default=None)

@@ -132,6 +132,31 @@ class OllamaClient:
         self.system_prompt = system_prompt
         self.max_tokens = max_tokens
         self.endpoint_desc = f"ollama:{self.base_url}"
+        # 직전 호출의 시간 분해. 로컬에서 "느리다"는 말은 쓸모가 없다 —
+        # 모델 로드인지, 입력 처리인지, 생성인지에 따라 처방이 완전히 달라진다.
+        # Ollama가 응답에 담아 보내주는 값을 그냥 버리고 있었다.
+        # 순차 호출을 전제로 한다. 동시 호출 시에는 마지막 값만 남는다.
+        self.last_timing: Optional[Dict[str, float]] = None
+
+    @staticmethod
+    def _timing(body: Dict[str, Any]) -> Dict[str, float]:
+        """나노초 단위 필드를 초로 바꾸고 토큰 처리 속도를 계산한다."""
+        ns = 1_000_000_000
+        load = body.get("load_duration", 0) / ns
+        p_dur = body.get("prompt_eval_duration", 0) / ns
+        g_dur = body.get("eval_duration", 0) / ns
+        p_tok = body.get("prompt_eval_count", 0)
+        g_tok = body.get("eval_count", 0)
+        return {
+            "total": body.get("total_duration", 0) / ns,
+            "load": load,
+            "prompt_seconds": p_dur,
+            "gen_seconds": g_dur,
+            "prompt_tokens": p_tok,
+            "gen_tokens": g_tok,
+            "prompt_tps": (p_tok / p_dur) if p_dur else 0.0,
+            "gen_tps": (g_tok / g_dur) if g_dur else 0.0,
+        }
 
     def complete_json(
         self,
@@ -161,8 +186,9 @@ class OllamaClient:
         last_err = None
         for attempt in range(1, self.retries + 1):
             try:
-                with urllib.request.urlopen(req, timeout=120) as resp:
+                with urllib.request.urlopen(req, timeout=600) as resp:
                     res_body = json.loads(resp.read().decode("utf-8"))
+                    self.last_timing = self._timing(res_body)
                     raw_text = res_body.get("response", "")
                     cleaned = clean_json_response(raw_text)
                     return json.loads(cleaned)
@@ -171,6 +197,92 @@ class OllamaClient:
                 if attempt < self.retries:
                     time.sleep(attempt * 1.5)
         raise RuntimeError(f"Ollama 호출 실패 ({self.retries}회 재시도 소진): {last_err}") from last_err
+
+    def translate(self, prompt: str) -> Dict[str, Any]:
+        return self.complete_json(prompt, system=self.system_prompt or "")
+
+
+class LMStudioClient:
+    """LM Studio의 OpenAI 호환 서버 클라이언트.
+
+    LM Studio가 내려받는 것은 MLX safetensors라 Ollama가 읽지 못한다. 변환하는
+    대신 이미 떠 있는 서버에 붙는다 — 파일을 옮기지 않아도 되고, MLX 런타임
+    그대로의 속도를 잰다는 이점이 있다.
+    """
+
+    def __init__(
+        self,
+        model_name: str,
+        base_url: Optional[str] = None,
+        retries: int = 3,
+        system_prompt: Optional[str] = None,
+        max_tokens: int = 4096,
+    ):
+        self.model_name = model_name
+        self.base_url = (base_url or settings.LMSTUDIO_BASE_URL).rstrip("/")
+        self.retries = retries
+        self.system_prompt = system_prompt
+        self.max_tokens = max_tokens
+        self.endpoint_desc = f"lmstudio:{self.base_url}"
+        self.last_timing: Optional[Dict[str, float]] = None
+
+    def complete_json(
+        self,
+        user: str,
+        *,
+        system: str = "",
+        temperature: float = 0.0,
+        max_tokens: Optional[int] = None,
+    ) -> Dict[str, Any]:
+        max_tokens = max_tokens or self.max_tokens
+        sys_prompt = system or self.system_prompt or ""
+        url = f"{self.base_url}/v1/chat/completions"
+        payload = {
+            "model": self.model_name,
+            "messages": [
+                {"role": "system", "content": sys_prompt},
+                {"role": "user", "content": user},
+            ],
+            "temperature": temperature,
+            "max_tokens": max_tokens,
+            "stream": False,
+            "response_format": {"type": "json_object"},
+        }
+        data = json.dumps(payload).encode("utf-8")
+
+        last_err = None
+        for attempt in range(1, self.retries + 1):
+            try:
+                req = urllib.request.Request(
+                    url, data=data, headers={"Content-Type": "application/json"}
+                )
+                started = time.time()
+                with urllib.request.urlopen(req, timeout=600) as resp:
+                    body = json.loads(resp.read().decode("utf-8"))
+                elapsed = time.time() - started
+
+                # OpenAI 호환 응답에는 소요 시간이 없다. 토큰 수만 주므로
+                # 벽시계 시간으로 생성 속도를 되짚는다.
+                usage = body.get("usage") or {}
+                gen_tok = usage.get("completion_tokens", 0)
+                self.last_timing = {
+                    "total": elapsed,
+                    "load": 0.0,
+                    "prompt_seconds": 0.0,
+                    "gen_seconds": elapsed,
+                    "prompt_tokens": usage.get("prompt_tokens", 0),
+                    "gen_tokens": gen_tok,
+                    "prompt_tps": 0.0,
+                    "gen_tps": (gen_tok / elapsed) if elapsed else 0.0,
+                }
+
+                raw_text = body["choices"][0]["message"]["content"] or ""
+                return json.loads(clean_json_response(raw_text))
+            except Exception as e:
+                last_err = e
+                if attempt < self.retries:
+                    time.sleep(attempt * 1.5)
+        raise RuntimeError(f"LM Studio 호출 실패 ({self.retries}회 재시도 소진): {last_err}") from last_err
 
     def translate(self, prompt: str) -> Dict[str, Any]:
         return self.complete_json(prompt, system=self.system_prompt or "")
@@ -284,6 +396,15 @@ def get_client(
             or os.getenv("OLLAMA_MODEL", "gemma2:latest")
         )
         return OllamaClient(model_name=model_name, system_prompt=system_prompt)
+
+    elif prov == "lmstudio":
+        model_name = (
+            model
+            or role_model
+            or settings.LMSTUDIO_MODEL
+            or os.getenv("LMSTUDIO_MODEL", "google/gemma-4-e4b")
+        )
+        return LMStudioClient(model_name=model_name, system_prompt=system_prompt)
 
     elif prov == "gemini":
         model_name = (

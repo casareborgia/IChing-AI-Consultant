@@ -24,6 +24,10 @@ class SafetyVerdict(BaseModel):
 class IntakeOutput(BaseModel):
     """[1] 정리 에이전트 출력 스키마"""
 
+    request_type: Literal["counsel", "question"] = Field(
+        "counsel",
+        description="counsel이면 괘를 뽑아 상담한다. question이면 주역 자체에 대한 물음이라 괘를 뽑지 않는다",
+    )
     clarified_question: str = Field(..., description="명확하게 재구성된 고민 내용")
     topic_category: str = Field(..., description="고민의 주제 카테고리 (예: 관계, 커리어, 결단 등)")
     is_duplicate_question: bool = Field(False, description="중복 질의(재삼독) 여부")

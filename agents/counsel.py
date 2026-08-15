@@ -16,7 +16,7 @@ MAX_TURNS_LIMIT = 12
 
 async def run_counsel_turn(
     user_message: str,
-    interpretation: HexagramInterpretationSchema,
+    interpretation: Optional[HexagramInterpretationSchema],
     *,
     conversation_history: Optional[List[Dict[str, str]]] = None,
     turn_number: int = 1,
@@ -39,11 +39,23 @@ async def run_counsel_turn(
     sys_prompt = load_system_prompt("counsel")
     llm = client or get_client(role="counsel")
 
-    # 프롬프트 조립
-    prompt_lines = [
-        f"[도출된 괘 및 해설 요약(한글)]\n{interpretation.raw_text}\n",
-        f"[상황 매핑 초안]\n{interpretation.contextual_mapping}\n",
-    ]
+    # 프롬프트 조립.
+    #
+    # 괘가 없는 턴이 있다. 주역 자체를 묻는 질문("대흉이 무슨 뜻인가요")에는 괘를
+    # 뽑지 않는다. 예전에는 이 경우에도 괘를 뽑아서 "지금 보신 괘는…"이라고 답했는데,
+    # 묻는 사람은 괘를 뽑은 적이 없으므로 없는 일을 사실처럼 말한 셈이었다.
+    if interpretation is None:
+        prompt_lines = [
+            "[이번 턴에는 도출된 괘가 없습니다]\n"
+            "주역 자체에 대한 물음입니다. 아는 대로 답하되, **괘를 뽑은 것처럼 말하지 마십시오.**\n"
+            "'지금 보신 괘', '이번에 나온 괘' 같은 표현은 사실이 아닙니다.\n"
+            "답을 마친 뒤, 물어볼 고민이 있다면 그때 괘를 헤아려 드리겠다고 알리십시오.\n",
+        ]
+    else:
+        prompt_lines = [
+            f"[도출된 괘 및 해설 요약(한글)]\n{interpretation.raw_text}\n",
+            f"[상황 매핑 초안]\n{interpretation.contextual_mapping}\n",
+        ]
 
     if conversation_history:
         prompt_lines.append("[지금까지의 대화 흐름]")

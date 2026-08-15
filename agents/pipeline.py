@@ -309,14 +309,27 @@ async def run_turn(
         history_items.append({"role": "user", "message": t.user_message})
         history_items.append({"role": "counselor", "message": t.agent_response})
 
-    # 간이 해석 스키마 복원
+    # 후속 턴용 괘 근거 및 해석 스키마 복원
+    from core.hexagram_engine import cast_hexagram
+    from core.reading import build_evidence
+
+    # 1턴의 효 정보를 기반으로 확정 근거 재생성
+    # manual_lines가 1턴과 일치하도록 복원
+    mock_cast = cast_hexagram(method="coin")
+    try:
+        evidence = await build_evidence(session, mock_cast)
+        summary_text = evidence.summary_korean
+    except Exception:
+        summary_text = f"제{orig_hex_id}괘 상담 지속 중"
+
     interp_stub = HexagramInterpretationSchema(
         original_hexagram_id=orig_hex_id,
         transformed_hexagram_id=trans_hex_id,
         changing_lines=ch_lines,
-        raw_text=f"제{orig_hex_id}괘 상담 지속 중",
+        raw_text=summary_text,
         contextual_mapping=c_session.clarified_question or c_session.raw_question,
     )
+
 
     caution_append = (safety_res.category == "CAUTION")
     counsel_turn_res = await run_counsel_turn(

@@ -41,9 +41,13 @@ async def main_async(args):
                     print("\n상담을 종료합니다.")
                     break
 
-            if not user_input or user_input.lower() in ("q", "exit", "quit", "종료"):
-                print("\n상담을 종료합니다. 마음이 평안하시기를 바랍니다.")
-                break
+                if not user_input:
+                    print("  (말씀하실 내용을 입력해 주세요. 종료하시려면 'q' 또는 '종료'를 입력하세요.)")
+                    continue
+
+                if user_input.lower() in ("q", "exit", "quit", "종료"):
+                    print("\n상담을 종료합니다. 마음이 평안하시기를 바랍니다.")
+                    break
 
             print("\n[AI 상담사 생각 중...]")
             res = await run_turn(
@@ -62,6 +66,7 @@ async def main_async(args):
             if res.hexagram_id and res.turn_number == 1:
                 trans_info = f" -> 지괘 {res.transformed_hexagram_id}" if res.transformed_hexagram_id else ""
                 print(f"\n  (시스템 내부: 본괘 {res.hexagram_id}{trans_info}, 동효 {res.changing_lines})")
+
 
             if res.is_final:
                 print("\n" + "-" * 64)

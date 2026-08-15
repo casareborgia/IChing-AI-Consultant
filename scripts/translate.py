@@ -39,6 +39,15 @@ from core.llm import (
 load_dotenv()
 
 # 출력 토큰 상한. 두 모델에 같은 값을 쓴다 — 한쪽만 조이면 그 차이가 모델 차이로 오해된다.
+#
+# 2048로는 안 된다. Gemini 2.5 Pro는 사고(thinking) 토큰이 이 예산에서 함께 빠지고,
+# 실측으로 건당 사고가 2,000~3,100토큰이다. 2048에서는 사고만으로 예산이 소진돼
+# finishReason=MAX_TOKENS로 잘린 JSON이 나온다(H29 실측: 사고 1963 + 답변 81, 파싱 실패).
+# 12건 중 가장 짧은 H1만 통과하므로 1건 테스트로는 이 문제가 드러나지 않는다.
+# Claude는 사고를 쓰지 않아 이 값이 커도 손해가 없다 — 상한일 뿐이고 답변은 300자 안쪽이다.
+#
+# 이 값은 반드시 클라이언트 생성 시 넘겨야 한다. 안 넘기면 클라이언트 기본값이
+# 쓰여 Claude 쪽만 4096으로 조여지고, 위에 적은 잘림이 되살아난다.
 MAX_OUTPUT_TOKENS = 8192
 
 
@@ -140,7 +149,7 @@ def get_translator(provider: str, model: Optional[str] = None, system_prompt: st
         location = settings.GEMINI_LOCATION or os.getenv("GEMINI_LOCATION", "us-central1")
         print(f"[설정] Provider: Gemini (Vertex AI) | Model: {model_name} | Location: {location} | Project: {project_id}")
         return VertexGeminiTranslator(model_name=model_name, project_id=project_id, location=location,
-                                     system_prompt=system_prompt)
+                                     system_prompt=system_prompt, max_tokens=MAX_OUTPUT_TOKENS)
 
     elif provider == "claude":
         model_name = model or settings.CLAUDE_MODEL or os.getenv("CLAUDE_MODEL")
@@ -150,7 +159,7 @@ def get_translator(provider: str, model: Optional[str] = None, system_prompt: st
             )
         location = settings.CLAUDE_LOCATION or os.getenv("CLAUDE_LOCATION", "us-east5")
         t = ClaudeTranslator(model_name=model_name, project_id=project_id, region=location,
-                             system_prompt=system_prompt)
+                             system_prompt=system_prompt, max_tokens=MAX_OUTPUT_TOKENS)
         print(f"[설정] Provider: Claude ({t.endpoint_desc}) | Model: {model_name} | Region: {location} | Project: {project_id}")
         return t
 

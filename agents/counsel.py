@@ -64,28 +64,29 @@ async def run_counsel_turn(
         needs_f = bool(data.get("needs_followup", True))
         f_q = data.get("followup_question")
         is_fin = bool(data.get("is_final", False))
+    except Exception:
+        msg = "남겨주신 마음을 천천히 되짚어보게 됩니다. 지금 이 순간 가장 마음에 걸리는 점은 무엇인가요?"
+        needs_f = True
+        f_q = "지금 이 순간 가장 마음에 걸리는 점은 무엇인가요?"
+        is_fin = False
 
-        # 턴 상한 강제
-        if turn_number >= MAX_TURNS_LIMIT:
-            needs_f = False
-            is_fin = True
-            f_q = None
+    # 턴 상한 강제. 이 판단은 try 밖에 있어야 한다 — 안에 두면 호출이 실패했을 때
+    # 상한이 적용되지 않아, LLM이 계속 죽는 동안 세션이 13턴, 14턴으로 끝없이 간다.
+    if turn_number >= MAX_TURNS_LIMIT:
+        needs_f = False
+        is_fin = True
+        f_q = None
 
-        if caution_append:
-            from agents.safety import CAUTION_APPEND_MESSAGE
-            if CAUTION_APPEND_MESSAGE.strip() not in msg:
-                msg += CAUTION_APPEND_MESSAGE
+    if caution_append:
+        from agents.safety import caution_append_message
 
-        return CounselTurnSchema(
-            message=msg,
-            needs_followup=needs_f,
-            followup_question=f_q,
-            is_final=is_fin,
-        )
-    except Exception as e:
-        return CounselTurnSchema(
-            message="남겨주신 마음을 천천히 되짚어보게 됩니다. 지금 이 순간 가장 마음에 걸리는 점은 무엇인가요?",
-            needs_followup=True,
-            followup_question="지금 이 순간 가장 마음에 걸리는 점은 무엇인가요?",
-            is_final=False,
-        )
+        append_text = caution_append_message()
+        if append_text.strip() not in msg:
+            msg += append_text
+
+    return CounselTurnSchema(
+        message=msg,
+        needs_followup=needs_f,
+        followup_question=f_q,
+        is_final=is_fin,
+    )

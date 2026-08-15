@@ -69,7 +69,9 @@ def main() -> None:
     model = args.model or settings.CLAUDE_MODEL or os.getenv("CLAUDE_MODEL")
     if not model:
         raise SystemExit("CLAUDE_MODEL이 없다. --model로 줄 것.")
-    tr = ClaudeTranslator(model_name=model, system_prompt=load_system())
+    # 재시도는 아래 classify가 이미 3회 돈다. 클라이언트 쪽 재시도를 켜 두면
+    # 3 × 3 = 9회가 되어, 채점 한 번에 나가는 호출이 조용히 3배가 된다.
+    tr = ClaudeTranslator(model_name=model, system_prompt=load_system(), retries=1)
     print(f"{model} @ {tr.endpoint_desc} | 시험 {len(cases)}건\n")
 
     results, lock = [], threading.Lock()

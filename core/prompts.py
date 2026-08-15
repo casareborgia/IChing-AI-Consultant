@@ -10,6 +10,35 @@ import re
 PROMPTS_DIR = Path(__file__).resolve().parent.parent / "prompts"
 
 
+def load_prompt_block(name: str, heading: str) -> str:
+    """prompts/<name>.md 에서 주어진 제목 아래 첫 코드펜스를 추출합니다.
+
+    Args:
+        name: 프롬프트 파일명 (확장자 .md 생략 가능)
+        heading: 찾을 제목의 앞부분. 예 "## 시스템 프롬프트", "### 기본 템플릿"
+                 뒤에 괄호 설명이 붙어 있어도 앞부분만 맞으면 된다.
+
+    Returns:
+        코드펜스 안의 문자열 (뒤쪽 개행만 정리)
+    """
+    file_name = name if name.endswith(".md") else f"{name}.md"
+    file_path = PROMPTS_DIR / file_name
+
+    if not file_path.exists():
+        raise FileNotFoundError(f"프롬프트 파일을 찾을 수 없습니다: {file_path}")
+
+    md = file_path.read_text(encoding="utf-8")
+    header_idx = md.find(heading)
+    if header_idx == -1:
+        raise ValueError(f"'{file_name}'에서 '{heading}' 섹션을 찾지 못했습니다.")
+
+    match = re.search(r"```[^\n]*\n(.*?)```", md[header_idx:], re.DOTALL)
+    if not match:
+        raise ValueError(f"'{file_name}'의 '{heading}' 아래 코드펜스(```)를 찾지 못했습니다.")
+
+    return match.group(1).rstrip("\n")
+
+
 def load_system_prompt(name: str) -> str:
     """prompts/<name>.md 파일에서 시스템 프롬프트 본문을 추출합니다.
 
@@ -20,19 +49,4 @@ def load_system_prompt(name: str) -> str:
     Returns:
         추출된 시스템 프롬프트 문자열 (앞뒤 공백 정제)
     """
-    file_name = name if name.endswith(".md") else f"{name}.md"
-    file_path = PROMPTS_DIR / file_name
-
-    if not file_path.exists():
-        raise FileNotFoundError(f"프롬프트 파일을 찾을 수 없습니다: {file_path}")
-
-    md = file_path.read_text(encoding="utf-8")
-    header_idx = md.find("## 시스템 프롬프트")
-    if header_idx == -1:
-        raise ValueError(f"'{file_name}'에서 '## 시스템 프롬프트' 섹션을 찾지 못했습니다.")
-
-    match = re.search(r"```[^\n]*\n(.*?)```", md[header_idx:], re.DOTALL)
-    if not match:
-        raise ValueError(f"'{file_name}'의 '## 시스템 프롬프트' 아래 코드펜스(```)를 찾지 못했습니다.")
-
-    return match.group(1).rstrip("\n")
+    return load_prompt_block(name, "## 시스템 프롬프트")

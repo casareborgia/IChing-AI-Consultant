@@ -1,8 +1,10 @@
 """안전 스크리너 및 래치 동작 검증 단위 테스트."""
 
+from pathlib import Path
+
 import pytest
 
-from agents.safety import format_safety_response, screen
+from agents.safety import format_safety_response, get_template, screen
 from schemas.counsel import SafetyVerdict
 
 
@@ -74,9 +76,59 @@ async def test_위기_세션_래치_유지():
 
 
 @pytest.mark.asyncio
+async def test_위기_문구는_정황에_따라_연락처_순서가_바뀐다():
+    """미성년자면 1388, 폭력 피해면 1366이 맨 위에 와야 한다 (CLAUDE.md 위기 연락처 절)."""
+    기본 = format_safety_response(SafetyVerdict(category="BLOCK_CRISIS"))
+    청소년 = format_safety_response(SafetyVerdict(category="BLOCK_CRISIS", context="minor"))
+    폭력 = format_safety_response(SafetyVerdict(category="BLOCK_CRISIS", context="violence"))
+
+    def 첫_연락처(msg: str) -> str:
+        for line in msg.split("\n"):
+            for num in ("109", "1577-0199", "1388", "1366", "112"):
+                if num in line:
+                    return num
+        raise AssertionError(f"연락처가 하나도 없다: {msg}")
+
+    assert 첫_연락처(기본) == "109"
+    assert 첫_연락처(청소년) == "1388"
+    assert 첫_연락처(폭력) == "1366"
+    assert 기본 != 청소년 != 폭력
+
+
+@pytest.mark.asyncio
+async def test_모르는_정황값은_기본_문구로_떨어진다():
+    """힌트가 이상해도 위기 안내 자체는 나가야 한다. 여기서 예외가 나면 위기가 통째로 실패한다."""
+    class OddContextLLM:
+        def complete_json(self, user: str, *, system: str = "", **kwargs) -> dict:
+            return {"category": "BLOCK_CRISIS", "context": "elderly", "signals": [], "reason": ""}
+
+    verdict = await screen("다 끝내고 싶어요", client=OddContextLLM())
+    assert verdict.category == "BLOCK_CRISIS"
+    assert verdict.context is None
+    assert format_safety_response(verdict) == get_template("crisis")
+
+
+@pytest.mark.asyncio
+async def test_문구는_코드가_아니라_프롬프트_파일에서_온다():
+    """safety_response.md를 고치면 화면이 바뀌어야 한다.
+
+    한동안 문구가 코드에 복사돼 있어 .md를 고쳐도 아무 변화가 없었다.
+    """
+    import agents.safety as safety_mod
+
+    for key in ("crisis", "crisis_minor", "crisis_violence", "scope", "caution", "ask", "error"):
+        assert get_template(key).strip(), f"{key} 문구가 비어 있다"
+
+    # 코드에 문구 복사본이 남아 있으면 안 된다
+    source = Path(safety_mod.__file__).read_text(encoding="utf-8")
+    assert "자살예방 상담전화" not in source
+    assert "1577-0199" not in source
+
+
+@pytest.mark.asyncio
 async def test_사용자_출력에_내부_라벨_미노출_전수_검증():
     """모든 판정 카테고리에 대해 사용자 응답에 내부 라벨 문자열이 없어야 함."""
-    internal_labels = ["BLOCK_CRISIS", "BLOCK_SCOPE", "ASK", "CAUTION", "NORMAL"]
+    internal_labels = ["BLOCK_CRISIS", "BLOCK_SCOPE", "ASK", "CAUTION", "NORMAL", "ERROR"]
 
     for cat in internal_labels:
         v = SafetyVerdict(category=cat, ask="구체적인 상황을 알려주세요.", reason="테스트")
@@ -88,12 +140,20 @@ async def test_사용자_출력에_내부_라벨_미노출_전수_검증():
 
 @pytest.mark.asyncio
 async def test_LLM_통신_장애_시_안전한_차단_및_시스템_에러_출력():
+    """실패는 다섯 판정 중 하나로 뭉개지 않는다.
+
+    부르는 쪽이 별도 인자를 넘겨야만 에러 문구가 나오는 구조였을 때는,
+    파이프라인이 그 인자를 넘기지 않아 통신 장애가 BLOCK_SCOPE 문구
+    ("의사·변호사와 상의하십시오")로 사용자에게 나갔다.
+    """
     mock_llm = FailingMockLLM()
     verdict = await screen("오늘 운세 어때?", client=mock_llm)
-    # LLM 실패 시 보수적으로 BLOCK_SCOPE 처리
-    assert verdict.category == "BLOCK_SCOPE"
+    assert verdict.category == "ERROR"
+    assert "screening_error" in verdict.signals
 
-    err_msg = format_safety_response(verdict, is_error=True)
-    assert "일시적인 시스템 연결 지연" in err_msg
-    # 에러 메시지에 109 핫라인이 오발송되지 않아야 함
+    # 판정만으로 에러 문구가 나와야 한다 (추가 인자 없이)
+    err_msg = format_safety_response(verdict)
+    assert err_msg == get_template("error")
+    # 위기 핫라인도, 범위 밖 안내도 섞이면 안 된다
     assert "109" not in err_msg
+    assert "변호사" not in err_msg

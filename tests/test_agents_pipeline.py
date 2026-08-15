@@ -212,3 +212,167 @@ async def test_재삼독_중복질문_감지_시_괘_미도출_및_회고_유도
             assert "이전에 이미 같은 고민" in res.user_facing_message
             assert prev_id in res.user_facing_message
 
+
+@pytest.mark.asyncio
+async def test_후속턴은_같은_괘를_유지하고_다시_뽑지_않는다(monkeypatch):
+    """세션이 이어지는 동안 괘가 바뀌면 안 된다 (재삼독 금지).
+
+    후속 턴에서 cast_hexagram()을 새로 부르면 매 턴 다른 괘가 나오고,
+    상담사는 A괘의 괘사를 들고 B괘 이야기를 하게 된다.
+    """
+    from core.rag import RetrievedChunk
+
+    async def mock_search_chunks(*args, **kwargs):
+        return [
+            RetrievedChunk(
+                chunk_id="c1", hexagram_id=3, line_number=None, source_type="guasa_comm",
+                category="annotation", content="원문", content_ko="번역", similarity=0.8,
+            )
+        ]
+
+    monkeypatch.setattr("agents.interpret.search_chunks", mock_search_chunks)
+
+    # 후속 턴에서 괘를 다시 뽑으려 하면 즉시 실패시킨다
+    def _no_recast(*args, **kwargs):
+        raise AssertionError("후속 턴에서 cast_hexagram()이 호출되었습니다 — 괘를 다시 뽑고 있습니다")
+
+    counsel_resp = {
+        "message": "지금 상황을 함께 짚어봅니다.",
+        "needs_followup": True,
+        "followup_question": "무엇이 가장 걸리시나요?",
+        "is_final": False,
+    }
+    mock_clients = {
+        "safety": MockLLMDispatcher({"default": {"category": "NORMAL"}}),
+        "intake": MockLLMDispatcher({"default": {
+            "clarified_question": "지금 시작해도 될지",
+            "topic_category": "결단",
+            "is_duplicate_question": False,
+            "duplicate_session_ref": None,
+        }}),
+        "interpret": MockLLMDispatcher({"default": {"contextual_mapping": "시작의 어려움"}}),
+        "counsel": MockLLMDispatcher({"default": counsel_resp}),
+    }
+
+    async with AsyncSessionLocal() as session:
+        # 3번 준괘(屯), 동효 1·5효로 고정해서 시작한다
+        res1 = await run_turn(
+            session,
+            user_id="same_hex_user",
+            message="지금 시작해도 될까요?",
+            manual_lines=[9, 8, 8, 8, 6, 8],
+            clients=mock_clients,
+        )
+        first_hex = res1.hexagram_id
+        first_trans = res1.transformed_hexagram_id
+        first_lines = res1.changing_lines
+
+        monkeypatch.setattr("core.hexagram_engine.cast_single_line", _no_recast)
+
+        for _ in range(3):
+            res = await run_turn(
+                session,
+                counsel_session_id=res1.session_id,
+                user_id="same_hex_user",
+                message="조금 더 이야기하고 싶어요.",
+                clients=mock_clients,
+            )
+            assert res.hexagram_id == first_hex
+            assert res.transformed_hexagram_id == first_trans
+            assert res.changing_lines == first_lines
+
+
+@pytest.mark.asyncio
+async def test_되묻기_이후_답변에서_괘가_실제로_도출된다(monkeypatch):
+    """ASK로 세션이 먼저 생겨도, 이어지는 답변에서 intake·interpret이 돌아야 한다.
+
+    세션 유무로 갈랐을 때는 이 턴이 해석 단계를 통째로 건너뛰고
+    뽑은 적 없는 1번 괘로 상담이 나갔다.
+    """
+    from core.rag import RetrievedChunk
+
+    async def mock_search_chunks(*args, **kwargs):
+        return [
+            RetrievedChunk(
+                chunk_id="c1", hexagram_id=2, line_number=None, source_type="guasa_comm",
+                category="annotation", content="원문", content_ko="번역", similarity=0.8,
+            )
+        ]
+
+    monkeypatch.setattr("agents.interpret.search_chunks", mock_search_chunks)
+
+    ask_client = MockLLMDispatcher({"default": {
+        "category": "ASK",
+        "ask": "어떤 일을 말씀하시는 걸까요?",
+        "signals": [],
+    }})
+    mock_clients = {
+        "safety": ask_client,
+        "intake": MockLLMDispatcher({"default": {
+            "clarified_question": "회사를 계속 다녀야 할지",
+            "topic_category": "커리어/진로",
+            "is_duplicate_question": False,
+            "duplicate_session_ref": None,
+        }}),
+        "interpret": MockLLMDispatcher({"default": {"contextual_mapping": "머무름과 떠남"}}),
+        "counsel": MockLLMDispatcher({"default": {
+            "message": "떠남과 머무름 사이에서 마음이 오가시는군요.",
+            "needs_followup": True,
+            "followup_question": "무엇이 가장 걸리시나요?",
+            "is_final": False,
+        }}),
+    }
+
+    async with AsyncSessionLocal() as session:
+        res1 = await run_turn(
+            session,
+            user_id="ask_user",
+            message="그것 때문에 요즘 계속 생각이 많아요",
+            clients=mock_clients,
+        )
+        assert res1.safety_category == "ASK"
+        assert res1.hexagram_id is None
+        assert "어떤 일을 말씀하시는" in res1.user_facing_message
+
+        # 사용자가 되물음에 답한다 -> 이번에는 괘가 나와야 한다
+        mock_clients["safety"] = MockLLMDispatcher({"default": {"category": "NORMAL"}})
+        res2 = await run_turn(
+            session,
+            counsel_session_id=res1.session_id,
+            user_id="ask_user",
+            message="회사를 계속 다닐지 고민이에요",
+            manual_lines=[8, 8, 8, 8, 8, 8],  # 곤괘(2)
+            clients=mock_clients,
+        )
+
+        assert res2.hexagram_id == 2, "되묻기 이후 턴에서 괘가 실제로 도출되어야 한다"
+        assert "떠남과 머무름" in res2.user_facing_message
+
+
+@pytest.mark.asyncio
+async def test_스크리닝_실패시_괘도_안뽑고_범위밖_문구도_안나간다():
+    """통신 장애가 사용자에게 의료·법률 안내로 둔갑하면 안 된다."""
+
+    class FailingLLM:
+        def complete_json(self, user: str, *, system: str = "", **kwargs) -> dict:
+            raise ConnectionError("API 연결 실패")
+
+    async with AsyncSessionLocal() as session:
+        res = await run_turn(
+            session,
+            user_id="err_user",
+            message="이직해야 할까요?",
+            clients={"safety": FailingLLM()},
+        )
+
+        from agents.safety import get_template
+
+        assert res.safety_category == "ERROR"
+        assert res.hexagram_id is None          # 괘를 뽑지 않는다
+        assert res.is_final is False            # 세션을 닫지 않는다
+        assert res.user_facing_message == get_template("error")
+        assert "변호사" not in res.user_facing_message
+        assert "109" not in res.user_facing_message
+        for label in ("BLOCK_CRISIS", "BLOCK_SCOPE", "ERROR"):
+            assert label not in res.user_facing_message
+

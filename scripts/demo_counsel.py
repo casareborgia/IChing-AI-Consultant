@@ -66,7 +66,9 @@ async def main_async(args):
                 method=args.method,
             )
 
-            session_id = res.session_id
+            # 스크리닝 실패 턴은 세션을 만들지 않고 빈 ID를 돌려준다.
+            # 그대로 덮어쓰면 진행 중이던 상담이 끊긴다.
+            session_id = res.session_id or session_id
 
             print(f"\n[AI 상담사 (턴 {res.turn_number})]:")
             print(res.user_facing_message)

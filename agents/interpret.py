@@ -52,14 +52,18 @@ async def run_interpret(
         hexagram_id=cast_result.original_hexagram_id,
         k=3,
     )
-    # 특정 효가 포커스인 경우 해당 효사 주석 추가 검색
+    # 특정 효가 포커스인 경우 해당 효사 주석 추가 검색.
+    #
+    # 괘 ID는 반드시 `evidence.target_hexagram_id`를 쓴다. 동효가 4~5개면 초점이
+    # 가리키는 효는 지괘의 효라서, 본괘 ID로 검색하면 효 번호만 같고 괘가 다른
+    # 주석이 딸려온다 — DB 확정 근거와 RAG 근거가 서로 다른 괘를 가리키게 된다.
     if cast_result.focus_rule.target_line_numbers:
         primary_line = cast_result.focus_rule.target_line_numbers[0]
         if primary_line <= 6:
             line_chunks = await search_chunks(
                 session,
                 clarified_question,
-                hexagram_id=cast_result.original_hexagram_id,
+                hexagram_id=evidence.target_hexagram_id,
                 line_number=primary_line,
                 k=2,
             )

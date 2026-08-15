@@ -41,7 +41,7 @@ class LLMClient(Protocol):
         *,
         system: str,
         temperature: float = 0.0,
-        max_tokens: int = 4096,
+        max_tokens: Optional[int] = None,
     ) -> Dict[str, Any]:
         """사용자 입력과 시스템 프롬프트를 받아 JSON Dict 형태로 응답을 반환합니다."""
         ...
@@ -57,12 +57,14 @@ class AnthropicClient:
         region: Optional[str] = None,
         retries: int = 3,
         system_prompt: Optional[str] = None,
+        max_tokens: int = 4096,
     ):
         import anthropic
 
         self.model_name = model_name
         self.retries = retries
         self.system_prompt = system_prompt
+        self.max_tokens = max_tokens
         api_key = os.getenv("ANTHROPIC_API_KEY")
 
         if api_key:
@@ -85,8 +87,9 @@ class AnthropicClient:
         *,
         system: str = "",
         temperature: float = 0.0,
-        max_tokens: int = 4096,
+        max_tokens: Optional[int] = None,
     ) -> Dict[str, Any]:
+        max_tokens = max_tokens or self.max_tokens
         sys_prompt = system or self.system_prompt or ""
         last_err = None
         for attempt in range(1, self.retries + 1):
@@ -121,11 +124,13 @@ class OllamaClient:
         base_url: Optional[str] = None,
         retries: int = 3,
         system_prompt: Optional[str] = None,
+        max_tokens: int = 4096,
     ):
         self.model_name = model_name
         self.base_url = (base_url or settings.OLLAMA_BASE_URL).rstrip("/")
         self.retries = retries
         self.system_prompt = system_prompt
+        self.max_tokens = max_tokens
         self.endpoint_desc = f"ollama:{self.base_url}"
 
     def complete_json(
@@ -134,8 +139,9 @@ class OllamaClient:
         *,
         system: str = "",
         temperature: float = 0.0,
-        max_tokens: int = 4096,
+        max_tokens: Optional[int] = None,
     ) -> Dict[str, Any]:
+        max_tokens = max_tokens or self.max_tokens
         sys_prompt = system or self.system_prompt or ""
         url = f"{self.base_url}/api/generate"
         payload = {
@@ -180,6 +186,7 @@ class GeminiClient:
         location: Optional[str] = None,
         retries: int = 3,
         system_prompt: Optional[str] = None,
+        max_tokens: int = 8192,
     ):
         from google import genai
         from google.genai import types
@@ -198,6 +205,7 @@ class GeminiClient:
         self.location = loc
         self.retries = retries
         self.system_prompt = system_prompt
+        self.max_tokens = max_tokens
         self.endpoint_desc = f"vertexai:{loc}"
         self._types = types
 
@@ -207,8 +215,9 @@ class GeminiClient:
         *,
         system: str = "",
         temperature: float = 0.0,
-        max_tokens: int = 8192,
+        max_tokens: Optional[int] = None,
     ) -> Dict[str, Any]:
+        max_tokens = max_tokens or self.max_tokens
         sys_prompt = system or self.system_prompt or ""
         config = self._types.GenerateContentConfig(
             temperature=temperature,

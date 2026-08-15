@@ -23,6 +23,13 @@ class Settings(BaseSettings):
     CLAUDE_LOCATION: str = "us-east5"
     CLAUDE_MODEL: str = ""  # e.g., claude-sonnet-4-5-20250929 (직결) / claude-sonnet-4-5@20250929 (Vertex)
 
+    # --- 안전 ---
+    # 위기 판정이 난 뒤 이 시간 동안은 같은 사용자에게 괘를 뽑지 않는다.
+    # 세션이 닫혔다고 위험이 끝난 것은 아니고, 위기 직후의 급격한 평온과 화제
+    # 전환은 그 자체가 위험 신호다(prompts/safety_screening.md 판정 규칙 8).
+    # 0으로 두면 세션 단위 래치만 걸린다.
+    CRISIS_LATCH_HOURS: int = 24
+
     # --- Role-specific Models (비어 있으면 기본 CLAUDE_MODEL / OLLAMA_MODEL 사용) ---
     SAFETY_MODEL: str = ""
     INTAKE_MODEL: str = ""

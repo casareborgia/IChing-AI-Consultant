@@ -56,7 +56,14 @@ async def run_intake(
             is_dup = False
             ref_id = None
 
+        # 모르는 값이 오면 상담으로 둔다. 괘를 뽑는 쪽이 기본 동작이고,
+        # 정보 질문을 상담으로 처리하는 편이 그 반대보다 덜 이상하다.
+        req_type = data.get("request_type")
+        if req_type not in ("counsel", "question"):
+            req_type = "counsel"
+
         return IntakeOutput(
+            request_type=req_type,
             clarified_question=data.get("clarified_question", message),
             topic_category=data.get("topic_category", "기타"),
             is_duplicate_question=is_dup,
@@ -65,6 +72,7 @@ async def run_intake(
     except Exception as e:
         # 에러 발생 시 원본 발화를 그대로 질문으로 삼아 진행
         return IntakeOutput(
+            request_type="counsel",
             clarified_question=message,
             topic_category="기타",
             is_duplicate_question=False,

@@ -43,6 +43,13 @@ def build(hexagrams: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         hid = h["hexagram_id"]
 
         # 괘 단위
+        # 序卦 해설은 괘사 주석과 따로 센다. 각 괘에 1:1로 붙으므로 계사전처럼
+        # 빼지는 않지만, "이 괘가 왜 이 자리인가"를 논하는 글이라 상황 매핑에
+        # 쓰는 괘사 주석과는 쓰임이 다르다. 나중에 가중치를 달리 주거나 빼려면
+        # 지금 갈라두어야 한다.
+        for i, c in enumerate(h.get("intro") or []):
+            add(hid, None, "annotation", "gwa_intro", c, i)
+
         for i, c in enumerate(h["guasa"]["commentary"]):
             add(hid, None, "annotation", "guasa_comm", c, i)
 
@@ -70,11 +77,14 @@ def build(hexagrams: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
 
 def main() -> None:
     ap = argparse.ArgumentParser()
+    ap.add_argument("-i", "--input", default="data/hexagrams.json",
+                    help="괘 구조 JSON. Kanripo 이관본은 data/hexagrams_kanripo.json")
     ap.add_argument("-o", "--output", default="data/rag_chunks.json")
     args = ap.parse_args()
 
     root = os.path.realpath(os.path.join(os.path.dirname(__file__), ".."))
-    hexagrams = json.load(open(os.path.join(root, "data", "hexagrams.json"), encoding="utf-8"))
+    src = args.input if os.path.isabs(args.input) else os.path.join(root, args.input)
+    hexagrams = json.load(open(src, encoding="utf-8"))
     chunks = build(hexagrams)
 
     assert len(chunks) == len({c["id"] for c in chunks}), "청크 id 중복"

@@ -18,59 +18,35 @@ from typing import List, Optional
 
 sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), "..")))
 
-from sqlalchemy import select
-
-from core.config import settings
 from core.db import AsyncSessionLocal
-from core.models.rag import InterpretationChunk
-
-EMBED_MODEL = "text-multilingual-embedding-002"
-
-
-def embed_query(text: str) -> List[float]:
-    from google import genai
-    from google.genai import types
-
-    client = genai.Client(vertexai=True, project=settings.GOOGLE_CLOUD_PROJECT,
-                          location=settings.GEMINI_LOCATION)
-    resp = client.models.embed_content(
-        model=EMBED_MODEL, contents=[text],
-        config=types.EmbedContentConfig(task_type="RETRIEVAL_QUERY"),
-    )
-    return resp.embeddings[0].values
-
-
-async def search(query: str, k: int, hexagram: Optional[int], source_type: Optional[str]):
-    vec = embed_query(query)
-    async with AsyncSessionLocal() as session:
-        stmt = select(
-            InterpretationChunk,
-            InterpretationChunk.embedding.cosine_distance(vec).label("dist"),
-        )
-        if hexagram:
-            stmt = stmt.where(InterpretationChunk.hexagram_id == hexagram)
-        if source_type:
-            stmt = stmt.where(InterpretationChunk.source_type == source_type)
-        stmt = stmt.order_by("dist").limit(k)
-        return (await session.execute(stmt)).all()
+from core.rag import search_chunks
 
 
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("query")
     ap.add_argument("-k", type=int, default=5)
-    ap.add_argument("--hexagram", type=int, default=None, help="이 괘로 좁힌다")
+    ap.add_argument("--hexagram", type=int, default=1, help="이 괘로 좁힌다 (기본 1)")
     ap.add_argument("--source-type", default=None, help="sosang_comm 등으로 좁힌다")
     args = ap.parse_args()
 
-    rows = asyncio.run(search(args.query, args.k, args.hexagram, args.source_type))
+    async def _run():
+        source_types = [args.source_type] if args.source_type else None
+        async with AsyncSessionLocal() as session:
+            return await search_chunks(
+                session,
+                args.query,
+                hexagram_id=args.hexagram,
+                source_types=source_types,
+                k=args.k,
+            )
+
+    rows = asyncio.run(_run())
     print(f"질의: {args.query}")
-    if args.hexagram:
-        print(f"범위: 제{args.hexagram}괘")
-    print()
-    for chunk, dist in rows:
+    print(f"범위: 제{args.hexagram}괘\n")
+    for chunk in rows:
         pos = f" {chunk.line_number}효" if chunk.line_number else ""
-        print(f"[유사도 {1 - dist:.3f}] 제{chunk.hexagram_id}괘{pos} · {chunk.source_type}")
+        print(f"[유사도 {chunk.similarity:.3f}] 제{chunk.hexagram_id}괘{pos} · {chunk.source_type}")
         print(f"  {chunk.content_ko[:150]}")
         print(f"  원문: {chunk.content[:70]}")
         print()
@@ -78,3 +54,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+

@@ -29,17 +29,18 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from core.config import settings
+from core.llm import (
+    AnthropicClient as ClaudeTranslator,
+    GeminiClient as VertexGeminiTranslator,
+    clean_json_response,
+    get_client,
+)
 
 load_dotenv()
 
 # 출력 토큰 상한. 두 모델에 같은 값을 쓴다 — 한쪽만 조이면 그 차이가 모델 차이로 오해된다.
-#
-# 2048로는 안 된다. Gemini 2.5 Pro는 사고(thinking) 토큰이 이 예산에서 함께 빠지고,
-# 실측으로 건당 사고가 2,000~3,100토큰이다. 2048에서는 사고만으로 예산이 소진돼
-# finishReason=MAX_TOKENS로 잘린 JSON이 나온다(H29 실측: 사고 1963 + 답변 81, 파싱 실패).
-# 12건 중 가장 짧은 H1만 통과하므로 1건 테스트로는 이 문제가 드러나지 않는다.
-# Claude는 사고를 쓰지 않아 이 값이 커도 손해가 없다 — 상한일 뿐이고 답변은 300자 안쪽이다.
 MAX_OUTPUT_TOKENS = 8192
+
 
 SYSTEM_PROMPT = """당신은 표점(標點)만 찍힌 주역 한문 원문을 현대 한국어로 옮기는 번역자입니다.
 
@@ -129,88 +130,6 @@ def build_user_prompt(item: Dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
-def clean_json_response(raw_text: str) -> str:
-    """마크다운 코드펜스나 주변 텍스트를 제거하고 순수 JSON 문자열만 추출합니다."""
-    text = raw_text.strip()
-    # ```json ... ``` 또는 ``` ... ``` 마크다운 블록 추출
-    match = re.search(r"```(?:json)?\s*([\s\S]*?)\s*```", text)
-    if match:
-        return match.group(1).strip()
-    
-    # 첫 { 부터 마지막 } 까지 추출
-    first_brace = text.find("{")
-    last_brace = text.rfind("}")
-    if first_brace != -1 and last_brace != -1 and last_brace > first_brace:
-        return text[first_brace : last_brace + 1].strip()
-
-    return text
-
-
-class VertexGeminiTranslator:
-    def __init__(self, model_name: str, project_id: str, location: str, system_prompt: str = SYSTEM_PROMPT):
-        from google import genai
-        from google.genai import types
-
-        self.client = genai.Client(
-            vertexai=True,
-            project=project_id,
-            location=location,
-        )
-        self.model_name = model_name
-        self.project_id = project_id
-        self.location = location
-        self.endpoint_desc = f"vertexai:{location}"
-        self.config = types.GenerateContentConfig(
-            temperature=0.0,
-            system_instruction=system_prompt,
-            max_output_tokens=MAX_OUTPUT_TOKENS,
-        )
-
-    def translate(self, prompt: str) -> Dict[str, Any]:
-        response = self.client.models.generate_content(
-            model=self.model_name,
-            contents=prompt,
-            config=self.config,
-        )
-        raw_text = response.text or ""
-        cleaned = clean_json_response(raw_text)
-        return json.loads(cleaned)
-
-
-class ClaudeTranslator:
-    def __init__(self, model_name: str, project_id: Optional[str] = None, region: Optional[str] = None,
-                 system_prompt: str = SYSTEM_PROMPT):
-        import anthropic
-
-        api_key = os.getenv("ANTHROPIC_API_KEY")
-        if api_key:
-            self.client = anthropic.Anthropic(api_key=api_key)
-            self.endpoint_desc = "anthropic:direct_api"
-        else:
-            if not project_id or not region:
-                raise ValueError("Anthropic Direct API Key 또는 Vertex AI 프로젝트/리전 설정이 필요합니다.")
-            self.client = anthropic.AnthropicVertex(
-                project_id=project_id,
-                region=region,
-            )
-            self.endpoint_desc = f"vertexai:{region}"
-
-        self.model_name = model_name
-        self.system_prompt = system_prompt
-
-    def translate(self, prompt: str) -> Dict[str, Any]:
-        response = self.client.messages.create(
-            model=self.model_name,
-            max_tokens=MAX_OUTPUT_TOKENS,
-            temperature=0.0,
-            system=self.system_prompt,
-            messages=[{"role": "user", "content": prompt}],
-        )
-        raw_text = response.content[0].text if response.content else ""
-        cleaned = clean_json_response(raw_text)
-        return json.loads(cleaned)
-
-
 def get_translator(provider: str, model: Optional[str] = None, system_prompt: str = SYSTEM_PROMPT):
     project_id = settings.GOOGLE_CLOUD_PROJECT or os.getenv("GOOGLE_CLOUD_PROJECT")
 
@@ -237,6 +156,7 @@ def get_translator(provider: str, model: Optional[str] = None, system_prompt: st
 
     else:
         raise ValueError(f"지원하지 않는 provider입니다: {provider}")
+
 
 
 def load_existing_results(output_path: Path) -> Dict[str, Dict[str, Any]]:

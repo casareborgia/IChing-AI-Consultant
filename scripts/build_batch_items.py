@@ -44,11 +44,14 @@ def build(hexagrams: list) -> list:
 
 def main() -> None:
     ap = argparse.ArgumentParser()
+    ap.add_argument("-i", "--input", default="data/hexagrams.json",
+                    help="괘 구조 JSON. Kanripo 이관본은 data/hexagrams_kanripo.json")
     ap.add_argument("-o", "--output", default="data/translation_items.json")
     args = ap.parse_args()
 
     root = os.path.realpath(os.path.join(os.path.dirname(__file__), ".."))
-    hexagrams = json.load(open(os.path.join(root, "data", "hexagrams.json"), encoding="utf-8"))
+    src = args.input if os.path.isabs(args.input) else os.path.join(root, args.input)
+    hexagrams = json.load(open(src, encoding="utf-8"))
     items = build(hexagrams)
 
     # 건수와 id 유일성은 여기서 막는다. 450건이 아니면 원문 데이터가 변한 것이다.

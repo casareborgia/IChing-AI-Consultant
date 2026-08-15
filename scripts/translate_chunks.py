@@ -33,6 +33,7 @@ PROMPT_MD = PROJECT_ROOT / "prompts" / "rag_translation.md"
 
 # 청크 성격을 사람 말로. 같은 한자라도 무엇에 붙은 글인지에 따라 뜻이 달라진다.
 SOURCE_LABEL = {
+    "gwa_intro":    "괘 전체를 개관하는 정전 서두 해설 (序卦 풀이)",
     "guasa_comm":   "괘사에 대한 정전 주석",
     "tanjon":       "단전",
     "tanjon_comm":  "단전에 대한 정전 주석",

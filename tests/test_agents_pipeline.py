@@ -163,6 +163,98 @@ async def test_위기_발화_즉시_차단_및_래치_유지():
         assert "109" in res2.user_facing_message
 
 
+@pytest.mark.asyncio
+async def test_위기_이후_새_세션에서도_괘를_뽑지_않는다():
+    """래치는 사람 단위여야 한다.
+
+    위기 판정은 세션을 닫으므로, 다음 발화는 새 세션으로 들어온다. 래치가 세션
+    안에만 있으면 위기를 겪은 사람이 몇 분 뒤 다시 말을 걸었을 때 평범한 괘가
+    그대로 나간다.
+    """
+    crisis_clients = {
+        "safety": MockLLMDispatcher({"default": {
+            "category": "BLOCK_CRISIS", "signals": ["위기"], "reason": "자해",
+        }}),
+    }
+
+    async with AsyncSessionLocal() as session:
+        res1 = await run_turn(
+            session, user_id="latch_user",
+            message="이제 그만하고 싶어요. 다 정리했습니다.",
+            clients=crisis_clients,
+        )
+        assert res1.safety_category == "BLOCK_CRISIS"
+        assert res1.is_final is True  # 세션이 닫힌다
+
+        # 세션 ID 없이(= 새 세션으로) 다시 말을 건다. 스크리너는 NORMAL을 준다.
+        res2 = await run_turn(
+            session, user_id="latch_user",
+            message="아까는 헛소리였고, 이직 얘기나 할까요?",
+            clients={"safety": MockLLMDispatcher({"default": {"category": "NORMAL"}})},
+        )
+
+        assert res2.session_id != res1.session_id, "새 세션이어야 이 테스트가 의미가 있다"
+        assert res2.safety_category == "BLOCK_CRISIS"
+        assert res2.hexagram_id is None
+        assert "109" in res2.user_facing_message
+
+
+@pytest.mark.asyncio
+async def test_다른_사용자는_래치에_걸리지_않는다(monkeypatch):
+    from core.rag import RetrievedChunk
+
+    async def mock_search(*args, **kwargs):
+        return [RetrievedChunk(
+            chunk_id="c", hexagram_id=1, line_number=None, source_type="guasa_comm",
+            category="annotation", content="원문", content_ko="번역", similarity=0.7,
+        )]
+
+    monkeypatch.setattr("agents.interpret.search_chunks", mock_search)
+
+    async with AsyncSessionLocal() as session:
+        await run_turn(
+            session, user_id="latch_user_a", message="다 끝내고 싶어요",
+            clients={"safety": MockLLMDispatcher({"default": {"category": "BLOCK_CRISIS"}})},
+        )
+
+        res = await run_turn(
+            session, user_id="latch_user_b", message="이직해야 할까요?",
+            manual_lines=[7, 7, 7, 7, 7, 7],
+            clients={
+                "safety": MockLLMDispatcher({"default": {"category": "NORMAL"}}),
+                "intake": MockLLMDispatcher({"default": {
+                    "clarified_question": "이직해야 할까요?", "topic_category": "커리어",
+                    "is_duplicate_question": False, "duplicate_session_ref": None,
+                }}),
+                "interpret": MockLLMDispatcher({"default": {"contextual_mapping": "매핑"}}),
+                "counsel": MockLLMDispatcher({"default": {
+                    "message": "함께 살펴봅니다.", "needs_followup": True,
+                    "followup_question": "무엇이 걸리시나요?", "is_final": False,
+                }}),
+            },
+        )
+        assert res.safety_category == "NORMAL"
+        assert res.hexagram_id == 1
+
+
+@pytest.mark.asyncio
+async def test_래치_시간이_지나면_풀린다(monkeypatch):
+    """창 밖의 오래된 위기까지 붙들지는 않는다."""
+    from core.config import settings
+
+    async with AsyncSessionLocal() as session:
+        await run_turn(
+            session, user_id="latch_user_old", message="다 끝내고 싶어요",
+            clients={"safety": MockLLMDispatcher({"default": {"category": "BLOCK_CRISIS"}})},
+        )
+
+        # 창을 0으로 두면 세션 단위 래치만 남는다
+        monkeypatch.setattr(settings, "CRISIS_LATCH_HOURS", 0)
+        from agents.pipeline import _has_recent_crisis
+
+        assert await _has_recent_crisis(session, "latch_user_old") is False
+
+
 async def _seed_previous_reading(session, prev_id: str, user_id: str, hexagram_id: int = 5,
                                  summary: str = "이직 고민"):
     """지난번 상담(괘를 얻고 저널까지 남긴 세션)을 만들어 둔다."""

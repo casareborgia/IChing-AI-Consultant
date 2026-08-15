@@ -8,6 +8,7 @@
 """
 
 from dataclasses import dataclass, field
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 import uuid
 
@@ -15,6 +16,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from agents.counsel import run_counsel_turn
+from core.config import settings
 from agents.intake import run_intake
 from agents.interpret import run_interpret
 from agents.journal import write_journal
@@ -78,6 +80,39 @@ async def _get_past_sessions(
             "summary": summary or "",
         })
     return past
+
+
+async def _has_recent_crisis(session: AsyncSession, user_id: Optional[str],
+                             exclude_session_id: Optional[str] = None) -> bool:
+    """이 사용자에게 최근 위기 판정이 있었는지 본다.
+
+    래치가 세션 안에만 있으면 아무것도 막지 못한다. 위기 판정은 세션을 닫으므로
+    (`is_final`), 다음 발화는 새 세션으로 들어오고 거기엔 아무 흔적이 없다.
+    위기를 겪은 사람이 몇 분 뒤 다시 말을 걸면 평범한 괘가 나가던 상태였다.
+
+    창(窓)을 둔 것은 타협이다. 프롬프트는 "해제는 사람이 판단한다"고 하지만
+    이 앱에는 판단할 사람이 없다. 무기한 차단은 앱을 못 쓰게 만들고, 즉시 해제는
+    지금처럼 아무것도 막지 못한다. 사람이 검토하는 경로가 생기면 이 창은 걷어낸다.
+
+    `user_id`가 없으면(익명) 세션 단위 래치만 남는다. 이건 한계이지 설계가 아니다.
+    """
+    hours = settings.CRISIS_LATCH_HOURS
+    if not user_id or hours <= 0:
+        return False
+
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
+    stmt = (
+        select(CounselSession.id)
+        .where(
+            CounselSession.user_id == user_id,
+            CounselSession.status == "safety_redirect",
+            CounselSession.updated_at >= cutoff,
+        )
+        .limit(1)
+    )
+    if exclude_session_id:
+        stmt = stmt.where(CounselSession.id != exclude_session_id)
+    return (await session.execute(stmt)).scalar_one_or_none() is not None
 
 
 async def _get_previous_reading(session: AsyncSession, ref_id: Optional[str]) -> Optional[Dict[str, Any]]:
@@ -179,6 +214,13 @@ async def run_turn(
 
             if c_session.status == "safety_redirect":
                 latched_crisis = True
+
+    # 세션이 닫혀도 사람은 그대로다. 최근에 위기 판정이 있었다면 새 세션으로 와도
+    # 괘를 뽑지 않는다.
+    if not latched_crisis:
+        latched_crisis = await _has_recent_crisis(
+            session, user_id, exclude_session_id=c_session.id if c_session else None
+        )
 
     # 2. [0] 안전 스크리닝 (항상 최우선 매 턴 실행)
     history_summary = None

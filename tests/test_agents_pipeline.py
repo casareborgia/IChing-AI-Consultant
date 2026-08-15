@@ -163,54 +163,152 @@ async def test_위기_발화_즉시_차단_및_래치_유지():
         assert "109" in res2.user_facing_message
 
 
+async def _seed_previous_reading(session, prev_id: str, user_id: str, hexagram_id: int = 5,
+                                 summary: str = "이직 고민"):
+    """지난번 상담(괘를 얻고 저널까지 남긴 세션)을 만들어 둔다."""
+    from core.models.counsel import CounselSession, CounselTurn, JournalEntry
+
+    session.add(CounselSession(
+        id=prev_id, user_id=user_id, raw_question="이직해야 할까요?",
+        clarified_question="이직해야 할까요?", status="completed",
+    ))
+    session.add(CounselTurn(
+        session_id=prev_id, turn_number=1,
+        original_hexagram_id=hexagram_id, transformed_hexagram_id=None, changing_lines=[],
+        user_message="이직해야 할까요?", agent_response="그때의 상담 답변",
+        needs_followup=False, is_final=True,
+    ))
+    if summary:
+        session.add(JournalEntry(
+            session_id=prev_id, summary=summary, key_insights="그때의 통찰",
+        ))
+    await session.commit()
+
+
+def _dup_clients(prev_id: str, counsel_resp=None):
+    from unittest.mock import AsyncMock  # noqa: F401  (호출부에서 patch에 쓴다)
+
+    return {
+        "safety": MockLLMDispatcher({"default": {"category": "NORMAL"}}),
+        "intake": MockLLMDispatcher({"default": {
+            "clarified_question": "이직해야 할까요?",
+            "topic_category": "커리어/진로",
+            "is_duplicate_question": True,
+            "duplicate_session_ref": prev_id,
+        }}),
+        "counsel": MockLLMDispatcher({"default": counsel_resp or {
+            "message": "그때의 괘를 다시 펼쳐 봅니다.",
+            "needs_followup": True,
+            "followup_question": "무엇이 달라졌나요?",
+            "is_final": False,
+        }}),
+    }
+
+
 @pytest.mark.asyncio
-async def test_재삼독_중복질문_감지_시_괘_미도출_및_회고_유도():
-    from core.models.counsel import CounselSession
+async def test_재삼독이면_새로_뽑지_않고_지난_괘를_물려받는다():
     import uuid
+    from unittest.mock import AsyncMock, patch
 
     prev_id = str(uuid.uuid4())
 
-    mock_clients = {
-        "safety": MockLLMDispatcher({"default": {"category": "NORMAL"}}),
-        "intake": MockLLMDispatcher({
-            "default": {
-                "clarified_question": "이직해야 할까요?",
-                "topic_category": "커리어/진로",
-                "is_duplicate_question": True,
-                "duplicate_session_ref": prev_id,
-            }
-        }),
-    }
-
-    from unittest.mock import AsyncMock, patch
-
     async with AsyncSessionLocal() as session:
-        # 이전 세션 사전 생성
-        prev_sess = CounselSession(
-            id=prev_id,
-            user_id="dup_user",
-            raw_question="이직해야 할까요?",
-            status="completed",
-        )
-        session.add(prev_sess)
-        await session.commit()
+        await _seed_previous_reading(session, prev_id, "dup_user", hexagram_id=5)
 
-        with patch("agents.pipeline._get_past_sessions", new_callable=AsyncMock) as mock_get_past:
-            mock_get_past.return_value = [
+        with patch("agents.pipeline._get_past_sessions", new_callable=AsyncMock) as past:
+            past.return_value = [
                 {"session_id": prev_id, "clarified_question": "이직해야 할까요?", "summary": "이직 고민"}
             ]
-
             res = await run_turn(
-                session,
-                user_id="dup_user",
-                message="이직해야 할까요?",
-                clients=mock_clients,
+                session, user_id="dup_user", message="이직해야 할까요?",
+                clients=_dup_clients(prev_id),
             )
 
-            assert res.is_duplicate is True
-            assert res.hexagram_id is None  # 괘를 다시 뽑지 않음
-            assert "이전에 이미 같은 고민" in res.user_facing_message
-            assert prev_id in res.user_facing_message
+        assert res.is_duplicate is True
+        assert res.hexagram_id == 5, "지난번 괘를 그대로 이어받아야 한다"
+        assert res.needs_followup is True
+        assert res.is_final is False
+        # 내부 식별자가 사용자 문장에 새어 나오면 안 된다
+        assert prev_id not in res.user_facing_message
+        # 지난번 괘와 그때의 요약을 보여준다
+        assert "제5괘" in res.user_facing_message
+        assert "이직 고민" in res.user_facing_message
+
+
+@pytest.mark.asyncio
+async def test_재삼독_이후_대화가_이어진다_같은_문구_반복_금지():
+    """되묻기에 답하면 상담이 이어져야 한다.
+
+    예전에는 괘 없는 턴이 남아 다음 턴이 다시 재삼독 분기로 들어갔고,
+    사용자가 무슨 말을 하든 똑같은 안내가 무한히 반복됐다.
+    """
+    import uuid
+    from unittest.mock import AsyncMock, patch
+
+    prev_id = str(uuid.uuid4())
+
+    async with AsyncSessionLocal() as session:
+        await _seed_previous_reading(session, prev_id, "dup_user2", hexagram_id=5)
+        clients = _dup_clients(prev_id)
+
+        with patch("agents.pipeline._get_past_sessions", new_callable=AsyncMock) as past:
+            past.return_value = [
+                {"session_id": prev_id, "clarified_question": "이직해야 할까요?", "summary": "이직 고민"}
+            ]
+            res1 = await run_turn(
+                session, user_id="dup_user2", message="이직해야 할까요?", clients=clients,
+            )
+            res2 = await run_turn(
+                session, counsel_session_id=res1.session_id, user_id="dup_user2",
+                message="그때랑 크게 달라진 건 없어요.", clients=clients,
+            )
+
+        assert res2.user_facing_message != res1.user_facing_message, "같은 문구가 반복되면 안 된다"
+        assert res2.is_duplicate is False, "두 번째 턴은 상담이지 재삼독 안내가 아니다"
+        assert res2.hexagram_id == 5, "괘는 지난번 것 그대로여야 한다"
+        assert res2.turn_number == 2
+        assert "그때의 괘를 다시 펼쳐" in res2.user_facing_message
+
+
+@pytest.mark.asyncio
+async def test_지목된_세션에_괘가_없으면_정상적으로_뽑는다(monkeypatch):
+    """보여줄 지난 괘가 없으면 막을 이유가 없다."""
+    import uuid
+    from unittest.mock import AsyncMock, patch
+
+    from core.models.counsel import CounselSession
+    from core.rag import RetrievedChunk
+
+    async def mock_search(*args, **kwargs):
+        return [RetrievedChunk(
+            chunk_id="c", hexagram_id=1, line_number=None, source_type="guasa_comm",
+            category="annotation", content="원문", content_ko="번역", similarity=0.7,
+        )]
+
+    monkeypatch.setattr("agents.interpret.search_chunks", mock_search)
+    prev_id = str(uuid.uuid4())
+
+    async with AsyncSessionLocal() as session:
+        # 괘 없이 되묻기만 하다 끝난 세션
+        session.add(CounselSession(
+            id=prev_id, user_id="dup_user3", raw_question="이직해야 할까요?", status="active",
+        ))
+        await session.commit()
+
+        clients = _dup_clients(prev_id)
+        clients["interpret"] = MockLLMDispatcher({"default": {"contextual_mapping": "매핑"}})
+
+        with patch("agents.pipeline._get_past_sessions", new_callable=AsyncMock) as past:
+            past.return_value = [
+                {"session_id": prev_id, "clarified_question": "이직해야 할까요?", "summary": ""}
+            ]
+            res = await run_turn(
+                session, user_id="dup_user3", message="이직해야 할까요?",
+                manual_lines=[7, 7, 7, 7, 7, 7], clients=clients,
+            )
+
+        assert res.is_duplicate is False
+        assert res.hexagram_id == 1, "보여줄 지난 괘가 없으면 정상적으로 뽑는다"
 
 
 @pytest.mark.asyncio

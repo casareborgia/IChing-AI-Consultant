@@ -47,7 +47,15 @@ async def main_async(args):
 
                 if user_input.lower() in ("q", "exit", "quit", "종료"):
                     print("\n상담을 종료합니다. 마음이 평안하시기를 바랍니다.")
+                    if session_id:
+                        from agents.journal import write_journal
+                        try:
+                            j = await write_journal(session, session_id)
+                            print(f"\n[저널 기록 저장 완료]\n  요약: {j.summary}\n  통찰: {j.key_insights}")
+                        except Exception as e:
+                            pass
                     break
+
 
             print("\n[AI 상담사 생각 중...]")
             res = await run_turn(

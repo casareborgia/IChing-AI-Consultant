@@ -120,10 +120,10 @@ async def search_chunks(
         sim = float(1.0 - dist) if dist is not None else 0.0
         retrieved.append(
             RetrievedChunk(
-                chunk_id=chunk.chunk_id,
+                chunk_id=str(chunk.id),
                 hexagram_id=chunk.hexagram_id,
                 line_number=chunk.line_number,
-                source_type=chunk.source_type,
+                source_type=chunk.source_type or "",
                 category=chunk.category,
                 content=chunk.content,
                 content_ko=chunk.content_ko or "",
@@ -132,3 +132,4 @@ async def search_chunks(
         )
 
     return retrieved
+

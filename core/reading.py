@@ -25,7 +25,6 @@ class LineEvidence:
     statement_text: str
     statement_ko: str
     small_xiang_text: Optional[str] = None
-    small_xiang_ko: Optional[str] = None
 
 
 @dataclass
@@ -50,7 +49,6 @@ class ReadingEvidence:
     focus_rule: FocusRuleResult
     target_lines: List[LineEvidence] = field(default_factory=list)
 
-
     @property
     def summary_korean(self) -> str:
         """상담 프롬프트 및 맥락 매핑에 주입할 확정 한글 근거 요약."""
@@ -69,10 +67,10 @@ class ReadingEvidence:
         if self.target_lines:
             parts.append("핵심 효사:")
             for line in self.target_lines:
-                pos_label = "용구/용육" if line.line_number == 7 else f"{line.line_number}효({line.position_name})"
+                pos_label = "용구/용육" if line.line_number == 7 else f"{line.line_number}효"
                 parts.append(f"- [{pos_label}] {line.statement_ko}")
-                if line.small_xiang_ko:
-                    parts.append(f"  (상전) {line.small_xiang_ko}")
+                if line.small_xiang_text:
+                    parts.append(f"  (상전 원문: {line.small_xiang_text})")
 
         return "\n".join(parts)
 
@@ -82,7 +80,7 @@ async def _get_hexagram(session: AsyncSession, hex_id: int) -> HexagramEvidence:
     h = (await session.execute(stmt)).scalar_one()
     return HexagramEvidence(
         hexagram_id=h.id,
-        name_full=h.name_full,
+        name_full=h.name_full or "",
         name_hanja=h.name_hanja,
         judgment_text=h.judgment_text,
         judgment_ko=h.judgment_ko or "",
@@ -93,15 +91,16 @@ async def _get_hexagram(session: AsyncSession, hex_id: int) -> HexagramEvidence:
 async def _get_line(session: AsyncSession, hex_id: int, line_num: int) -> LineEvidence:
     stmt = select(Line).where(Line.hexagram_id == hex_id, Line.line_number == line_num)
     line = (await session.execute(stmt)).scalar_one()
+    pos_name = "용구/용육" if line_num == 7 else f"{line_num}효"
     return LineEvidence(
         hexagram_id=line.hexagram_id,
         line_number=line.line_number,
-        position_name=line.position_name,
+        position_name=pos_name,
         statement_text=line.statement_text,
         statement_ko=line.statement_ko or "",
         small_xiang_text=line.small_xiang_text,
-        small_xiang_ko=line.small_xiang_ko,
     )
+
 
 
 async def build_evidence(

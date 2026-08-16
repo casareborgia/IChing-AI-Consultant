@@ -151,6 +151,12 @@ async def search_chunks(session, query: str, *, hexagram_id: int,
 - `source_type` 실제 값: `line_comm`(효사 주석 421) · `sosang_comm`(399) ·
   `sosang`(원문 386) · `tanjon_comm`(214) · `guasa_comm`(81) · `tanjon`(64) ·
   `daesang`(64) · `gwa_intro`(序卦 62) · `daesang_comm`(61). 합 1,752.
+
+  **2026-08-16 추가.** 주자 『본의』 784건이 `benui_line`(386) · `benui_tanjon`(172) ·
+  `benui_sosang`(108) · `benui_guasa`(64) · `benui_daesang`(54)로 들어와 합 2,536이다.
+  검색은 `search_chunks`가 아니라 `core.rag.search_balanced`가 출처별 몫을 따로
+  뽑는다(정전 3 + 본의 2). 한 풀에 던지면 어느 쪽을 근거로 삼을지가 검색 순위의
+  우연에 맡겨진다 — 아래 D절 이하의 제약(괘로 좁힐 것, 한글만 줄 것)은 그대로다.
 - 반환값에 `content`(한문) · `content_ko`(한글) · `source_type` · `line_number` ·
   유사도를 담는다. 한문을 버리지 않는 이유는 "왜 이 해석인가"를 물었을 때 원문을
   대야 하기 때문이다. 다만 상담 에이전트에게는 한글만 준다(5절).

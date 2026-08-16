@@ -145,7 +145,9 @@ def get_translator(provider: str, model: Optional[str] = None, system_prompt: st
     if provider == "gemini":
         if not project_id:
             raise ValueError("GOOGLE_CLOUD_PROJECT가 설정되지 않았습니다.")
-        model_name = model or settings.GEMINI_MODEL or os.getenv("GEMINI_MODEL", "gemini-2.5-pro")
+        # 450건과 청크 번역을 만든 모델을 그대로 고정한다. settings.GEMINI_MODEL은
+        # 서비스용(Flash)으로 바뀌었으므로 물려받으면 저본과 다른 모델로 다시 돌게 된다.
+        model_name = model or os.getenv("TRANSLATE_GEMINI_MODEL", "gemini-2.5-pro")
         location = settings.GEMINI_LOCATION or os.getenv("GEMINI_LOCATION", "us-central1")
         print(f"[설정] Provider: Gemini (Vertex AI) | Model: {model_name} | Location: {location} | Project: {project_id}")
         return VertexGeminiTranslator(model_name=model_name, project_id=project_id, location=location,

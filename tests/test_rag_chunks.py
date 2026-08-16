@@ -15,12 +15,22 @@ from core.models.rag import InterpretationChunk
 
 ROOT = os.path.join(os.path.dirname(__file__), "..")
 DATA = os.path.join(ROOT, "data", "hexagrams_kanripo.json")
-CHUNKS = os.path.join(ROOT, "data", "rag_chunks_kanripo.json")
 
-ALLOWED_SOURCE_TYPES = {
+# 인덱스에 들어가는 청크 파일 전부. 적재가 전량 교체라 여기 빠진 파일이 있으면
+# 그만큼 DB에서 사라진다 — 실제로 본의만 넣고 돌리면 정전 1,752건이 지워진다.
+CHUNK_FILES = [
+    os.path.join(ROOT, "data", "rag_chunks_kanripo.json"),
+    os.path.join(ROOT, "data", "rag_chunks_benui.json"),
+]
+
+JEONGJEON_TYPES = {
     "gwa_intro", "guasa_comm", "tanjon", "tanjon_comm", "daesang", "daesang_comm",
     "line_comm", "sosang", "sosang_comm",
 }
+BENUI_TYPES = {
+    "benui_guasa", "benui_line", "benui_tanjon", "benui_daesang", "benui_sosang",
+}
+ALLOWED_SOURCE_TYPES = JEONGJEON_TYPES | BENUI_TYPES
 
 
 def _expected_count() -> int:
@@ -30,7 +40,7 @@ def _expected_count() -> int:
     숫자는 그걸 못 잡는다. 실제로 저본 이관 때 1,751 → 1,752로 늘면서
     이 테스트가 깨졌고, 숫자만 고쳤다면 같은 일이 또 생겼을 것이다.
     """
-    return len(json.load(open(CHUNKS, encoding="utf-8")))
+    return sum(len(json.load(open(p, encoding="utf-8"))) for p in CHUNK_FILES)
 
 
 async def _count(session):
@@ -89,3 +99,38 @@ async def test_넣으면_안_되는_것이_안_들어갔다():
                     f"괘{hid} {line['position']}효 효사 원문이 인덱스에 있다"
             if h["munon"]["original"]:
                 assert h["munon"]["original"] not in contents, f"괘{hid} 문언전이 인덱스에 있다"
+
+
+@pytest.mark.asyncio
+async def test_본의는_주석만_넣고_원문은_넣지_않는다():
+    """본의 쪽에서 원문이 들어오면 같은 글이 인덱스에 두 벌 있게 된다.
+
+    단전·상전 원문은 정전 쪽 청크가 이미 갖고 있다. 두 번 넣으면 검색 결과가
+    중복으로 채워져 실질적인 근거의 폭이 좁아진다.
+    """
+    async with AsyncSessionLocal() as session:
+        if await _count(session) == 0:
+            pytest.skip("청크 적재 전이다")
+
+        rows = (await session.execute(
+            select(InterpretationChunk.category, func.count())
+            .where(InterpretationChunk.source_type.in_(BENUI_TYPES))
+            .group_by(InterpretationChunk.category))).all()
+
+        assert rows, "본의가 인덱스에 없다"
+        assert {c for c, _ in rows} == {"annotation"}, \
+            f"본의 쪽에 주석 아닌 것이 있다: {rows}"
+
+
+@pytest.mark.asyncio
+async def test_두_주석서가_모두_인덱스에_있다():
+    """전량 교체 적재라 한쪽 파일만 넘기면 다른 쪽이 통째로 사라진다."""
+    async with AsyncSessionLocal() as session:
+        if await _count(session) == 0:
+            pytest.skip("청크 적재 전이다")
+
+        types_ = {r[0] for r in (await session.execute(
+            select(InterpretationChunk.source_type).distinct())).all()}
+
+        assert types_ & JEONGJEON_TYPES, "정전이 인덱스에서 사라졌다"
+        assert types_ & BENUI_TYPES, "본의가 인덱스에서 사라졌다"

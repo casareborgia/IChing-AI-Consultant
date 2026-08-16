@@ -122,3 +122,48 @@ async def test_CAUTION_문구는_한_번만_붙는다():
     )
     assert "참고 안내" in res.message
     assert res.message.count("참고 안내") == 1
+
+
+def test_금지_목록이_프롬프트와_코드에서_어긋나지_않는다():
+    """코드가 막는 단어와 프롬프트가 금지한 단어가 갈라지면 안 된다.
+
+    안전 문구를 코드에 복사해 뒀다가 프롬프트 파일과 갈라진 전례가 있었다.
+    """
+    from pathlib import Path
+    from agents.counsel import DIAGNOSIS_TERMS
+
+    md = (Path(__file__).resolve().parent.parent / "prompts" / "counsel.md").read_text(encoding="utf-8")
+    빠진_것 = [w for w in DIAGNOSIS_TERMS if w not in md]
+    assert not 빠진_것, f"코드는 막는데 프롬프트에 없는 단어: {빠진_것}"
+
+
+@pytest.mark.asyncio
+async def test_진단성_표현이_나오면_다시_쓰게_한다():
+    class DiagnosisThenCleanLLM:
+        def __init__(self):
+            self.calls = 0
+
+        def complete_json(self, user: str, *, system: str = "", **kwargs) -> dict:
+            self.calls += 1
+            if self.calls == 1:
+                return {"message": "우울증인지 아닌지는 제가 판단할 수 없습니다. 어떠신가요?",
+                        "needs_followup": True, "followup_question": "어떠신가요?", "is_final": False}
+            return {"message": "그 이름을 붙이는 일은 전문가의 몫입니다. 언제부터였나요?",
+                    "needs_followup": True, "followup_question": "언제부터였나요?", "is_final": False}
+
+    llm = DiagnosisThenCleanLLM()
+    res = await run_counsel_turn("제가 우울증일까요?", INTERP, turn_number=1, client=llm)
+    assert llm.calls == 2, "한 번은 다시 쓰게 해야 한다"
+    assert "우울증" not in res.message
+
+
+@pytest.mark.asyncio
+async def test_재생성도_실패하면_안전한_문장으로_바꾼다():
+    class AlwaysDiagnosisLLM:
+        def complete_json(self, user: str, *, system: str = "", **kwargs) -> dict:
+            return {"message": "우울증일 수 있습니다.", "needs_followup": True,
+                    "followup_question": "어떠신가요?", "is_final": False}
+
+    res = await run_counsel_turn("제가 우울증일까요?", INTERP, turn_number=1, client=AlwaysDiagnosisLLM())
+    assert "우울증" not in res.message
+    assert "전문가의 몫" in res.message

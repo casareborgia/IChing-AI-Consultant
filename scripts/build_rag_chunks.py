@@ -92,6 +92,14 @@ def build_benui(hexagrams: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         text = (text or "").strip()
         if not text:
             return
+        # 교감 표시는 주석이 아니다. 『본의』에는 割註 자리에 '衍文'(잘못 들어간
+        # 글자)만 적힌 데가 있는데, 번역할 내용이 없어 한글 번역이 한자 그대로
+        # 남는다 — 그러면 인덱스에 맨한자가 실리고 상담 답변으로 샌다.
+        #
+        # `seq`는 부르는 쪽의 enumerate 값이라 여기서 걸러도 나머지 id는 그대로다.
+        # 걸러낸 뒤 번호를 다시 매기면 이미 번역된 항목들의 id가 밀린다.
+        if text in ("衍文",):
+            return
         pos = line_no if line_no is not None else 0
         chunks.append({
             "id": f"B{hid}-{source_type}-{pos}-{seq}",

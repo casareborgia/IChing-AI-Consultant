@@ -33,7 +33,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from sqlalchemy import delete
 
-from agents.counsel import MAX_TURNS_LIMIT, run_counsel_turn
+from agents.counsel import DIAGNOSIS_TERMS, MAX_TURNS_LIMIT, run_counsel_turn
 from agents.intake import run_intake
 from agents.interpret import run_interpret
 from agents.journal import write_journal
@@ -46,8 +46,9 @@ from schemas.counsel import HexagramInterpretationSchema
 FIXTURES = PROJECT_ROOT / "tests" / "fixtures" / "agent_cases.json"
 
 CJK = re.compile(r"[一-鿿]")
-# 진단성 발언. 설계 원칙 4 — 병명·약물·의학적 판단 금지
-DIAGNOSIS = ("우울증", "불안장애", "공황장애", "조울", "ADHD", "처방", "복용", "투약", "진단됩니다", "진단입니다")
+# 진단성 발언. 설계 원칙 4 — 병명·약물·의학적 판단 금지.
+# 목록은 agents/counsel.py가 갖는다. 여기에 복사본을 두면 둘이 갈라진다.
+DIAGNOSIS = DIAGNOSIS_TERMS
 # 단정적 예언. 포지셔닝 — 예언자가 아니라 상담사
 PREDICTION = ("반드시 성공", "반드시 실패", "무조건 성공", "무조건 실패", "틀림없이", "운명입니다", "정해져 있습니다")
 
@@ -112,6 +113,8 @@ class Check:
         self.seconds = 0.0
         self.error: Optional[str] = None
         self.timing: Optional[Dict[str, float]] = None   # Ollama가 준 시간 분해
+        # 위반이 잡혔을 때 무엇이 나왔는지 봐야 진짜인지 안다. 세 번 막혔던 자리다.
+        self.output: Optional[str] = None
 
     @property
     def constraint_ok(self) -> bool:
@@ -155,6 +158,7 @@ async def run_intake_cases(cases: List[Dict], client) -> List[Check]:
                 chk.violations.append("clarified_question이 비었다")
             if not (res.topic_category or "").strip():
                 chk.violations.append("topic_category가 비었다")
+            chk.output = res.clarified_question
             _text_checks(res.clarified_question, where="정리된 질문", violations=chk.violations)
 
             want = case.get("expect_request_type")
@@ -202,6 +206,7 @@ async def run_interpret_cases(cases: List[Dict], client, session) -> List[Check]
 
                 if not (res.contextual_mapping or "").strip():
                     chk.violations.append("contextual_mapping이 비었다")
+                chk.output = res.contextual_mapping
                 _text_checks(res.contextual_mapping, where="상황 매핑", violations=chk.violations)
 
                 # 괘는 규칙 엔진이 정한다. 모델이 바꿔치기하면 안 된다.
@@ -244,6 +249,7 @@ async def run_counsel_cases(cases: List[Dict], client) -> List[Check]:
                 continue
 
             msg = res.message or ""
+            chk.output = msg
             if not msg.strip():
                 chk.violations.append("message가 비었다")
             _text_checks(msg, where="상담 답변", violations=chk.violations)
@@ -293,7 +299,9 @@ async def run_journal_cases(cases: List[Dict], client, session) -> List[Check]:
             chk.format_ok = getattr(client, "failures", 0) == _f0
             if not chk.format_ok:
                 chk.error = f"모델 호출 실패 — {getattr(client, 'last_error', '')[:80]}"
-            elif not (entry.summary or "").strip():
+            else:
+                chk.output = entry.summary
+            if chk.format_ok and not (entry.summary or "").strip():
                 chk.violations.append("summary가 비었다")
             if not (entry.key_insights or "").strip():
                 chk.violations.append("key_insights가 비었다")
@@ -404,7 +412,8 @@ async def main_async(args) -> None:
                 path = Path(args.output).with_name(Path(args.output).stem + f"_{tag}.json")
                 path.write_text(json.dumps(
                     {n: [{"id": c.case_id, "format_ok": c.format_ok, "violations": c.violations,
-                          "seconds": round(c.seconds, 2), "timing": c.timing, "error": c.error}
+                          "seconds": round(c.seconds, 2), "timing": c.timing,
+                          "output": c.output, "error": c.error}
                          for c in cs] for n, cs in merged.items()},
                     ensure_ascii=False, indent=2), encoding="utf-8")
                 print(f"  상세 → {path}")

@@ -13,6 +13,28 @@ from schemas.counsel import CounselTurnSchema, HexagramInterpretationSchema
 
 MAX_TURNS_LIMIT = 12
 
+# 답변에 나오면 안 되는 진단성 표현. 설계 원칙 4이자 SaMD 판정선과 닿는 자리다
+# (CLAUDE.md 법적 확인 사항 — "고위험군입니다" 류의 등급·병명 표시는 의료기기 쪽으로
+# 넘어가는 신호로 적혀 있다).
+#
+# 프롬프트에도 같은 목록이 있고, 둘이 어긋나지 않는지는 테스트가 지킨다.
+# 문구를 코드에 복사해 두었다가 프롬프트와 갈라진 전례가 이미 있었다.
+DIAGNOSIS_TERMS = (
+    "우울증", "불안장애", "공황장애", "조울", "강박증", "ADHD", "번아웃증후군",
+    "처방", "복용", "투약", "진단",
+)
+
+# 재생성까지 실패했을 때 나가는 문장. 병명을 피하면서 상담을 잇는다.
+DIAGNOSIS_FALLBACK = (
+    "그 이름을 붙이는 일은 전문가의 몫이라 제가 답할 수 있는 자리가 아닙니다.\n\n"
+    "다만 말씀하신 상태가 언제부터였는지, 하루 중 언제 가장 힘드신지 들려주시겠어요?"
+)
+
+
+def find_diagnosis_terms(text: str) -> list:
+    """답변에 섞인 진단성 표현을 찾는다."""
+    return [w for w in DIAGNOSIS_TERMS if w in (text or "")]
+
 
 async def run_counsel_turn(
     user_message: str,
@@ -81,6 +103,34 @@ async def run_counsel_turn(
         needs_f = True
         f_q = "지금 이 순간 가장 마음에 걸리는 점은 무엇인가요?"
         is_fin = False
+
+    # 진단성 표현이 섞이면 한 번 다시 쓰게 한다.
+    #
+    # 프롬프트에 금지 목록과 예시까지 넣었는데도 다섯 번에 한 번은 샜다. 확률적으로
+    # 새게 둘 수 있는 자리가 아니다 — 병명을 되받는 순간 상담이 아니라 감별이 되고,
+    # 그건 SaMD 판정선 쪽으로 걸어가는 일이다.
+    #
+    # 재생성은 한 번뿐이다. 실패가 이어지면 호출만 늘고 답은 안 나아진다.
+    hits = find_diagnosis_terms(msg)
+    if hits:
+        try:
+            retry_prompt = (
+                user_prompt
+                + f"\n\n※ 직전에 쓴 답변에 {', '.join(hits)} 라는 말이 들어 있었습니다."
+                " 그 단어를 한 번도 쓰지 말고 다시 쓰십시오. 부정문으로도 쓰지 마십시오."
+                " '그 이름', '말씀하신 그것'처럼 가리키기만 하고 넘어가십시오."
+            )
+            data = llm.complete_json(retry_prompt, system=sys_prompt, temperature=0.3)
+            retried = data.get("message", "")
+            if retried and not find_diagnosis_terms(retried):
+                msg = retried
+                f_q = data.get("followup_question", f_q)
+            else:
+                msg = DIAGNOSIS_FALLBACK
+                f_q = None
+        except Exception:
+            msg = DIAGNOSIS_FALLBACK
+            f_q = None
 
     # 턴 상한 강제. 이 판단은 try 밖에 있어야 한다 — 안에 두면 호출이 실패했을 때
     # 상한이 적용되지 않아, LLM이 계속 죽는 동안 세션이 13턴, 14턴으로 끝없이 간다.

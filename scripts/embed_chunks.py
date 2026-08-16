@@ -100,18 +100,42 @@ async def load(rows: List[Dict[str, Any]], vectors: List[List[float]], dry_run: 
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--chunks", default="data/rag_chunks.json")
-    ap.add_argument("--translations", required=True)
+    ap.add_argument("--chunks", nargs="+", default=["data/rag_chunks.json"],
+                    help="청크 파일. 여러 개를 주면 합쳐서 적재한다")
+    ap.add_argument("--translations", nargs="+", required=True,
+                    help="번역 파일. --chunks와 같은 순서로 짝지어 준다")
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--limit", type=int, default=None, help="앞에서 N건만 (연결 시험용)")
     args = ap.parse_args()
 
-    chunks = json.load(open(args.chunks, encoding="utf-8"))
-    if args.limit:
-        chunks = chunks[:args.limit]
+    # 여러 자료를 한 번에 받는 이유는 이 적재가 **전량 교체**이기 때문이다.
+    # 본의만 넣고 돌리면 정전 1,752건이 지워진다. 인덱스에 있어야 할 것을 전부
+    # 한 번에 주는 것 외에 안전한 방법이 없다 — 청크를 식별할 자연키가 스키마에
+    # 없어서 부분 갱신이 성립하지 않는다(이 파일 첫머리 참고).
+    if len(args.chunks) != len(args.translations):
+        raise SystemExit(
+            f"--chunks {len(args.chunks)}개와 --translations {len(args.translations)}개가 "
+            "짝이 맞지 않는다. 같은 순서로 짝지어 준다"
+        )
 
-    rows, skipped = merge(chunks, args.translations)
-    print(f"청크 {len(chunks)}건 → 임베딩 대상 {len(rows)}건 / 제외 {len(skipped)}건")
+    rows: List[Dict[str, Any]] = []
+    skipped: List[Any] = []
+    총청크 = 0
+    for chunk_path, tr_path in zip(args.chunks, args.translations):
+        chunks = json.load(open(chunk_path, encoding="utf-8"))
+        if args.limit:
+            chunks = chunks[:args.limit]
+        총청크 += len(chunks)
+        r, s = merge(chunks, tr_path)
+        print(f"  {chunk_path}: {len(chunks)}건 중 {len(r)}건 준비")
+        rows.extend(r)
+        skipped.extend(s)
+
+    중복 = len(rows) - len({(r["hexagram_id"], r["source_type"], r["line_number"], r["content"]) for r in rows})
+    if 중복:
+        raise SystemExit(f"같은 내용의 청크가 {중복}건 겹친다 — 입력 파일이 겹치지 않는지 보라")
+
+    print(f"청크 {총청크}건 → 임베딩 대상 {len(rows)}건 / 제외 {len(skipped)}건")
     if skipped:
         for cid, why in skipped[:10]:
             print(f"  제외 {cid}: {why}")

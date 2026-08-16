@@ -362,10 +362,18 @@ class GeminiClient:
     ) -> Dict[str, Any]:
         max_tokens = max_tokens or self.max_tokens
         sys_prompt = system or self.system_prompt or ""
+        # JSON을 **요구**한다. 프롬프트에 "JSON만 출력하라"고 적는 것으로는 안 된다 —
+        # Gemini 2.5 Flash는 그 지시를 무시하고 산문으로 답했고, 상담 에이전트 7건 중
+        # 4건이 파싱 실패로 죽었다(`Expecting value: line 1 column 1`). Ollama는
+        # `format: "json"`을, Anthropic은 프롬프트 준수를 믿을 수 있지만 이쪽은 아니다.
+        #
+        # 스키마(`response_schema`)까지는 주지 않는다. 에이전트마다 모양이 달라
+        # 클라이언트가 알아야 할 것이 늘고, LM Studio에서 같은 이유로 한 번 데였다.
         config = self._types.GenerateContentConfig(
             temperature=temperature,
             system_instruction=sys_prompt,
             max_output_tokens=max_tokens,
+            response_mime_type="application/json",
         )
         last_err = None
         for attempt in range(1, self.retries + 1):

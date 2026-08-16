@@ -727,3 +727,81 @@ async def test_후속턴에서도_해설을_다시_찾고_괘로_좁힌다(monke
     assert all(h is not None for h in 검색된_괘), "괘로 좁히지 않은 검색이 있다"
     assert "기다림의 자리" in res2.user_facing_message, "다시 찾은 해설이 답변에 닿지 않았다"
     assert "需者飮食之道也" not in res2.user_facing_message
+
+
+@pytest.mark.asyncio
+async def test_모든_턴이_예외없이_스크리닝을_먼저_거친다(monkeypatch):
+    """[0] 안전 스크리닝은 매 턴 돌고, 다른 무엇보다 먼저 돈다.
+
+    지금은 코드 관례로만 지켜진다. 배포 리팩터에서 "가벼운 인사는 지름길로"
+    같은 동적 라우팅을 입구에 얹으면 조용히 깨질 수 있는 자리다 — 인사말로
+    보이는 발화를 스크리너 앞에서 걷어내는 순간, 위기는 대화가 깊어지며
+    드러난다는 전제가 무너진다.
+
+    그래서 관례가 아니라 테스트로 붙든다. 스크리닝을 건너뛰는 경로가 하나라도
+    생기면 여기서 실패한다.
+    """
+    from core.rag import RetrievedChunk
+
+    호출순서 = []
+
+    real_screen = None
+
+    async def spy_screen(text, **kwargs):
+        호출순서.append(("screen", text))
+        return await real_screen(text, **kwargs)
+
+    import agents.pipeline as pipe
+    real_screen = pipe.screen
+    monkeypatch.setattr(pipe, "screen", spy_screen)
+
+    async def mock_search(*args, **kwargs):
+        return [RetrievedChunk(
+            chunk_id="c", hexagram_id=1, line_number=None, source_type="guasa_comm",
+            category="annotation", content="원문", content_ko="번역", similarity=0.7,
+        )]
+
+    def spy_cast(*args, **kwargs):
+        호출순서.append(("cast", None))
+        from core.hexagram_engine import cast_hexagram as real_cast
+        return real_cast(*args, **kwargs)
+
+    monkeypatch.setattr("agents.interpret.search_balanced", mock_search)
+    monkeypatch.setattr("agents.interpret.cast_hexagram", spy_cast)
+
+    clients = {
+        "safety": MockLLMDispatcher({"default": {"category": "NORMAL"}}),
+        "intake": MockLLMDispatcher({"default": {
+            "request_type": "counsel", "clarified_question": "지금 시작해도 될지",
+            "topic_category": "결단", "is_duplicate_question": False,
+            "duplicate_session_ref": None,
+        }}),
+        "interpret": MockLLMDispatcher({"default": {"contextual_mapping": "시작의 어려움"}}),
+        "counsel": MockLLMDispatcher({"default": {
+            "message": "함께 살펴봅니다. 무엇이 걸리시나요?", "needs_followup": True,
+            "followup_question": "무엇이 걸리시나요?", "is_final": False,
+        }}),
+    }
+
+    # 인사말, 상담 발화, 후속 발화 — 성격이 다른 세 턴 모두 검사한다.
+    발화 = ["안녕하세요", "지금 시작해도 될까요?", "조금 더 이야기하고 싶어요"]
+
+    async with AsyncSessionLocal() as session:
+        sid = None
+        for msg in 발화:
+            res = await run_turn(session, counsel_session_id=sid, user_id="screen_every_turn",
+                                 message=msg, manual_lines=[9, 8, 8, 8, 6, 8], clients=clients)
+            sid = res.session_id or sid
+
+    스크리닝 = [t for t, _ in 호출순서 if t == "screen"]
+    assert len(스크리닝) == len(발화), (
+        f"턴 {len(발화)}개 중 스크리닝은 {len(스크리닝)}번만 돌았다 — "
+        "스크리닝을 건너뛰는 경로가 생겼다")
+
+    assert 호출순서[0][0] == "screen", "첫 동작이 스크리닝이 아니다"
+
+    # 괘를 뽑기 전에 반드시 스크리닝이 있어야 한다. 순서가 뒤집히면 위기 발화에도
+    # 괘가 먼저 나온 뒤에야 차단되는 셈이 된다.
+    for i, (종류, _) in enumerate(호출순서):
+        if 종류 == "cast":
+            assert any(t == "screen" for t, _ in 호출순서[:i]), "괘를 스크리닝보다 먼저 뽑았다"

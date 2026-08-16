@@ -183,8 +183,12 @@ async def run_interpret_cases(cases: List[Dict], client, session) -> List[Check]
     async def stub_search(*args, **kwargs):
         return list(STUB_CHUNKS)
 
-    original = interpret_mod.search_chunks
-    interpret_mod.search_chunks = stub_search
+    # 검색을 대역으로 갈아끼운다. 인덱스 내용이 점수에 섞이면 모델 비교가 안 되고,
+    # 임베딩 호출도 나가지 않는다. 이름은 `core.rag`를 따라간다 —
+    # `search_chunks`에서 `search_balanced`로 바뀌었을 때 여기가 같이 안 바뀌어
+    # 하네스가 통째로 죽은 적이 있다(테스트 밖이라 pytest가 못 잡는다).
+    original = interpret_mod.search_balanced
+    interpret_mod.search_balanced = stub_search
     try:
         out = []
         for case in cases:
@@ -218,7 +222,7 @@ async def run_interpret_cases(cases: List[Dict], client, session) -> List[Check]
             out.append(chk)
         return out
     finally:
-        interpret_mod.search_chunks = original
+        interpret_mod.search_balanced = original
 
 
 async def run_counsel_cases(cases: List[Dict], client) -> List[Check]:

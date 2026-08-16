@@ -182,7 +182,11 @@ RAG 대상 1,752건 — 정전 주석 1,238(효사 421·소상전 399·단전 21
 4. [x] RAG 청크 구축 (정전 주석 + 序卦 해설 + 소상전·단전·대상전, 1,752건)
        본의·현대해설은 애초에 이 단계 범위가 아니다. 데이터 레이어 절 참고
 4-1. [x] 저본 이관 — 현토본 → Kanripo 표점본 (2026-08-15). 번역·임베딩 전량 재생성
-5. [ ] 에이전트 4종 + 안전 스크리닝 구현
+5. [x] 에이전트 4종 + 안전 스크리닝 구현 (2026-08-16). `agents/` 6종 +
+       `core/{llm,prompts,rag,reading}.py`, 프롬프트 6종, 테스트 58건 통과.
+       안전 채점 110/112 — 심각한 놓침 0·과탐 0이나 **Sonnet 기준**이다.
+       서비스할 모델로는 아직 재지 않았다. 「모델 운영」 절의 배포 전 목록 참고.
+       계약과 판단 근거는 `docs/STEP5_INSTRUCTIONS.md`에 남겼다
 6. [ ] 로컬 통합 테스트 (GCP 올리기 전 여기서 다 잡기)
 7. [ ] Vertex AI 배포 + 비용/지연 실측
 
@@ -210,8 +214,8 @@ iching-counsel/
 │   ├── apply_decisions.py     # 판정 반영 (파싱과 별도 단계)
 │   ├── verify_kanripo.py      # 무손실·보존 검증
 │   └── parse_jeonguiu.py      # 구 현토본 파서 (폐기, 이력용)
-├── agents/               # intake, interpret, counsel, journal, safety
-├── core/                 # hexagram_engine, db, rag
+├── agents/               # safety, intake, interpret, counsel, journal, pipeline
+├── core/                 # hexagram_engine, llm, prompts, rag, reading, db
 ├── schemas/              # Pydantic 모델
 ├── migrations/           # Alembic
 └── prompts/              # 에이전트별 프롬프트 (코드와 분리)

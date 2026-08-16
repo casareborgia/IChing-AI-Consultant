@@ -101,7 +101,26 @@ async def search_chunks(
         raise ValueError("hexagram_id는 필수 인자입니다. 괘 범위를 지정하지 않으면 타 괘 해설이 섞입니다.")
 
     vec = embed_query(query, use_cache=use_cache)
+    return await _search_with_vector(
+        session, vec, hexagram_id=hexagram_id, line_number=line_number,
+        source_types=source_types, k=k,
+    )
 
+
+async def _search_with_vector(
+    session: AsyncSession,
+    vec: List[float],
+    *,
+    hexagram_id: int,
+    line_number: Optional[int] = None,
+    source_types: Optional[List[str]] = None,
+    k: int = 5,
+) -> List[RetrievedChunk]:
+    """이미 임베딩된 질의 벡터로 검색한다.
+
+    출처를 갈라 두 번 검색할 때 질의를 두 번 임베딩하지 않으려고 벡터를 밖에서
+    받는다. 같은 문장을 두 번 임베딩하는 것은 돈과 지연을 그냥 두 배로 쓰는 일이다.
+    """
     stmt = select(
         InterpretationChunk,
         InterpretationChunk.embedding.cosine_distance(vec).label("dist"),
@@ -135,15 +154,70 @@ async def search_chunks(
     return retrieved
 
 
+# 두 주석서. 한 풀에 던지지 않고 갈라서 뽑는다.
+#
+# 이 자료는 『주역전의』, 곧 정전(傳)과 본의(義)를 함께 읽는 체제에서 왔다.
+# 그런데 한 번의 의미 검색에 다 던져 상위 k건을 받으면 균형이 검색 순위에
+# 맡겨진다 — 본의는 중앙값 31자로 훨씬 짧아 밀리기 쉽고, 반대로 짧은 글이
+# 질의어와 촘촘히 겹쳐 정전을 밀어낼 수도 있다. 어느 쪽이든 무엇을 근거로
+# 삼을지가 우연에 달리게 된다.
+#
+# 그래서 출처별로 정해진 수만큼 따로 뽑아 합친다. 비율이 코드에 드러나 있어야
+# 나중에 조정하거나 한쪽을 뺄 수 있다.
+JEONGJEON_TYPES = [
+    "gwa_intro", "guasa_comm", "tanjon_comm", "daesang_comm",
+    "line_comm", "sosang_comm", "tanjon", "daesang", "sosang",
+]
+BENUI_TYPES = [
+    "benui_guasa", "benui_line", "benui_tanjon", "benui_daesang", "benui_sosang",
+]
+
 # 질의 문자열 하나만 받는 검색 함수. 상담 루프가 대화 중 다시 찾을 때 쓴다.
 Retriever = Callable[[str], Awaitable[List[RetrievedChunk]]]
+
+
+async def search_balanced(
+    session: AsyncSession,
+    query: str,
+    *,
+    hexagram_id: int,
+    line_number: Optional[int] = None,
+    k_jeongjeon: int = 3,
+    k_benui: int = 2,
+    use_cache: bool = False,
+) -> List[RetrievedChunk]:
+    """정전과 본의를 정해진 몫만큼 따로 뽑아 합친다.
+
+    정전이 앞에 온다. 이 앱은 의사결정 지원을 표방하므로 의리(義理)를 논하는
+    정전이 본류고, 점법(占法)을 말하는 본의는 근거를 두껍게 하는 자리다
+    (CLAUDE.md 데이터 레이어 절).
+
+    `k_benui=0`이면 본의를 아예 빼고 검색한다. 본의가 답변의 톤을 예언 쪽으로
+    당기는지 같은 인덱스에서 대조하려면 이 스위치가 필요하다 — 인덱스를 두 벌
+    만들어 비교하면 다른 것까지 같이 달라진다.
+    """
+    if hexagram_id is None:
+        raise ValueError("hexagram_id는 필수 인자입니다. 괘 범위를 지정하지 않으면 타 괘 해설이 섞입니다.")
+
+    vec = embed_query(query, use_cache=use_cache)  # 한 번만 임베딩한다
+
+    out: List[RetrievedChunk] = []
+    for types, k in ((JEONGJEON_TYPES, k_jeongjeon), (BENUI_TYPES, k_benui)):
+        if k <= 0:
+            continue
+        out.extend(await _search_with_vector(
+            session, vec, hexagram_id=hexagram_id, line_number=line_number,
+            source_types=types, k=k,
+        ))
+    return out
 
 
 def make_retriever(
     session: AsyncSession,
     *,
     hexagram_id: int,
-    k: int = 3,
+    k_jeongjeon: int = 3,
+    k_benui: int = 2,
     use_cache: bool = False,
 ) -> Retriever:
     """괘 범위를 미리 묶은 검색 함수를 만듭니다.
@@ -153,16 +227,21 @@ def make_retriever(
     정할 수 있다. `hexagram_id`를 키워드 필수 인자로 둔 것과 같은 이유이고,
     거기서 한 걸음 더 간 것이다(주석이 아니라 구조로 막는다).
 
+    대화 중 다시 찾을 때도 정전과 본의를 갈라 뽑는다. 첫 검색만 균형을 잡고
+    재검색은 한 풀에서 뽑으면, 대화가 길어질수록 근거가 한쪽으로 쏠린다.
+
     Args:
         session: SQLAlchemy 비동기 세션
         hexagram_id: 검색을 묶어둘 괘. 초점이 가리키는 괘를 쓴다
-        k: 한 번의 재검색이 가져올 최대 청크 수
+        k_jeongjeon: 재검색 1회가 가져올 정전 쪽 최대 청크 수
+        k_benui: 같은 자리에서 본의 쪽 최대 청크 수 (0이면 본의를 뺀다)
         use_cache: 임베딩 디스크 캐시 사용 여부
     """
 
     async def _retrieve(query: str) -> List[RetrievedChunk]:
-        return await search_chunks(
-            session, query, hexagram_id=hexagram_id, k=k, use_cache=use_cache
+        return await search_balanced(
+            session, query, hexagram_id=hexagram_id,
+            k_jeongjeon=k_jeongjeon, k_benui=k_benui, use_cache=use_cache,
         )
 
     return _retrieve

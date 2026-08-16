@@ -41,7 +41,7 @@ async def test_정상_상담_흐름_괘도출_대화_저널생성(monkeypatch):
             )
         ]
 
-    monkeypatch.setattr("agents.interpret.search_chunks", mock_search_chunks)
+    monkeypatch.setattr("agents.interpret.search_balanced", mock_search_chunks)
 
     mock_clients = {
         "safety": MockLLMDispatcher({"default": {"category": "NORMAL", "signals": []}}),
@@ -217,7 +217,7 @@ async def test_사연이_섞이면_상담으로_본다(monkeypatch):
             category="annotation", content="원문", content_ko="번역", similarity=0.7,
         )]
 
-    monkeypatch.setattr("agents.interpret.search_chunks", mock_search)
+    monkeypatch.setattr("agents.interpret.search_balanced", mock_search)
 
     clients = {
         "safety": MockLLMDispatcher({"default": {"category": "NORMAL"}}),
@@ -293,7 +293,7 @@ async def test_다른_사용자는_래치에_걸리지_않는다(monkeypatch):
             category="annotation", content="원문", content_ko="번역", similarity=0.7,
         )]
 
-    monkeypatch.setattr("agents.interpret.search_chunks", mock_search)
+    monkeypatch.setattr("agents.interpret.search_balanced", mock_search)
 
     async with AsyncSessionLocal() as session:
         await run_turn(
@@ -461,7 +461,7 @@ async def test_지목된_세션에_괘가_없으면_정상적으로_뽑는다(mo
             category="annotation", content="원문", content_ko="번역", similarity=0.7,
         )]
 
-    monkeypatch.setattr("agents.interpret.search_chunks", mock_search)
+    monkeypatch.setattr("agents.interpret.search_balanced", mock_search)
     prev_id = str(uuid.uuid4())
 
     async with AsyncSessionLocal() as session:
@@ -504,7 +504,7 @@ async def test_후속턴은_같은_괘를_유지하고_다시_뽑지_않는다(m
             )
         ]
 
-    monkeypatch.setattr("agents.interpret.search_chunks", mock_search_chunks)
+    monkeypatch.setattr("agents.interpret.search_balanced", mock_search_chunks)
 
     # 후속 턴에서 괘를 다시 뽑으려 하면 즉시 실패시킨다
     def _no_recast(*args, **kwargs):
@@ -573,7 +573,7 @@ async def test_되묻기_이후_답변에서_괘가_실제로_도출된다(monke
             )
         ]
 
-    monkeypatch.setattr("agents.interpret.search_chunks", mock_search_chunks)
+    monkeypatch.setattr("agents.interpret.search_balanced", mock_search_chunks)
 
     ask_client = MockLLMDispatcher({"default": {
         "category": "ASK",
@@ -677,8 +677,8 @@ async def test_후속턴에서도_해설을_다시_찾고_괘로_좁힌다(monke
             )
         ]
 
-    monkeypatch.setattr("agents.interpret.search_chunks", mock_search_chunks)
-    monkeypatch.setattr("core.rag.search_chunks", mock_search_chunks)
+    monkeypatch.setattr("agents.interpret.search_balanced", mock_search_chunks)
+    monkeypatch.setattr("core.rag.search_balanced", mock_search_chunks)
 
     mock_clients = {
         "safety": MockLLMDispatcher({"default": {"category": "NORMAL"}}),

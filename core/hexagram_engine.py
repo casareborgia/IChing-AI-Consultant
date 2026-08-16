@@ -2,6 +2,7 @@ import random
 from typing import List, Optional
 
 from schemas.hexagram_engine import (
+    BodyUseType,
     FocusRuleResult,
     FocusType,
     HexagramCastResult,
@@ -78,6 +79,27 @@ HEXAGRAM_BINARY_TO_ID = {
 
 HEXAGRAM_ID_TO_BINARY = {v: k for k, v in HEXAGRAM_BINARY_TO_ID.items()}
 
+# ---------------------------------------------------------------------------
+# 체용(體用) 보완 규칙 상수
+# 지괘가 아래 9괘이면 본괘(體) 위주로 해석한다.
+# 출처: 주역점치는법, 비(否/12), 점(漸/53), 려(旅/56), 함(咸/31), 미제(未濟/64),
+#       곤(困/47), 고(蠱/18), 정(井/48), 항(恒/32)
+_BODY_USE_EMPHASIZE_ORIGINAL: frozenset[int] = frozenset({12, 53, 56, 31, 64, 47, 18, 48, 32})
+
+# 지괘가 아래 9괘이면 지괘(用) 위주로 해석한다.
+# 익(益/42), 서합(噬嗑/21), 비(賁/22), 기제(旣濟/63), 풍(豊/55),
+# 손(損/41), 절(節/60), 귀매(歸妹/54), 태(泰/11)
+_BODY_USE_EMPHASIZE_TRANSFORMED: frozenset[int] = frozenset({42, 21, 22, 63, 55, 41, 60, 54, 11})
+
+# 지괘 이름 조회 (체용 주석 생성용) — 괘 ID → 한글 이름
+_HEX_NAME_KO: dict[int, str] = {
+    11: "지천태(泰)", 12: "천지비(否)", 18: "산풍고(蠱)", 21: "화뢰서합(噬嗑)",
+    22: "산화비(賁)", 31: "택산함(咸)", 32: "뇌풍항(恒)", 41: "산택손(損)",
+    42: "풍뢰익(益)", 47: "택수곤(困)", 48: "수풍정(井)", 53: "풍산점(漸)",
+    54: "뇌택귀매(歸妹)", 55: "뇌화풍(豊)", 56: "화산여(旅)", 60: "수택절(節)",
+    63: "수화기제(旣濟)", 64: "화수미제(未濟)",
+}
+# ---------------------------------------------------------------------------
 
 
 def binary_to_hexagram_id(binary_code: str) -> int:
@@ -126,12 +148,48 @@ def cast_single_line(method: str = "coin") -> int:
         raise ValueError(f"지원하지 않는 점법입니다: {method}")
 
 
+def _calculate_body_use(transformed_hex_id: Optional[int]) -> tuple[BodyUseType, Optional[str]]:
+    """체용(體用) 보완 규칙 판정.
+
+    지괘가 특수 18괘에 해당할 경우 BodyUseType과 한글 설명을 반환한다.
+    지괘가 없거나 나머지 46괘이면 (STANDARD, None)을 반환한다.
+    """
+    if transformed_hex_id is None:
+        return BodyUseType.STANDARD, None
+
+    name = _HEX_NAME_KO.get(transformed_hex_id, f"제{transformed_hex_id}괘")
+
+    if transformed_hex_id in _BODY_USE_EMPHASIZE_ORIGINAL:
+        note = (
+            f"지괘가 {name}이므로, 체용 보완 규칙에 따라 "
+            "본괘(體)의 기류를 중심으로 해석의 무게를 둡니다."
+        )
+        return BodyUseType.EMPHASIZE_ORIGINAL, note
+
+    if transformed_hex_id in _BODY_USE_EMPHASIZE_TRANSFORMED:
+        note = (
+            f"지괘가 {name}이므로, 체용 보완 규칙에 따라 "
+            "지괘(用)의 미래 기운을 중심으로 해석의 무게를 둡니다."
+        )
+        return BodyUseType.EMPHASIZE_TRANSFORMED, note
+
+    return BodyUseType.STANDARD, None
+
+
 def calculate_focus_rule(
     original_hex_id: int,
     changing_lines: List[int],
+    transformed_hex_id: Optional[int] = None,
 ) -> FocusRuleResult:
-    """주자(朱子) 점법 기준 동효 수(0~6개)에 따른 해석 집중 대상 판단"""
+    """주자(朱子) 점법 기준 동효 수(0~6개)에 따른 해석 집중 대상 판단.
+
+    Args:
+        original_hex_id: 본괘 ID (1~64)
+        changing_lines: 변효(동효) 위치 목록 (1~6)
+        transformed_hex_id: 지괘 ID. 체용 보완 규칙 계산에 사용. 없으면 None.
+    """
     count = len(changing_lines)
+    body_use_type, body_use_note = _calculate_body_use(transformed_hex_id)
 
     if count == 0:
         return FocusRuleResult(
@@ -146,6 +204,8 @@ def calculate_focus_rule(
             target_hexagram_type="ORIGINAL",
             target_line_numbers=[changing_lines[0]],
             description_ko=f"1개의 변효가 있으므로 본괘 {changing_lines[0]}효의 효사(爻辭)를 주 해석으로 삼습니다.",
+            body_use_type=body_use_type,
+            body_use_note_ko=body_use_note,
         )
     elif count == 2:
         # 상위 효 우선
@@ -155,14 +215,36 @@ def calculate_focus_rule(
             target_hexagram_type="ORIGINAL",
             target_line_numbers=sorted_lines,
             description_ko=f"2개의 변효가 있으므로 본괘 두 효({sorted_lines[1]}효, {sorted_lines[0]}효)의 효사를 주 해석으로 삼으며, 상위 효({sorted_lines[0]}효)를 우선합니다.",
+            body_use_type=body_use_type,
+            body_use_note_ko=body_use_note,
         )
     elif count == 3:
-        return FocusRuleResult(
-            focus_type=FocusType.BOTH_JUDGMENTS,
-            target_hexagram_type="BOTH",
-            target_line_numbers=[],
-            description_ko="3개의 변효가 있으므로 본괘 괘사와 지괘 괘사를 함께 참작하되, 본괘 괘사를 위주로 합니다.",
-        )
+        # 주희 《역학계몽》 고변점: 초효(1효) 포함 여부에 따라 본괘/지괘 괘사 분기
+        if 1 in changing_lines:
+            base = FocusRuleResult(
+                focus_type=FocusType.ORIGINAL_JUDGMENT,
+                target_hexagram_type="ORIGINAL",
+                target_line_numbers=[],
+                description_ko=(
+                    "3개의 변효 중 초효(1효)가 포함되어 있으므로 "
+                    "본괘의 괘사(卦辭)를 주 해석으로 삼습니다."
+                ),
+            )
+        else:
+            base = FocusRuleResult(
+                focus_type=FocusType.TRANSFORMED_JUDGMENT,
+                target_hexagram_type="TRANSFORMED",
+                target_line_numbers=[],
+                description_ko=(
+                    "3개의 변효 중 초효(1효)가 부동효이므로 "
+                    "지괘의 괘사(卦辭)를 주 해석으로 삼습니다."
+                ),
+            )
+        body_use_type, body_use_note = _calculate_body_use(transformed_hex_id)
+        return base.model_copy(update={
+            "body_use_type": body_use_type,
+            "body_use_note_ko": body_use_note,
+        })
     elif count == 4:
         # 지괘에서 변하지 않은 두 효 중 아래쪽(하위) 효사 우선
         unchanged = sorted([pos for pos in range(1, 7) if pos not in changing_lines])
@@ -171,6 +253,8 @@ def calculate_focus_rule(
             target_hexagram_type="TRANSFORMED",
             target_line_numbers=unchanged,
             description_ko=f"4개의 변효가 있으므로 지괘에서 변하지 않은 두 효({unchanged[0]}효, {unchanged[1]}효)의 효사를 주 해석으로 삼으며, 아래쪽 효({unchanged[0]}효)를 우선합니다.",
+            body_use_type=body_use_type,
+            body_use_note_ko=body_use_note,
         )
     elif count == 5:
         # 지괘에서 변하지 않은 1개 효사
@@ -180,9 +264,12 @@ def calculate_focus_rule(
             target_hexagram_type="TRANSFORMED",
             target_line_numbers=[unchanged],
             description_ko=f"5개의 변효가 있으므로 지괘에서 변하지 않은 하나의 효({unchanged}효) 효사를 주 해석으로 삼습니다.",
+            body_use_type=body_use_type,
+            body_use_note_ko=body_use_note,
         )
     elif count == 6:
-        # 6개 모두 변함
+        # 6개 모두 변함 — 건/곤 특수 예외, 나머지는 지괘 괘사
+        # 건/곤은 체용 보완 규칙 대상 외이므로 body_use는 STANDARD로 둔다
         if original_hex_id == 1:
             return FocusRuleResult(
                 focus_type=FocusType.SPECIAL_USE_LINE,
@@ -204,6 +291,8 @@ def calculate_focus_rule(
                 target_hexagram_type="TRANSFORMED",
                 target_line_numbers=[],
                 description_ko="6효가 모두 변하였으므로 지괘의 괘사를 주 해석으로 삼습니다.",
+                body_use_type=body_use_type,
+                body_use_note_ko=body_use_note,
             )
     else:
         raise ValueError(f"유효하지 않은 변효 수입니다: {count}")
@@ -275,6 +364,7 @@ def cast_hexagram(
     focus_rule = calculate_focus_rule(
         original_hex_id=orig_hex_id,
         changing_lines=changing_lines,
+        transformed_hex_id=trans_hex_id,
     )
 
     return HexagramCastResult(

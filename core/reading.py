@@ -73,6 +73,8 @@ class ReadingEvidence:
         if trans:
             parts.append(f"지괘: 제{trans.hexagram_id}괘 {trans.name_full}")
         parts.append(f"해석 초점: {self.focus_rule.description_ko}")
+        if self.focus_rule.body_use_note_ko:
+            parts.append(f"체용(體用) 보완: {self.focus_rule.body_use_note_ko}")
 
         parts.append("주 해석 근거:")
         if focus == FocusType.ORIGINAL_JUDGMENT:

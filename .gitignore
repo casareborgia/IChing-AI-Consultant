@@ -33,3 +33,7 @@ data/source/
 # 실제 모델로 돌린 대화록 (재현 가능하고 용량만 차지한다)
 data/transcripts/
 data/.cache/
+
+# Frontend local env
+frontend/.env.local
+frontend/.env*.local

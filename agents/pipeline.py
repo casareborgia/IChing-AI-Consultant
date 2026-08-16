@@ -224,9 +224,20 @@ async def run_turn(
         )
 
     # 2. [0] 안전 스크리닝 (항상 최우선 매 턴 실행)
+    #
+    # history_summary에 날것 user_message를 넣으면 안 된다.
+    # "투자에서 좋은 성과가 안 나와서 불안해요" 같은 정상 발화가
+    # 스크리닝 규칙 8번(위기 이후 평온 = 위험 신호)의 맥락 텍스트로
+    # 들어가 CAUTION → BLOCK_CRISIS 오탐 연쇄를 일으킨다.
+    # 규칙 8이 필요한 정보는 "이전에 실제 위기 판정이 있었는가"뿐이다.
+    # 세션-level 래치(latched_crisis)가 이미 그 역할을 하고 있고,
+    # 여기서는 스크리너가 세션 맥락을 인식하도록 최소한의 힌트만 준다.
     history_summary = None
     if turns:
-        history_summary = f"이전 {len(turns)}개 턴 진행 중. 최근 발화: {turns[-1].user_message}"
+        crisis_in_history = c_session is not None and c_session.status == "safety_redirect"
+        history_summary = f"이전 {len(turns)}개 턴 진행 중."
+        if crisis_in_history:
+            history_summary += " 이전 턴에서 위기 신호 판정 있음."
 
     safety_res: SafetyVerdict = await screen(
         message,

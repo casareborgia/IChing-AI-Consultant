@@ -13,6 +13,18 @@ class FocusType(str, Enum):
     SPECIAL_USE_LINE = "SPECIAL_USE_LINE"              # 건괘 용구 / 곤괘 용육 (동효 6개 특수)
 
 
+class BodyUseType(str, Enum):
+    """체용(體用) 보완 규칙: 지괘의 성격에 따른 해석 가중치 조정
+
+    주역점치는법 전통에서 지괘가 특정 9괘에 해당할 때 본괘(體)를,
+    다른 특정 9괘에 해당할 때 지괘(用)를 위주로 해석한다.
+    나머지 46괘는 표준 고변점 규칙을 따른다.
+    """
+    EMPHASIZE_ORIGINAL = "EMPHASIZE_ORIGINAL"   # 지괘가 한계·쇠퇴성 9괘 → 본괘(體) 위주
+    EMPHASIZE_TRANSFORMED = "EMPHASIZE_TRANSFORMED"  # 지괘가 성장·완결성 9괘 → 지괘(用) 위주
+    STANDARD = "STANDARD"                       # 나머지 46괘 → 표준 고변점 규칙
+
+
 class LineCastResult(BaseModel):
     """개별 효 산출 결과"""
     position: int = Field(..., ge=1, le=6, description="효 위치 (1: 초효 ~ 6: 상효)")
@@ -28,6 +40,14 @@ class FocusRuleResult(BaseModel):
     target_hexagram_type: str = Field(..., description="주 해석 대상 괘 ('ORIGINAL', 'TRANSFORMED', 'BOTH')")
     target_line_numbers: List[int] = Field(default_factory=list, description="주 해석 대상 효 번호 목록 (예: [1], [2, 5], [7] 용구/용육)")
     description_ko: str = Field(..., description="해석 지침 설명 (한글)")
+    body_use_type: BodyUseType = Field(
+        default=BodyUseType.STANDARD,
+        description="체용(體用) 보완 규칙: 지괘 성격에 따른 해석 가중치 (지괘 없으면 STANDARD)",
+    )
+    body_use_note_ko: Optional[str] = Field(
+        default=None,
+        description="체용 조정 사유 설명 (한글). 지괘가 특수 18괘일 때만 채워진다.",
+    )
 
 
 class HexagramCastResult(BaseModel):

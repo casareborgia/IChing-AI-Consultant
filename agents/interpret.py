@@ -13,7 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from core.hexagram_engine import cast_hexagram
 from core.llm import LLMClient, get_client
 from core.prompts import load_system_prompt
-from core.rag import RetrievedChunk, search_chunks
+from core.rag import RetrievedChunk, search_balanced
 from core.reading import ReadingEvidence, build_evidence
 from schemas.counsel import HexagramInterpretationSchema
 
@@ -25,6 +25,7 @@ async def run_interpret(
     method: str = "coin",
     manual_lines: Optional[List[int]] = None,
     client: Optional[LLMClient] = None,
+    k_benui: int = 2,
 ) -> Tuple[HexagramInterpretationSchema, ReadingEvidence, List[RetrievedChunk]]:
     """괘를 도출하고 확정 근거 및 RAG 주석을 수집하여 해석 초안을 생성합니다.
 
@@ -34,6 +35,8 @@ async def run_interpret(
         method: 괘 산출 방식 ("coin" | "yarrow")
         manual_lines: 수동 지정 효 리스트 (테스트용)
         client: 주입할 LLM 클라이언트 (테스트 시 Mock 주입)
+        k_benui: 본의에서 가져올 청크 수. 0이면 정전만 쓴다 — 본의가 답변의
+            톤을 예언 쪽으로 당기는지 같은 인덱스에서 대조할 때 쓰는 스위치다
 
     Returns:
         (HexagramInterpretationSchema, ReadingEvidence, list of RetrievedChunk) 튜플
@@ -45,12 +48,16 @@ async def run_interpret(
     evidence = await build_evidence(session, cast_result)
 
     # 3. RAG 주석 및 해설 검색 (pgvector 의미 검색)
-    # 본괘 기준 검색
-    chunks = await search_chunks(
+    #
+    # 정전과 본의를 갈라 뽑는다. 한 풀에 던지면 무엇을 근거로 삼을지가 검색 순위의
+    # 우연에 맡겨진다 — 본의는 중앙값 31자로 짧아 밀리거나, 반대로 질의어와 촘촘히
+    # 겹쳐 정전을 밀어낸다. 비율은 `core.rag.search_balanced`에 드러나 있다.
+    chunks = await search_balanced(
         session,
         clarified_question,
         hexagram_id=cast_result.original_hexagram_id,
-        k=3,
+        k_jeongjeon=3,
+        k_benui=k_benui,
     )
     # 특정 효가 포커스인 경우 해당 효사 주석 추가 검색.
     #
@@ -60,22 +67,24 @@ async def run_interpret(
     if cast_result.focus_rule.target_line_numbers:
         primary_line = cast_result.focus_rule.target_line_numbers[0]
         if primary_line <= 6:
-            line_chunks = await search_chunks(
+            line_chunks = await search_balanced(
                 session,
                 clarified_question,
                 hexagram_id=evidence.target_hexagram_id,
                 line_number=primary_line,
-                k=2,
+                k_jeongjeon=2,
+                k_benui=1 if k_benui else 0,
             )
             chunks.extend(line_chunks)
 
     # 지괘가 있고 포커스가 지괘인 경우 지괘 주석도 검색
     if cast_result.transformed_hexagram_id and cast_result.focus_rule.target_hexagram_type in ("TRANSFORMED", "BOTH"):
-        trans_chunks = await search_chunks(
+        trans_chunks = await search_balanced(
             session,
             clarified_question,
             hexagram_id=cast_result.transformed_hexagram_id,
-            k=2,
+            k_jeongjeon=2,
+            k_benui=1 if k_benui else 0,
         )
         chunks.extend(trans_chunks)
 

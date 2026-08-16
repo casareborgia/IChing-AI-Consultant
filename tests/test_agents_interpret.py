@@ -37,7 +37,7 @@ async def test_초점이_지괘면_효_검색도_지괘로_좁힌다(monkeypatch
     RAG 근거가 서로 다른 괘를 가리키게 된다.
     """
     rec = RecordingSearch()
-    monkeypatch.setattr("agents.interpret.search_chunks", rec)
+    monkeypatch.setattr("agents.interpret.search_balanced", rec)
 
     async with AsyncSessionLocal() as session:
         interp, evidence, _ = await run_interpret(
@@ -59,7 +59,7 @@ async def test_초점이_지괘면_효_검색도_지괘로_좁힌다(monkeypatch
 async def test_모든_RAG_검색이_괘로_좁혀진다(monkeypatch):
     """좁히지 않은 검색이 한 건도 없어야 한다."""
     rec = RecordingSearch()
-    monkeypatch.setattr("agents.interpret.search_chunks", rec)
+    monkeypatch.setattr("agents.interpret.search_balanced", rec)
 
     async with AsyncSessionLocal() as session:
         await run_interpret(

@@ -2,6 +2,7 @@
 
 - 한문 원문 노출 차단 (순수 한글 번역 및 해설만 전달)
 - 단정적 예언 배제 및 성찰형 상담 대화 루프 (1턴 1질문 되묻기)
+- 대화 중 필요하면 해설을 다시 찾는다 (Agentic RAG, 한 턴 3회 상한)
 - 턴 수 상한(기본 12턴) 도달 시 마무리 강제
 """
 
@@ -9,9 +10,30 @@ from typing import Any, Dict, List, Optional
 
 from core.llm import LLMClient, get_client
 from core.prompts import load_system_prompt
+from core.rag import RetrievedChunk, Retriever
 from schemas.counsel import CounselTurnSchema, HexagramInterpretationSchema
 
 MAX_TURNS_LIMIT = 12
+
+# 한 턴 안에서 해설을 다시 찾을 수 있는 횟수.
+#
+# Agentic RAG는 "조금만 더 찾아보자"를 스스로 반복할 수 있다. 상한이 없으면 한 턴이
+# 무한정 길어지고 호출도 그만큼 늘어난다.
+MAX_RAG_SEARCHES = 3
+
+# 검색 결과의 출처를 사람 말로 옮긴다. `source_type`은 내부 값이라 그대로 두면
+# 답변에 'line_comm' 같은 문자열이 새어 나올 여지가 생긴다.
+SOURCE_LABELS = {
+    "line_comm": "효사 주석",
+    "sosang": "소상전",
+    "sosang_comm": "소상전 주석",
+    "tanjon": "단전",
+    "tanjon_comm": "단전 주석",
+    "daesang": "대상전",
+    "daesang_comm": "대상전 주석",
+    "guasa_comm": "괘사 주석",
+    "gwa_intro": "괘 서두 해설",
+}
 
 # 답변에 나오면 안 되는 진단성 표현. 설계 원칙 4이자 SaMD 판정선과 닿는 자리다
 # (CLAUDE.md 법적 확인 사항 — "고위험군입니다" 류의 등급·병명 표시는 의료기기 쪽으로
@@ -36,6 +58,52 @@ def find_diagnosis_terms(text: str) -> list:
     return [w for w in DIAGNOSIS_TERMS if w in (text or "")]
 
 
+# 근거를 물어오는 말들. 이 자리에서는 모델의 판단을 기다리지 않고 코드가 찾는다.
+#
+# 프롬프트에 "근거를 물으면 반드시 먼저 찾으라"고 조건까지 나열해 적어봤지만
+# gemma4:latest는 여섯 턴 중 한 번도 `search_query`를 채우지 않았다. 대신 처음 받은
+# 근거 한 줄을 말만 바꿔 되풀이했다. 진단어를 프롬프트로만 막으려다 코드로 옮긴 것과
+# 같은 자리다 — 확률에 맡길 수 없는 동작은 코드가 붙든다.
+#
+# 근거 투명성은 이 앱의 차별점이다(CLAUDE.md 포지셔닝). "왜 이렇게 보느냐"는 물음에
+# 찾아보지도 않고 답하는 것은 그 차별점을 스스로 무르는 일이다.
+GROUNDS_PATTERNS = (
+    "왜 그렇게", "왜 그런", "무슨 근거", "근거가", "근거는", "어떤 근거",
+    "어떤 대목", "어디에 나오", "어디 나오", "출처", "무엇을 보고", "어떻게 아시",
+)
+
+
+def asks_for_grounds(text: str) -> bool:
+    """근거를 묻는 발화인지 본다. 띄어쓰기 차이는 무시한다."""
+    t = (text or "").replace(" ", "")
+    return any(p.replace(" ", "") in t for p in GROUNDS_PATTERNS)
+
+
+def format_retrieved(query: str, chunks: List[RetrievedChunk]) -> str:
+    """재검색 결과를 프롬프트에 붙일 한글 블록으로 만든다.
+
+    `content_ko`만 쓴다. 한문(`content`)은 "왜 이 해석인가"를 물었을 때 코드가 꺼내
+    보여주려고 보존하는 값이지 모델에게 줄 값이 아니다. 모델 손에 한문이 있으면
+    답변에 새어 나오고, 그러면 원칙 1이 프롬프트 문구 하나에 매달린다.
+    """
+    header = f'[추가로 찾아본 해설 — 질의: "{query}"]'
+    lines = [header]
+
+    for c in chunks:
+        ko = (c.content_ko or "").strip()
+        if not ko:
+            continue  # 번역이 비어 있으면 건너뛴다. 한문으로 대신하지 않는다
+        label = SOURCE_LABELS.get(c.source_type, "해설")
+        if c.line_number and c.line_number <= 6:
+            label = f"{label}({c.line_number}효)"
+        lines.append(f"- {label}: {ko}")
+
+    if len(lines) == 1:
+        lines.append("찾은 해설이 없습니다. 지금 가진 근거 안에서 답하고, 없는 말을 지어내지 마십시오.")
+
+    return "\n".join(lines)
+
+
 async def run_counsel_turn(
     user_message: str,
     interpretation: Optional[HexagramInterpretationSchema],
@@ -44,6 +112,7 @@ async def run_counsel_turn(
     turn_number: int = 1,
     client: Optional[LLMClient] = None,
     caution_append: bool = False,
+    retrieve: Optional[Retriever] = None,
 ) -> CounselTurnSchema:
     """내담자와 상담 대화 1턴을 수행하고 응답 및 후속 질문 여부를 반환합니다.
 
@@ -54,6 +123,8 @@ async def run_counsel_turn(
         turn_number: 현재 세션의 턴 번호 (1부터 시작)
         client: 주입할 LLM 클라이언트
         caution_append: CAUTION 문구를 말미에 덧붙여야 하는지 여부
+        retrieve: 대화 중 해설을 다시 찾을 검색 함수 (`core.rag.make_retriever`).
+            None이면 재검색 없이 진행한다 — 괘가 없는 턴에는 좁힐 괘가 없으므로 None이다
 
     Returns:
         CounselTurnSchema 객체
@@ -92,17 +163,84 @@ async def run_counsel_turn(
 
     user_prompt = "\n".join(prompt_lines)
 
-    try:
-        data = llm.complete_json(user_prompt, system=sys_prompt, temperature=0.3)
-        msg = data.get("message", "말씀해 주신 상황을 괘의 흐름과 함께 깊이 새겨봅니다.")
-        needs_f = bool(data.get("needs_followup", True))
-        f_q = data.get("followup_question")
-        is_fin = bool(data.get("is_final", False))
-    except Exception:
+    # 대화 중 재검색 (Agentic RAG). 설계 원칙 3.
+    #
+    # 첫 검색은 해석 에이전트가 괘를 뽑을 때 한 번 돈다. 그 결과는 정리된 첫 질문으로
+    # 찾은 것이고, 대화는 거기서 멀리 간다 — "왜 그렇게 보시나요", "사람 문제가 아니라
+    # 시기 문제라면요" 같은 물음의 답은 첫 검색 결과 안에 없다. 그때 모델이
+    # `search_query`를 채우면 여기서 다시 찾아 프롬프트에 붙이고 한 번 더 부른다.
+    #
+    # 모델이 정하는 것은 질의 문자열뿐이다. 어느 괘에서 찾을지는 부르는 쪽이 묶어
+    # 넘긴다 — 괘 범위까지 맡기면 64괘 전체에서 끌어와 지금 뽑은 괘와 무관한 해설이
+    # 답변에 섞인다.
+    searched = 0
+    notes: List[str] = []
+    data: Optional[Dict[str, Any]] = None
+    final_prompt = user_prompt
+
+    # 근거를 물어온 턴은 묻기 전에 찾는다. 모델이 요청하기를 기다리지 않는다.
+    #
+    # 질의로는 사용자의 물음 자체가 아니라 **직전에 상담사가 한 말**을 쓴다.
+    # "왜 그렇게 보시나요"는 의미 검색에 넣을 것이 없는 문장이다. 근거를 대야 할
+    # 대상은 그 앞에서 상담사가 한 말이므로, 그 말로 찾아야 관련 주석이 걸린다.
+    if retrieve is not None and asks_for_grounds(user_message):
+        지난_상담사_발화 = next(
+            (h.get("message", "") for h in reversed(conversation_history or [])
+             if h.get("role") != "user" and (h.get("message") or "").strip()),
+            "",
+        )
+        seed_query = 지난_상담사_발화 or (
+            interpretation.contextual_mapping if interpretation else ""
+        ) or user_message
+        chunks = await retrieve(seed_query)
+        searched += 1
+        notes.append(format_retrieved(seed_query, chunks))
+
+    while True:
+        final_prompt = user_prompt + ("\n\n" + "\n\n".join(notes) if notes else "")
+        try:
+            data = llm.complete_json(final_prompt, system=sys_prompt, temperature=0.3)
+        except Exception:
+            data = None
+            break
+
+        if not isinstance(data, dict):
+            data = None
+            break
+
+        query = str(data.get("search_query") or "").strip()
+        if not query or retrieve is None or searched >= MAX_RAG_SEARCHES:
+            break
+
+        chunks = await retrieve(query)
+        searched += 1
+        notes.append(format_retrieved(query, chunks))
+
+        # 없는 것은 다시 찾아도 없다. 같은 괘 안에서 빈 결과가 나오면 질의를 바꿔도
+        # 나아질 여지가 크지 않으므로 검색 예산을 여기서 닫는다.
+        #
+        # 다만 루프를 끊지는 않는다. 끊으면 마지막으로 받은 응답이 "검색해 주세요"인
+        # 채로 남아 답변이 비고, 사용자는 아무 말도 못 듣는다. 한 번 더 불러
+        # **못 찾았다는 사실을 알고** 가진 근거로 답하게 한다.
+        if not chunks:
+            searched = MAX_RAG_SEARCHES
+
+    if data is None:
         msg = "남겨주신 마음을 천천히 되짚어보게 됩니다. 지금 이 순간 가장 마음에 걸리는 점은 무엇인가요?"
         needs_f = True
         f_q = "지금 이 순간 가장 마음에 걸리는 점은 무엇인가요?"
         is_fin = False
+    else:
+        msg = data.get("message", "말씀해 주신 상황을 괘의 흐름과 함께 깊이 새겨봅니다.")
+        needs_f = bool(data.get("needs_followup", True))
+        f_q = data.get("followup_question")
+        is_fin = bool(data.get("is_final", False))
+
+        # 검색을 요청하는 차례에는 답변을 비워도 된다고 프롬프트가 허락한다. 그래서
+        # 상한에 닿아 더 못 찾게 된 마지막 응답이 빈 답변일 수 있다. 빈 화면을 내보내는
+        # 대신 대화를 잇는 문장으로 바꾼다.
+        if not str(msg or "").strip():
+            msg = "말씀해 주신 상황을 괘의 흐름과 함께 다시 짚어봅니다."
 
     # 진단성 표현이 섞이면 한 번 다시 쓰게 한다.
     #
@@ -115,7 +253,7 @@ async def run_counsel_turn(
     if hits:
         try:
             retry_prompt = (
-                user_prompt
+                final_prompt  # 재검색으로 얻은 해설까지 그대로 들고 다시 쓴다
                 + f"\n\n※ 직전에 쓴 답변에 {', '.join(hits)} 라는 말이 들어 있었습니다."
                 " 그 단어를 한 번도 쓰지 말고 다시 쓰십시오. 부정문으로도 쓰지 마십시오."
                 " '그 이름', '말씀하신 그것'처럼 가리키기만 하고 넘어가십시오."

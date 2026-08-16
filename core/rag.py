@@ -1,6 +1,7 @@
 """RAG 의미 검색 모듈.
 
 - 괘 ID(hexagram_id) 범위 강제 (타 괘 오염 원천 차단)
+- 상담 루프의 대화 중 재검색용 바인딩 (make_retriever)
 - Vertex AI text-multilingual-embedding-002 (task_type=RETRIEVAL_QUERY)
 - pgvector 코사인 거리 검색 및 유사도 계산
 - 로컬 개발/튜닝을 위한 디스크 캐시 옵션 지원
@@ -11,7 +12,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
-from typing import List, Optional
+from typing import Awaitable, Callable, List, Optional
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -132,4 +133,37 @@ async def search_chunks(
         )
 
     return retrieved
+
+
+# 질의 문자열 하나만 받는 검색 함수. 상담 루프가 대화 중 다시 찾을 때 쓴다.
+Retriever = Callable[[str], Awaitable[List[RetrievedChunk]]]
+
+
+def make_retriever(
+    session: AsyncSession,
+    *,
+    hexagram_id: int,
+    k: int = 3,
+    use_cache: bool = False,
+) -> Retriever:
+    """괘 범위를 미리 묶은 검색 함수를 만듭니다.
+
+    상담 에이전트에게 `search_chunks`를 그대로 쥐여주지 않는 이유는 범위 때문이다.
+    괘 ID를 부르는 쪽에서 못 박아 두면 에이전트가 넓힐 방법이 없다 — 질의 문자열만
+    정할 수 있다. `hexagram_id`를 키워드 필수 인자로 둔 것과 같은 이유이고,
+    거기서 한 걸음 더 간 것이다(주석이 아니라 구조로 막는다).
+
+    Args:
+        session: SQLAlchemy 비동기 세션
+        hexagram_id: 검색을 묶어둘 괘. 초점이 가리키는 괘를 쓴다
+        k: 한 번의 재검색이 가져올 최대 청크 수
+        use_cache: 임베딩 디스크 캐시 사용 여부
+    """
+
+    async def _retrieve(query: str) -> List[RetrievedChunk]:
+        return await search_chunks(
+            session, query, hexagram_id=hexagram_id, k=k, use_cache=use_cache
+        )
+
+    return _retrieve
 

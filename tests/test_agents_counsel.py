@@ -2,7 +2,8 @@
 
 import pytest
 
-from agents.counsel import MAX_TURNS_LIMIT, run_counsel_turn
+from agents.counsel import MAX_RAG_SEARCHES, MAX_TURNS_LIMIT, run_counsel_turn
+from core.rag import RetrievedChunk
 from schemas.counsel import HexagramInterpretationSchema
 
 INTERP = HexagramInterpretationSchema(
@@ -167,3 +168,188 @@ async def test_재생성도_실패하면_안전한_문장으로_바꾼다():
     res = await run_counsel_turn("제가 우울증일까요?", INTERP, turn_number=1, client=AlwaysDiagnosisLLM())
     assert "우울증" not in res.message
     assert "전문가의 몫" in res.message
+
+
+# ── 대화 중 재검색 (Agentic RAG, 설계 원칙 3) ─────────────────────────────
+
+
+def _chunk(ko="때를 기다리는 것이 이롭다는 뜻입니다.", hanja="需者飮食之道也"):
+    return RetrievedChunk(
+        chunk_id="c1", hexagram_id=5, line_number=3, source_type="line_comm",
+        category="annotation", content=hanja, content_ko=ko, similarity=0.82,
+    )
+
+
+class SearchingLLM:
+    """근거가 모자라다며 재검색을 요청하는 모델.
+
+    `requests`번 검색을 요청한 뒤 답을 쓴다. 프롬프트를 모아두므로 검색 결과가
+    실제로 다음 호출에 들어갔는지 확인할 수 있다.
+    """
+
+    def __init__(self, requests: int = 1):
+        self.requests = requests
+        self.prompts = []
+
+    def complete_json(self, user: str, *, system: str = "", **kwargs) -> dict:
+        self.prompts.append(user)
+        if len(self.prompts) <= self.requests:
+            return {"message": "", "needs_followup": True, "followup_question": None,
+                    "is_final": False, "search_query": f"질의{len(self.prompts)}"}
+        return {"message": "찾아본 해설로 보면 지금은 기다림의 자리입니다.",
+                "needs_followup": True, "followup_question": "무엇이 가장 걸리시나요?",
+                "is_final": False, "search_query": None}
+
+
+@pytest.mark.asyncio
+async def test_근거가_모자라면_다시_찾아_그_해설로_답한다():
+    """첫 검색은 정리된 첫 질문으로 돌았다. 대화가 옮겨가면 거기에 답이 없다."""
+    calls = []
+
+    async def retrieve(query):
+        calls.append(query)
+        return [_chunk()]
+
+    llm = SearchingLLM(requests=1)
+    # 근거를 묻는 말이 아니다 — 코드가 먼저 찾는 경로를 타지 않고, 모델이 스스로
+    # 더 찾겠다고 한 경우만 본다.
+    res = await run_counsel_turn(
+        "관계 이야기인 줄 알았는데 시기의 문제인 것 같아요.", INTERP, client=llm, retrieve=retrieve
+    )
+
+    assert calls == ["질의1"]
+    assert len(llm.prompts) == 2, "검색 후 다시 물어야 한다"
+    assert "때를 기다리는 것이 이롭다" in llm.prompts[1], "찾은 해설이 다음 호출에 들어가야 한다"
+    assert "기다림의 자리" in res.message
+
+
+@pytest.mark.asyncio
+async def test_재검색은_상한을_넘지_않는다():
+    """'조금만 더 찾아보자'가 반복되면 한 턴이 무한정 길어진다."""
+    calls = []
+
+    async def retrieve(query):
+        calls.append(query)
+        return [_chunk()]
+
+    llm = SearchingLLM(requests=99)  # 끝없이 더 찾자고 한다
+    res = await run_counsel_turn("왜요?", INTERP, client=llm, retrieve=retrieve)
+
+    assert len(calls) == MAX_RAG_SEARCHES
+    assert len(llm.prompts) == MAX_RAG_SEARCHES + 1
+    assert res.message.strip(), "상한에 닿아도 빈 답변이 나가면 안 된다"
+
+
+@pytest.mark.asyncio
+async def test_괘가_없는_턴에는_다시_찾지_않는다():
+    """주역 자체를 묻는 턴에는 좁힐 괘가 없다. 좁히지 않은 검색은 하지 않는다."""
+    llm = SearchingLLM(requests=99)
+    res = await run_counsel_turn("대흉이 무슨 뜻인가요?", None, client=llm, retrieve=None)
+
+    assert len(llm.prompts) == 1
+    assert res.message.strip()
+
+
+@pytest.mark.asyncio
+async def test_다시_찾은_해설도_한글만_넘어간다():
+    """한문은 근거 보존용이지 모델에게 줄 값이 아니다. 번역이 비면 건너뛴다."""
+    async def retrieve(query):
+        return [_chunk(), _chunk(ko="", hanja="雲上於天需")]
+
+    llm = SearchingLLM(requests=1)
+    await run_counsel_turn("왜요?", INTERP, client=llm, retrieve=retrieve)
+
+    주입된_해설 = llm.prompts[1]
+    assert "需者飮食之道也" not in 주입된_해설
+    assert "雲上於天需" not in 주입된_해설, "번역이 비었다고 한문으로 대신하면 안 된다"
+    assert "때를 기다리는 것이 이롭다" in 주입된_해설
+
+
+@pytest.mark.asyncio
+async def test_찾은_해설이_없으면_더_찾지_않는다():
+    calls = []
+
+    async def retrieve(query):
+        calls.append(query)
+        return []
+
+    llm = SearchingLLM(requests=99)
+    res = await run_counsel_turn("왜요?", INTERP, client=llm, retrieve=retrieve)
+
+    assert len(calls) == 1, "같은 괘 안에서 빈 결과가 나오면 질의를 바꿔도 나아지지 않는다"
+    assert "찾은 해설이 없습니다" in llm.prompts[1]
+    assert res.message.strip()
+
+
+class NoSearchLLM:
+    """`search_query`를 쓸 줄 모르는 모델. 로컬 gemma4가 실제로 그랬다."""
+
+    def __init__(self):
+        self.prompts = []
+
+    def complete_json(self, user: str, *, system: str = "", **kwargs) -> dict:
+        self.prompts.append(user)
+        return {"message": "지금은 기다림의 자리로 봅니다.", "needs_followup": True,
+                "followup_question": "무엇이 걸리시나요?", "is_final": False}
+
+
+@pytest.mark.asyncio
+async def test_근거를_물으면_모델이_요청하지_않아도_찾는다():
+    """프롬프트에 '근거를 물으면 반드시 찾으라'고 적어도 모델은 안 찾았다.
+
+    여섯 턴 중 0회였다. 근거 투명성이 이 앱의 차별점인데 확률에 맡길 수 없어
+    코드가 붙든다 — 진단어를 코드로 옮긴 것과 같은 판단이다.
+    """
+    calls = []
+
+    async def retrieve(query):
+        calls.append(query)
+        return [_chunk()]
+
+    llm = NoSearchLLM()
+    history = [
+        {"role": "user", "message": "이직을 할지 고민이에요"},
+        {"role": "counselor", "message": "지금은 때를 살피는 자리로 보입니다."},
+    ]
+    res = await run_counsel_turn(
+        "왜 그렇게 보시나요?", INTERP, conversation_history=history,
+        client=llm, retrieve=retrieve,
+    )
+
+    assert len(calls) == 1
+    assert calls[0] == "지금은 때를 살피는 자리로 보입니다.", (
+        "근거를 대야 할 대상은 직전에 상담사가 한 말이다. "
+        "'왜 그렇게 보시나요'로 검색하면 의미 검색에 넣을 것이 없다"
+    )
+    assert "때를 기다리는 것이 이롭다" in llm.prompts[0], "찾은 해설이 첫 호출부터 들어가야 한다"
+    assert res.message.strip()
+
+
+@pytest.mark.asyncio
+async def test_평범한_발화에는_강제로_찾지_않는다():
+    """매 턴 찾으면 호출이 배로 늘고 지연도 그만큼 는다."""
+    calls = []
+
+    async def retrieve(query):
+        calls.append(query)
+        return [_chunk()]
+
+    llm = NoSearchLLM()
+    await run_counsel_turn("요즘 일이 손에 안 잡혀요.", INTERP, client=llm, retrieve=retrieve)
+
+    assert calls == []
+    assert len(llm.prompts) == 1
+
+
+@pytest.mark.asyncio
+async def test_코드가_먼저_찾은_것도_상한에_포함된다():
+    calls = []
+
+    async def retrieve(query):
+        calls.append(query)
+        return [_chunk()]
+
+    llm = SearchingLLM(requests=99)  # 코드가 한 번 찾은 뒤에도 계속 더 찾자고 한다
+    await run_counsel_turn("무슨 근거로 그렇게 보시나요?", INTERP, client=llm, retrieve=retrieve)
+
+    assert len(calls) == MAX_RAG_SEARCHES, "강제 검색이 상한 밖에 있으면 상한이 무의미해진다"

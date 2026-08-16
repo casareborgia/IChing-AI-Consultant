@@ -246,7 +246,10 @@ class LMStudioClient:
             "temperature": temperature,
             "max_tokens": max_tokens,
             "stream": False,
-            "response_format": {"type": "json_object"},
+            # response_format은 넣지 않는다. LM Studio는 'json_schema'나 'text'만
+            # 받고 OpenAI의 'json_object'를 거부한다(HTTP 400). 에이전트마다 스키마가
+            # 달라 json_schema를 여기서 만들 수도 없다. JSON 추출은 응답을 받은 뒤
+            # clean_json_response가 한다 — 다른 provider도 같은 방식이다.
         }
         data = json.dumps(payload).encode("utf-8")
 

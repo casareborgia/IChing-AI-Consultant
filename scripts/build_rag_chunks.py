@@ -75,17 +75,64 @@ def build(hexagrams: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     return chunks
 
 
+def build_benui(hexagrams: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """주자 『본의』 주석 청크. `data/benui.json`을 받는다.
+
+    `source_type`을 `benui_`로 갈라 둔다. 정전과 한 이름으로 섞으면 나중에
+    가중치를 달리 주거나 빼는 일이 불가능해진다 — 序卦 해설을 `gwa_intro`로
+    갈라둔 것과 같은 이유다. 본의는 점법(占法) 중심이라 톤이 다르므로 더욱
+    갈라 두어야 한다(CLAUDE.md 데이터 레이어 절).
+
+    원문(단전·상전)은 여기서 내지 않는다. 정전 쪽 청크에 이미 있고, 같은 글을
+    두 번 넣으면 검색 결과가 중복으로 채워진다. 본의에서 가져오는 건 주석뿐이다.
+    """
+    chunks: List[Dict[str, Any]] = []
+
+    def add(hid, line_no, source_type, text, seq=0):
+        text = (text or "").strip()
+        if not text:
+            return
+        pos = line_no if line_no is not None else 0
+        chunks.append({
+            "id": f"B{hid}-{source_type}-{pos}-{seq}",
+            "hexagram_id": hid,
+            "line_number": line_no,
+            "category": "annotation",
+            "source_type": source_type,
+            "content": text,
+        })
+
+    for h in hexagrams:
+        hid = h["hexagram_id"]
+        for i, c in enumerate(h["guasa"]["commentary"]):
+            add(hid, None, "benui_guasa", c, i)
+        for i, c in enumerate(h.get("danjeon", {}).get("commentary") or []):
+            add(hid, None, "benui_tanjon", c, i)
+        for i, c in enumerate(h.get("daesang", {}).get("commentary") or []):
+            add(hid, None, "benui_daesang", c, i)
+        for line in h["lines"]:
+            pos = line["line_number"]
+            for i, c in enumerate(line["commentary"]):
+                add(hid, pos, "benui_line", c, i)
+            for i, c in enumerate(line.get("sosang_commentary") or []):
+                add(hid, pos, "benui_sosang", c, i)
+
+    return chunks
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("-i", "--input", default="data/hexagrams.json",
                     help="괘 구조 JSON. Kanripo 이관본은 data/hexagrams_kanripo.json")
     ap.add_argument("-o", "--output", default="data/rag_chunks.json")
+    ap.add_argument("--benui", action="store_true",
+                    help="입력을 data/benui.json으로 보고 본의 주석 청크를 만든다")
     args = ap.parse_args()
 
     root = os.path.realpath(os.path.join(os.path.dirname(__file__), ".."))
     src = args.input if os.path.isabs(args.input) else os.path.join(root, args.input)
     hexagrams = json.load(open(src, encoding="utf-8"))
-    chunks = build(hexagrams)
+    chunks = build_benui(hexagrams) if args.benui else build(hexagrams)
 
     assert len(chunks) == len({c["id"] for c in chunks}), "청크 id 중복"
     assert all(c["content"] for c in chunks), "내용이 빈 청크가 있다"

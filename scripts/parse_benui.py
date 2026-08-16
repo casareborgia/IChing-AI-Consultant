@@ -176,16 +176,30 @@ def parse_gyeong(nums=("001", "002")):
         for hexa in split_hexagrams(raw):
             units = split_units(tokenize(hexa["body"]))
             guasa = units[0]
+
+            # 효 번호는 **순서로** 매긴다. 효 머리를 그대로 믿지 않는다.
+            #
+            # 이 저본에는 판각 오자가 있다. 中孚 이효가 "九三"으로 찍혀 있는데,
+            # 바로 뒤 割註가 "九二中孚…"로 시작해 스스로 이효임을 밝힌다.
+            # 剝 오효(六四로 찍힘)와 巽 삼효(九二로 찍힘)도 같다.
+            #
+            # 순서로 매기는 것이 안전한 이유는 검산이 되기 때문이다 — 괘마다
+            # 단위가 정확히 6개(건·곤은 용구·용육까지 7개)여야 하고, 전체가
+            # 386이어야 한다. 하나라도 어긋나면 아래 경고가 뜬다.
+            raw_lines = [u for u in units[1:] if u["marker"] in LINE_MARKERS]
             lines = []
-            for u in units[1:]:
-                if u["marker"] not in LINE_MARKERS:
-                    continue
+            for pos, u in enumerate(raw_lines, start=1):
+                번호 = 7 if u["marker"] in ("用九", "用六") else pos
                 lines.append({
-                    "line_number": LINE_MARKERS[u["marker"]],
+                    "line_number": 번호,
                     "marker": u["marker"],
+                    "marker_mismatch": LINE_MARKERS[u["marker"]] != 번호,
                     "text": normalize(u["text"].strip()),
                     "commentary": [normalize(n) for n in u["notes"] if n.strip()],
                 })
+            if len(lines) not in (6, 7):
+                print(f"  ! 효 단위가 {len(lines)}개인 괘가 있다 "
+                      f"({hexa['lower']}下{hexa['upper']}上)", file=sys.stderr)
             result.append({
                 "trigrams": {"lower": hexa["lower"], "upper": hexa["upper"]},
                 "guasa": {
@@ -197,12 +211,134 @@ def parse_gyeong(nums=("001", "002")):
     return result
 
 
+HANJA_ONLY = re.compile(r"[^一-鿿㐀-䶵𠀀-𪛖]")
+JEON_HEAD = re.compile(r"^(彖曰|象曰)")
+
+
+def hanja(s: str) -> str:
+    return HANJA_ONLY.sub("", s or "")
+
+
+def attach_notes(raw: str, expected):
+    """단전·상전 권에 붙은 割註를 기준 원문에 귀속시킨다.
+
+    이 권들에는 괘 구분 표시가 없다. 전각 공백을 경계로 써봤지만 卷三은
+    44개인데 실린 괘는 30개다 — 들여쓰기와 구분이 섞여 있어 못 믿는다.
+
+    대신 **기준 데이터의 원문 순서로 정렬한다.** 단전·대상전·소상전은 이미
+    `hexagrams_kanripo.json`에 있고 저본의 배열 순서와 같으므로, 괄호 밖
+    본문에서 그 원문이 시작하는 자리를 차례로 찾으면 된다. 뒤따르는 주석은
+    다음 원문이 시작하기 전까지 그 항목의 것이다.
+
+    이문이 있어 완전 일치는 기대하지 않는다. 앞머리 8→6→4자로 줄여가며 찾고,
+    그래도 못 찾으면 그 항목은 비워 둔다(조용히 엉뚱한 데 붙이지 않는다).
+    """
+    tokens = tokenize(raw)
+
+    stream = []  # (글자, 토큰 인덱스)
+    for i, (kind, text) in enumerate(tokens):
+        if kind != "text":
+            continue
+        for ch in hanja(text):
+            stream.append((ch, i))
+    T = "".join(c for c, _ in stream)
+
+    starts = []
+    cursor = 0
+    for item in expected:
+        key = hanja(JEON_HEAD.sub("", item["text"]))
+        pos = -1
+        for probe in (key, key[:8], key[:6], key[:4]):
+            if len(probe) < 3:
+                break
+            pos = T.find(probe, cursor)
+            if pos >= 0:
+                break
+        if pos >= 0:
+            cursor = pos + 1
+        starts.append(stream[pos][1] if pos >= 0 else -1)
+
+    # 주석 토큰을, 자기 앞에 있는 가장 가까운 원문에 붙인다
+    notes = {i: [] for i in range(len(expected))}
+    order = sorted((tok_i, i) for i, tok_i in enumerate(starts) if tok_i >= 0)
+    for j, (kind, text) in enumerate(tokens):
+        if kind != "note" or not text.strip():
+            continue
+        owner = None
+        for tok_i, i in order:
+            if tok_i <= j:
+                owner = i
+            else:
+                break
+        if owner is not None:
+            notes[owner].append(normalize(text))
+
+    matched = sum(1 for s in starts if s >= 0)
+    return notes, matched
+
+
+def parse_jeon(hexagrams, ref):
+    """卷三~六 → 단전·대상전·소상전 본의를 괘별로 붙인다."""
+    plans = [
+        ("003", "danjeon", range(0, 30)),
+        ("004", "danjeon", range(30, 64)),
+        ("005", "sang", range(0, 30)),
+        ("006", "sang", range(30, 64)),
+    ]
+    stats = {"danjeon": [0, 0], "daesang": [0, 0], "sosang": [0, 0]}
+
+    for num, kind, idx in plans:
+        expected = []
+        for i in idx:
+            r = ref[i]
+            if kind == "danjeon":
+                expected.append({"i": i, "slot": "danjeon", "line": None,
+                                 "text": r["danjeon"]["original"]})
+            else:
+                expected.append({"i": i, "slot": "daesang", "line": None,
+                                 "text": r["daesang"]["original"]})
+                for ln in r["lines"]:
+                    expected.append({"i": i, "slot": "sosang", "line": ln["position"],
+                                     "text": ln.get("sosang") or ""})
+
+        expected = [e for e in expected if hanja(e["text"])]
+        notes, matched = attach_notes(load_juan(num), expected)
+
+        for k, item in enumerate(expected):
+            h = hexagrams[item["i"]]
+            got = notes[k]
+            if item["slot"] == "danjeon":
+                h.setdefault("danjeon", {"commentary": []})["commentary"] = got
+            elif item["slot"] == "daesang":
+                h.setdefault("daesang", {"commentary": []})["commentary"] = got
+            else:
+                for ln in h["lines"]:
+                    if ln["line_number"] == item["line"]:
+                        ln["sosang_commentary"] = got
+                        break
+            stats[item["slot"]][0] += 1 if got else 0
+            stats[item["slot"]][1] += 1
+
+        print(f"  卷{num}: 원문 {matched}/{len(expected)} 정렬")
+
+    return stats
+
+
 def main():
     ap = argparse.ArgumentParser(description="주자 『본의』 파서 (原本周易本義)")
     ap.add_argument("-o", "--out", default="data/benui.json")
+    ap.add_argument("--ref", default="data/hexagrams_kanripo.json",
+                    help="정렬 기준 데이터 (단전·상전 원문을 여기서 가져온다)")
     args = ap.parse_args()
 
     hexagrams = parse_gyeong()
+    ref = json.loads(Path(args.ref).read_text(encoding="utf-8"))
+    for h, r in zip(hexagrams, ref):
+        h["hexagram_id"] = r["hexagram_id"]
+        h["name_hanja"] = r["name_hanja"]
+    stats = parse_jeon(hexagrams, ref)
+    for slot, (got, total) in stats.items():
+        print(f"  {slot} 본의 {got}/{total}건")
 
     괘사주석 = sum(1 for h in hexagrams if h["guasa"]["commentary"])
     효 = sum(len(h["lines"]) for h in hexagrams)
@@ -210,6 +346,12 @@ def main():
 
     print(f"괘 {len(hexagrams)}개 / 효 {효}개")
     print(f"  괘사 본의 {괘사주석}건, 효사 본의 {효주석}건")
+
+    총 = (괘사주석 + 효주석
+          + sum(len(h.get("danjeon", {}).get("commentary", [])) for h in hexagrams)
+          + sum(len(h.get("daesang", {}).get("commentary", [])) for h in hexagrams)
+          + sum(len(l.get("sosang_commentary", [])) for h in hexagrams for l in h["lines"]))
+    print(f"  본의 주석 총 {총}건")
 
     out = Path(args.out)
     out.write_text(

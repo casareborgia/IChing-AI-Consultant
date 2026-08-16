@@ -650,3 +650,80 @@ async def test_스크리닝_실패시_괘도_안뽑고_범위밖_문구도_안�
         for label in ("BLOCK_CRISIS", "BLOCK_SCOPE", "ERROR"):
             assert label not in res.user_facing_message
 
+
+
+@pytest.mark.asyncio
+async def test_후속턴에서도_해설을_다시_찾고_괘로_좁힌다(monkeypatch):
+    """설계 원칙 3 — RAG는 1회 검색으로 끝나지 않는다.
+
+    첫 검색은 정리된 첫 질문으로 돈다. 후속 턴에 검색 경로가 없으면 상담사는
+    세션 내내 그 한 번의 결과만 들고 이야기하게 되고, "왜 그렇게 보시나요"에
+    답할 근거가 첫 턴 안에 갇힌다.
+
+    좁히지 않은 검색이 한 번도 없어야 한다는 것도 같이 본다. 괘를 지정하지 않으면
+    64괘 전체에서 끌어와 지금 뽑은 괘와 무관한 해설이 답변에 섞인다.
+    """
+    from core.rag import RetrievedChunk
+
+    검색된_괘 = []
+
+    async def mock_search_chunks(session, query, *, hexagram_id, **kwargs):
+        검색된_괘.append(hexagram_id)
+        return [
+            RetrievedChunk(
+                chunk_id="c1", hexagram_id=hexagram_id, line_number=None,
+                source_type="guasa_comm", category="annotation",
+                content="需者飮食之道也", content_ko="때를 기다리는 자리입니다.", similarity=0.8,
+            )
+        ]
+
+    monkeypatch.setattr("agents.interpret.search_chunks", mock_search_chunks)
+    monkeypatch.setattr("core.rag.search_chunks", mock_search_chunks)
+
+    mock_clients = {
+        "safety": MockLLMDispatcher({"default": {"category": "NORMAL"}}),
+        "intake": MockLLMDispatcher({"default": {
+            "clarified_question": "지금 시작해도 될지",
+            "topic_category": "결단",
+            "is_duplicate_question": False,
+            "duplicate_session_ref": None,
+        }}),
+        "interpret": MockLLMDispatcher({"default": {"contextual_mapping": "시작의 어려움"}}),
+        # 해설을 받기 전에는 더 찾자고 하고, 받은 뒤에 답한다.
+        # 키는 주입된 검색 결과에만 나오는 문자열이어야 한다 — "추가로 찾아본 해설"은
+        # 프롬프트 파일에 설명으로도 들어 있어 첫 호출부터 매치된다.
+        "counsel": MockLLMDispatcher({
+            '질의: "기다림의 뜻"': {
+                "message": "찾아본 해설로 보면 지금은 기다림의 자리입니다.",
+                "needs_followup": True, "followup_question": "무엇이 걸리시나요?",
+                "is_final": False, "search_query": None,
+            },
+            "default": {
+                "message": "", "needs_followup": True, "followup_question": None,
+                "is_final": False, "search_query": "기다림의 뜻",
+            },
+        }),
+    }
+
+    async with AsyncSessionLocal() as session:
+        res1 = await run_turn(
+            session,
+            user_id="research_user",
+            message="지금 시작해도 될까요?",
+            manual_lines=[9, 8, 8, 8, 6, 8],
+            clients=mock_clients,
+        )
+        첫턴_검색수 = len(검색된_괘)
+
+        res2 = await run_turn(
+            session,
+            counsel_session_id=res1.session_id,
+            user_id="research_user",
+            message="왜 그렇게 보시나요?",
+            clients=mock_clients,
+        )
+
+    assert len(검색된_괘) > 첫턴_검색수, "후속 턴에서 다시 찾지 않았다"
+    assert all(h is not None for h in 검색된_괘), "괘로 좁히지 않은 검색이 있다"
+    assert "기다림의 자리" in res2.user_facing_message, "다시 찾은 해설이 답변에 닿지 않았다"
+    assert "需者飮食之道也" not in res2.user_facing_message

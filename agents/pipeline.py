@@ -26,6 +26,7 @@ from core.llm import LLMClient
 from core.models.counsel import CounselSession, CounselTurn, JournalEntry
 from core.models.hexagram import Hexagram
 from core.prompts import load_prompt_block
+from core.rag import make_retriever
 from core.reading import build_evidence
 from schemas.counsel import HexagramInterpretationSchema, SafetyVerdict
 
@@ -457,6 +458,10 @@ async def run_turn(
         )
 
         # 3-3. [3] 상담 대화 생성
+        #
+        # 재검색은 초점이 가리키는 괘로 묶어 넘긴다. 동효가 4~5개면 초점은 지괘에
+        # 있고, 그때 본괘로 묶으면 상담사가 이야기하는 괘와 다시 찾아오는 해설이
+        # 서로 다른 괘가 된다. `evidence.target_hexagram_id`가 그 자리를 가리킨다.
         counsel_turn_res = await run_counsel_turn(
             message,
             interp_res,
@@ -464,6 +469,7 @@ async def run_turn(
             turn_number=turn_no,
             client=clients.get("counsel"),
             caution_append=(safety_res.category == "CAUTION"),
+            retrieve=make_retriever(session, hexagram_id=evidence.target_hexagram_id),
         )
 
         new_turn = CounselTurn(
@@ -516,6 +522,9 @@ async def run_turn(
         contextual_mapping=c_session.clarified_question or c_session.raw_question,
     )
 
+    # 후속 턴이야말로 재검색이 필요한 자리다. 첫 검색은 정리된 첫 질문으로 돌았고,
+    # 여기서는 대화가 이미 그 질문에서 멀어져 있다. 이 경로에 검색이 없으면
+    # 상담사는 세션 내내 첫 턴에 찾아둔 해설만 들고 이야기하게 된다.
     counsel_turn_res = await run_counsel_turn(
         message,
         interp_stub,
@@ -523,6 +532,7 @@ async def run_turn(
         turn_number=turn_no,
         client=clients.get("counsel"),
         caution_append=(safety_res.category == "CAUTION"),
+        retrieve=make_retriever(session, hexagram_id=evidence.target_hexagram_id),
     )
 
     new_turn = CounselTurn(

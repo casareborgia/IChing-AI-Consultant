@@ -124,13 +124,28 @@ class OllamaClient:
         base_url: Optional[str] = None,
         retries: int = 3,
         system_prompt: Optional[str] = None,
-        max_tokens: int = 4096,
+        max_tokens: int = 8192,
+        num_ctx: int = 16384,
     ):
+        # `num_ctx`를 반드시 준다. **모델이 아니라 서버가 창을 정한다** — gemma4는
+        # 131,072 토큰을 지원한다고 스스로 밝히지만, Ollama는 요청에 없으면 기본
+        # 4096으로 잡는다. 프롬프트가 그 창을 거의 채우면 생성할 자리가 남지 않아
+        # 몇 토큰 내고 `done_reason=length`로 끝나고, JSON이 닫히지 않는다.
+        #
+        # 실제로 그렇게 새고 있었다. 근거를 붙인 상담 턴(프롬프트 7,377자)에서
+        # **29 토큰**만 생성하고 잘렸다. 상담 12턴 중 2턴이 그렇게 폴백 문구로
+        # 나갔는데, 화면에는 "남겨주신 마음을 천천히 되짚어보게 됩니다"만 보여
+        # 모델이 성의 없이 답한 것처럼 읽혔다.
+        #
+        # 창을 넓히면 KV 캐시만큼 메모리를 더 쓴다. 16,384는 지금 프롬프트(최대
+        # 8천 자 안팎)에 생성 몫까지 얹고도 남는 크기이고, 로컬 개발기에 부담이
+        # 되지 않는 선이다.
         self.model_name = model_name
         self.base_url = (base_url or settings.OLLAMA_BASE_URL).rstrip("/")
         self.retries = retries
         self.system_prompt = system_prompt
         self.max_tokens = max_tokens
+        self.num_ctx = num_ctx
         self.endpoint_desc = f"ollama:{self.base_url}"
         # 직전 호출의 시간 분해. 로컬에서 "느리다"는 말은 쓸모가 없다 —
         # 모델 로드인지, 입력 처리인지, 생성인지에 따라 처방이 완전히 달라진다.
@@ -178,6 +193,7 @@ class OllamaClient:
             "options": {
                 "temperature": temperature,
                 "num_predict": max_tokens,
+                "num_ctx": self.num_ctx,
             },
         }
         data = json.dumps(payload).encode("utf-8")
@@ -190,6 +206,18 @@ class OllamaClient:
                     res_body = json.loads(resp.read().decode("utf-8"))
                     self.last_timing = self._timing(res_body)
                     raw_text = res_body.get("response", "")
+
+                    # 상한에서 잘린 것을 JSON 오류로 마주치면 원인이 안 보인다.
+                    # "Unterminated string"만 남고, 프롬프트가 잘못됐나 모델이
+                    # 이상한가 한참 헤매게 된다. Ollama가 알려주는 것을 그냥 읽는다.
+                    if res_body.get("done_reason") == "length":
+                        raise ValueError(
+                            f"출력이 잘렸다 — 프롬프트 {res_body.get('prompt_eval_count')} 토큰, "
+                            f"생성 {res_body.get('eval_count')} 토큰 "
+                            f"(창 num_ctx={self.num_ctx}, 상한 num_predict={max_tokens}). "
+                            "생성 토큰이 적은데 잘렸다면 상한이 아니라 창이 찬 것이다"
+                        )
+
                     cleaned = clean_json_response(raw_text)
                     return json.loads(cleaned)
             except Exception as e:

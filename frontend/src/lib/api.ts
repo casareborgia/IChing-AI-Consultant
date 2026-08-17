@@ -9,7 +9,15 @@ const BACKEND_API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:80
 function buildCastResultFromBackend(
   hexId: number,
   transformedHexId: number,
-  changingLines: number[] = []
+  changingLines: number[] = [],
+  rawFocusRule?: {
+    focus_type?: string;
+    target_hexagram_type?: 'ORIGINAL' | 'TRANSFORMED' | 'BOTH';
+    target_line_numbers?: number[];
+    description_ko?: string;
+    body_use_type?: 'EMPHASIZE_ORIGINAL' | 'EMPHASIZE_TRANSFORMED' | 'STANDARD';
+    body_use_note_ko?: string | null;
+  }
 ): CastResult {
   const binary = HEXAGRAM_ID_TO_BINARY[hexId] || '111111';
   const lines: LineInfo[] = [];
@@ -34,11 +42,23 @@ function buildCastResultFromBackend(
     });
   }
 
+  const focusRule = rawFocusRule
+    ? {
+        focusType: rawFocusRule.focus_type || 'ORIGINAL_JUDGMENT',
+        targetHexagramType: rawFocusRule.target_hexagram_type || 'ORIGINAL',
+        targetLineNumbers: rawFocusRule.target_line_numbers || [],
+        descriptionKo: rawFocusRule.description_ko || '',
+        bodyUseType: rawFocusRule.body_use_type || 'STANDARD',
+        bodyUseNoteKo: rawFocusRule.body_use_note_ko || null,
+      }
+    : undefined;
+
   return {
     originalHexId: hexId,
     transformedHexId: transformedHexId || hexId,
     lines,
     changingPositions: changingLines,
+    focusRule,
   };
 }
 
@@ -81,7 +101,7 @@ export async function startConsultationApi(question: string): Promise<{
     const transHexId = data.transformed_hexagram_id || hexId;
     const changingLines = data.changing_lines || [];
 
-    const castResult = buildCastResultFromBackend(hexId, transHexId, changingLines);
+    const castResult = buildCastResultFromBackend(hexId, transHexId, changingLines, data.focus_rule);
     const hexMeta = HEXAGRAMS_META[hexId];
 
     const firstMessage: ChatMessage = {

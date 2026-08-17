@@ -9,7 +9,7 @@ from core.hexagram_engine import (
     hexagram_id_to_binary,
     rebuild_cast,
 )
-from schemas.hexagram_engine import FocusType
+from schemas.hexagram_engine import BodyUseType, FocusType
 
 
 def test_binary_mapping():
@@ -79,10 +79,15 @@ def test_focus_rules_0_to_6_lines():
     assert rule2.target_hexagram_type == "ORIGINAL"
     assert rule2.target_line_numbers == [4, 1]
 
-    # 3개 (1, 2, 3효 변효) -> 본괘/지괘 괘사 모두 참작
-    rule3 = calculate_focus_rule(1, [1, 2, 3])
-    assert rule3.focus_type == FocusType.BOTH_JUDGMENTS
-    assert rule3.target_hexagram_type == "BOTH"
+    # 3개 (1, 2, 3효 변효 — 초효 포함) -> 주희 고변점: 본괘 괘사 주 해석
+    rule3_with_1 = calculate_focus_rule(1, [1, 2, 3])
+    assert rule3_with_1.focus_type == FocusType.ORIGINAL_JUDGMENT
+    assert rule3_with_1.target_hexagram_type == "ORIGINAL"
+
+    # 3개 (2, 3, 4효 변효 — 초효 미포함) -> 주희 고변점: 지괘 괘사 주 해석
+    rule3_without_1 = calculate_focus_rule(1, [2, 3, 4])
+    assert rule3_without_1.focus_type == FocusType.TRANSFORMED_JUDGMENT
+    assert rule3_without_1.target_hexagram_type == "TRANSFORMED"
 
     # 4개 (1, 2, 3, 4효 변효) -> 지괘 안 변한 5, 6효 중 아래쪽(5효) 우선
     rule4 = calculate_focus_rule(1, [1, 2, 3, 4])
@@ -96,12 +101,35 @@ def test_focus_rules_0_to_6_lines():
     assert rule5.target_hexagram_type == "TRANSFORMED"
     assert rule5.target_line_numbers == [6]
 
-    # 6개 (일반 괘: 예를 들어 3번 준괘) -> 지괘 괘사만. 본괘 괘사를 함께 보는
-    # 3변효(BOTH_JUDGMENTS)와 focus_type만으로 구분되어야 한다.
+    # 6개 (일반 괘: 예를 들어 3번 준괘) -> 지괘 괘사
     rule6_general = calculate_focus_rule(3, [1, 2, 3, 4, 5, 6])
     assert rule6_general.focus_type == FocusType.TRANSFORMED_JUDGMENT
     assert rule6_general.target_hexagram_type == "TRANSFORMED"
-    assert rule6_general.focus_type != rule3.focus_type
+
+
+def test_body_use_rules():
+    """지괘 18괘 체용(體用) 보완 규칙 판정 검증"""
+    # 1. 한계/쇠퇴성 9괘 (예: 12 비, 53 점, 64 미제) -> EMPHASIZE_ORIGINAL
+    rule_orig = calculate_focus_rule(1, [1], transformed_hex_id=12)
+    assert rule_orig.body_use_type == BodyUseType.EMPHASIZE_ORIGINAL
+    assert rule_orig.body_use_note_ko is not None
+    assert "본괘(體)" in rule_orig.body_use_note_ko
+
+    # 2. 성장/완결성 9괘 (예: 42 익, 21 서합, 11 태) -> EMPHASIZE_TRANSFORMED
+    rule_trans = calculate_focus_rule(1, [1], transformed_hex_id=42)
+    assert rule_trans.body_use_type == BodyUseType.EMPHASIZE_TRANSFORMED
+    assert rule_trans.body_use_note_ko is not None
+    assert "지괘(用)" in rule_trans.body_use_note_ko
+
+    # 3. 일반 46괘 (예: 1 건, 2 곤) -> STANDARD
+    rule_std = calculate_focus_rule(1, [1], transformed_hex_id=1)
+    assert rule_std.body_use_type == BodyUseType.STANDARD
+    assert rule_std.body_use_note_ko is None
+
+    # 4. 지괘 없음 (동효 0개) -> STANDARD
+    rule_none = calculate_focus_rule(1, [], transformed_hex_id=None)
+    assert rule_none.body_use_type == BodyUseType.STANDARD
+    assert rule_none.body_use_note_ko is None
 
 
 def test_cast_hexagram_random():
@@ -144,3 +172,68 @@ def test_rebuild_cast_잘못된_동효_위치():
         rebuild_cast(1, [0])
     with pytest.raises(ValueError):
         rebuild_cast(1, [7])  # 7은 용구/용육 자리이지 동효 위치가 아니다
+
+
+def test_체용은_초점을_뒤집지_않는다():
+    """초점 규칙과 체용 규칙은 같은 층이 아니다.
+
+    초점(고변점)이 어느 근거를 꺼낼지 정하고, 체용은 그 근거를 어느 쪽으로
+    기울여 읽을지만 보탠다. 둘은 4,032 조합 중 567개(14%)에서 서로 다른 괘를
+    가리키므로, 어긋날 때 무엇이 이기는지가 문구에 드러나야 한다.
+
+    예전에는 두 문구가 대등하게 나란히 붙어 "본괘의 괘사를 주 해석으로 삼습니다"와
+    "지괘를 중심으로 무게를 둡니다"가 동시에 나갔다.
+    """
+    from itertools import combinations
+
+    from core.hexagram_engine import (
+        BODY_USE_SUBORDINATE_PREFIX,
+        HEXAGRAM_ID_TO_BINARY,
+        cast_hexagram,
+    )
+
+    검사 = 어긋남 = 같은방향 = 0
+    for hid, binary in HEXAGRAM_ID_TO_BINARY.items():
+        for n in range(1, 7):
+            for lines in combinations(range(1, 7), n):
+                vals = [
+                    (9 if binary[p - 1] == "1" else 6) if p in lines
+                    else (7 if binary[p - 1] == "1" else 8)
+                    for p in range(1, 7)
+                ]
+                fr = cast_hexagram(manual_lines=vals).focus_rule
+                if fr.body_use_type == BodyUseType.STANDARD:
+                    assert fr.body_use_note_ko is None
+                    continue
+
+                검사 += 1
+                note = fr.body_use_note_ko
+                assert note, "체용 판정이 났는데 문구가 없다"
+
+                강조 = ("ORIGINAL" if fr.body_use_type == BodyUseType.EMPHASIZE_ORIGINAL
+                        else "TRANSFORMED")
+                if fr.target_hexagram_type in (강조, "BOTH"):
+                    같은방향 += 1
+                    assert "같은 방향" in note
+                    assert BODY_USE_SUBORDINATE_PREFIX not in note
+                else:
+                    어긋남 += 1
+                    # 어긋날 때는 근거가 초점을 따른다고 문구가 먼저 밝힌다
+                    assert note.startswith(BODY_USE_SUBORDINATE_PREFIX), note
+                    # "~를 중심으로"처럼 초점을 밀어내는 표현이 없어야 한다
+                    assert "중심으로" not in note, note
+
+    assert 어긋남 == 567, f"어긋나는 조합 수가 달라졌다: {어긋남}"
+    assert 같은방향 > 0 and 검사 == 어긋남 + 같은방향
+
+
+def test_체용_판정은_지괘만_보고_초점_계산과_독립이다():
+    """같은 지괘면 동효 수가 달라도 체용 판정은 같다."""
+    for lines in ([1], [1, 2], [1, 2, 3], [2, 3, 4]):
+        rule = calculate_focus_rule(1, lines, transformed_hex_id=12)
+        assert rule.body_use_type == BodyUseType.EMPHASIZE_ORIGINAL
+
+    # 지괘를 안 넘기면 체용은 서지 않는다 — 부르는 쪽이 빠뜨리면 조용히 STANDARD다
+    누락 = calculate_focus_rule(1, [1])
+    assert 누락.body_use_type == BodyUseType.STANDARD
+    assert 누락.body_use_note_ko is None

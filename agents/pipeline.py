@@ -46,6 +46,7 @@ class TurnResult:
     safety_category: str = "NORMAL"   # 내부 로깅/DB용 (사용자 미노출)
     is_duplicate: bool = False
     journal_summary: Optional[str] = None
+    focus_rule: Optional[Dict[str, Any]] = None
 
 
 async def _get_past_sessions(
@@ -513,6 +514,7 @@ async def run_turn(
             changing_lines=interp_res.changing_lines,
             safety_category=safety_res.category,
             journal_summary=journal_summary,
+            focus_rule=evidence.focus_rule.model_dump(),
         )
 
     # 4. 이미 괘가 있는 세션 -> 그 괘를 되살려 상담을 잇는다
@@ -576,4 +578,5 @@ async def run_turn(
         changing_lines=cast.changing_lines,
         safety_category=safety_res.category,
         journal_summary=journal_summary,
+        focus_rule=evidence.focus_rule.model_dump(),
     )

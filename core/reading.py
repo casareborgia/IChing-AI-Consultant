@@ -13,7 +13,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from core.hexagram_engine import HexagramCastResult
 from core.models.hexagram import Hexagram, Line
 from core.models.rag import InterpretationChunk
-from schemas.hexagram_engine import FocusRuleResult, FocusType
+from schemas.hexagram_engine import BodyUseType, FocusRuleResult, FocusType
+
+# 체용 참작 절의 머리. 주 근거와 섞이지 않게 하려고 절을 갈라 둔다 —
+# 이 문자열로 요약을 쪼개면 "주 해석 근거에 무엇이 들었는지"를 정확히 셀 수 있다.
+BODY_USE_SUPPLEMENT_HEADER = "체용 참작(주 근거가 아닙니다):"
 
 
 @dataclass
@@ -60,10 +64,15 @@ class ReadingEvidence:
         손에 한문이 있으면 답변에 새어 나오고, 그러면 "원문을 그대로 노출하지
         않는다"는 원칙이 프롬프트 한 줄에 매달리게 된다. 애초에 주지 않는다.
 
-        무엇을 주 근거로 삼을지는 focus_rule을 따른다. 특히 6효가 모두 변한
-        일반괘는 지괘 괘사만 본다 — 본괘 괘사는 참작 대상이 아니라고 엔진이
-        3변효(BOTH_JUDGMENTS)와 구분해 둔 자리다. 여기서 늘 본괘 괘사를 맨 앞에
-        붙이면 그 구분이 프롬프트에서 다시 뭉개진다.
+        **무엇을 주 근거로 삼을지는 오직 focus_rule이 정한다.** 6효가 모두 변한
+        일반괘는 지괘 괘사만 본다 — 본괘 괘사를 늘 맨 앞에 붙이면 엔진이 갈라둔
+        구분이 프롬프트에서 다시 뭉개진다.
+
+        체용(體用)은 근거를 고르지 않는다. 읽는 무게만 보탠다. 그래서 체용이
+        가리키는 괘의 괘사가 주 근거에 없을 때는 `체용 참작` 절에 따로 얹는다 —
+        "그 괘에 무게를 두라"면서 그 괘의 괘사를 안 주면 모델이 없는 근거를
+        지어낼 자리가 생긴다. 절을 갈라 두는 이유는 주 근거와 섞이지 않게
+        하려는 것이다.
         """
         orig, trans = self.original, self.transformed
         focus = self.focus_rule.focus_type
@@ -95,7 +104,34 @@ class ReadingEvidence:
             # 효사가 주 근거일 때 괘사는 배경으로만 둔다
             parts.append(f"배경 — 본괘 괘사: {orig.judgment_ko}")
 
+        참작 = self._body_use_supplement()
+        if 참작:
+            parts.append(BODY_USE_SUPPLEMENT_HEADER)
+            parts.append(참작)
+
         return "\n".join(parts)
+
+    def _body_use_supplement(self) -> Optional[str]:
+        """체용이 가리키는 괘의 괘사가 주 근거에 없으면 그 한 줄을 돌려준다.
+
+        이미 주 근거에 들어 있으면 None이다 — 같은 괘사를 두 번 싣지 않는다.
+        효사가 주 근거인 경우 본괘 괘사는 '배경'으로 이미 실려 있으므로 본괘
+        쪽은 보탤 것이 없다.
+        """
+        body_use = self.focus_rule.body_use_type
+        focus = self.focus_rule.focus_type
+
+        if body_use == BodyUseType.EMPHASIZE_TRANSFORMED:
+            if self.transformed and focus != FocusType.TRANSFORMED_JUDGMENT:
+                return f"- 지괘 괘사: {self.transformed.judgment_ko}"
+            return None
+
+        if body_use == BodyUseType.EMPHASIZE_ORIGINAL:
+            if focus == FocusType.TRANSFORMED_JUDGMENT:
+                return f"- 본괘 괘사: {self.original.judgment_ko}"
+            return None
+
+        return None
 
 
 async def _get_hexagram(session: AsyncSession, hex_id: int) -> HexagramEvidence:

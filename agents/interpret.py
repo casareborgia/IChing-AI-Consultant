@@ -16,6 +16,7 @@ from core.prompts import load_system_prompt
 from core.rag import RetrievedChunk, search_balanced
 from core.reading import ReadingEvidence, build_evidence
 from schemas.counsel import HexagramInterpretationSchema
+from schemas.hexagram_engine import BodyUseType
 
 
 async def run_interpret(
@@ -77,8 +78,15 @@ async def run_interpret(
             )
             chunks.extend(line_chunks)
 
-    # 지괘가 있고 포커스가 지괘인 경우 지괘 주석도 검색
-    if cast_result.transformed_hexagram_id and cast_result.focus_rule.target_hexagram_type in ("TRANSFORMED", "BOTH"):
+    # 지괘가 있고 포커스가 지괘이거나 체용 규칙상 지괘(用) 강조인 경우 지괘 주석도 검색
+    should_search_trans = (
+        cast_result.transformed_hexagram_id is not None
+        and (
+            cast_result.focus_rule.target_hexagram_type in ("TRANSFORMED", "BOTH")
+            or cast_result.focus_rule.body_use_type == BodyUseType.EMPHASIZE_TRANSFORMED
+        )
+    )
+    if should_search_trans and cast_result.transformed_hexagram_id:
         trans_chunks = await search_balanced(
             session,
             clarified_question,

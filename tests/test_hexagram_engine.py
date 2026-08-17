@@ -79,15 +79,12 @@ def test_focus_rules_0_to_6_lines():
     assert rule2.target_hexagram_type == "ORIGINAL"
     assert rule2.target_line_numbers == [4, 1]
 
-    # 3개 (1, 2, 3효 변효 — 초효 포함) -> 주희 고변점: 본괘 괘사 주 해석
-    rule3_with_1 = calculate_focus_rule(1, [1, 2, 3])
-    assert rule3_with_1.focus_type == FocusType.ORIGINAL_JUDGMENT
-    assert rule3_with_1.target_hexagram_type == "ORIGINAL"
-
-    # 3개 (2, 3, 4효 변효 — 초효 미포함) -> 주희 고변점: 지괘 괘사 주 해석
-    rule3_without_1 = calculate_focus_rule(1, [2, 3, 4])
-    assert rule3_without_1.focus_type == FocusType.TRANSFORMED_JUDGMENT
-    assert rule3_without_1.target_hexagram_type == "TRANSFORMED"
+    # 3개 -> 《역학계몽》 고변점: 본괘·지괘 괘사를 함께 보되 본괘 위주.
+    # 본괘냐 지괘냐를 가리는 일은 체용 규칙의 몫이라 초점에서 겹쳐 정하지 않는다.
+    for lines in ([1, 2, 3], [2, 3, 4], [1, 3, 5], [4, 5, 6]):
+        rule3 = calculate_focus_rule(1, lines)
+        assert rule3.focus_type == FocusType.BOTH_JUDGMENTS, lines
+        assert rule3.target_hexagram_type == "BOTH", lines
 
     # 4개 (1, 2, 3, 4효 변효) -> 지괘 안 변한 5, 6효 중 아래쪽(5효) 우선
     rule4 = calculate_focus_rule(1, [1, 2, 3, 4])
@@ -101,10 +98,12 @@ def test_focus_rules_0_to_6_lines():
     assert rule5.target_hexagram_type == "TRANSFORMED"
     assert rule5.target_line_numbers == [6]
 
-    # 6개 (일반 괘: 예를 들어 3번 준괘) -> 지괘 괘사
+    # 6개 (일반 괘: 예를 들어 3번 준괘) -> 지괘 괘사만. 본괘 괘사를 함께 보는
+    # 3변효(BOTH_JUDGMENTS)와 focus_type으로 구분되어야 한다.
     rule6_general = calculate_focus_rule(3, [1, 2, 3, 4, 5, 6])
     assert rule6_general.focus_type == FocusType.TRANSFORMED_JUDGMENT
     assert rule6_general.target_hexagram_type == "TRANSFORMED"
+    assert rule6_general.focus_type != FocusType.BOTH_JUDGMENTS
 
 
 def test_body_use_rules():
@@ -178,7 +177,7 @@ def test_체용은_초점을_뒤집지_않는다():
     """초점 규칙과 체용 규칙은 같은 층이 아니다.
 
     초점(고변점)이 어느 근거를 꺼낼지 정하고, 체용은 그 근거를 어느 쪽으로
-    기울여 읽을지만 보탠다. 둘은 4,032 조합 중 567개(14%)에서 서로 다른 괘를
+    기울여 읽을지만 보탠다. 둘은 4,032 조합 중 387개에서 서로 다른 괘를
     가리키므로, 어긋날 때 무엇이 이기는지가 문구에 드러나야 한다.
 
     예전에는 두 문구가 대등하게 나란히 붙어 "본괘의 괘사를 주 해석으로 삼습니다"와
@@ -223,7 +222,8 @@ def test_체용은_초점을_뒤집지_않는다():
                     # "~를 중심으로"처럼 초점을 밀어내는 표현이 없어야 한다
                     assert "중심으로" not in note, note
 
-    assert 어긋남 == 567, f"어긋나는 조합 수가 달라졌다: {어긋남}"
+    # 3변효는 초점이 BOTH라 어긋남이 없다 — 체용이 그 자리에서 방향을 정한다.
+    assert 어긋남 == 387, f"어긋나는 조합 수가 달라졌다: {어긋남}"
     assert 같은방향 > 0 and 검사 == 어긋남 + 같은방향
 
 

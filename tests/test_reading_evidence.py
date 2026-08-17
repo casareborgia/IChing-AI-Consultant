@@ -4,6 +4,8 @@
 한문이 새지 않을 것, 그리고 초점 규칙이 가리키는 것만 주 근거로 삼을 것.
 """
 
+from itertools import combinations
+
 import pytest
 
 from core.db import AsyncSessionLocal
@@ -59,20 +61,16 @@ async def test_6효_모두_변한_일반괘는_본괘_괘사를_주근거로_삼
         assert evidence.transformed.judgment_ko in 주근거
         assert evidence.original.judgment_ko not in 주근거
 
-        # 반면 3변효(초효 포함 시)는 본괘 괘사를 주근거로 삼는다
-        cast3 = cast_hexagram(manual_lines=[9, 9, 9, 7, 7, 7])
-        assert cast3.focus_rule.focus_type == FocusType.ORIGINAL_JUDGMENT
-        ev3 = await build_evidence(session, cast3)
-        주근거3 = ev3.summary_korean.split("주 해석 근거:")[1]
-        assert ev3.original.judgment_ko in 주근거3
-
-        # 3변효(초효 미포함 시)는 지괘 괘사를 주근거로 삼는다
-        cast3_no1 = cast_hexagram(manual_lines=[7, 9, 9, 9, 7, 7])
-        assert cast3_no1.focus_rule.focus_type == FocusType.TRANSFORMED_JUDGMENT
-        ev3_no1 = await build_evidence(session, cast3_no1)
-        주근거3_no1 = ev3_no1.summary_korean.split("주 해석 근거:")[1]
-        assert ev3_no1.transformed is not None
-        assert ev3_no1.transformed.judgment_ko in 주근거3_no1
+        # 반면 3변효는 두 괘사를 함께 보되 본괘 위주다(《역학계몽》 고변점).
+        # 동효 위치와 무관하다 — 본괘냐 지괘냐를 가리는 일은 체용의 몫이다.
+        for lines in ([9, 9, 9, 7, 7, 7], [7, 9, 9, 9, 7, 7]):
+            cast3 = cast_hexagram(manual_lines=lines)
+            assert cast3.focus_rule.focus_type == FocusType.BOTH_JUDGMENTS
+            ev3 = await build_evidence(session, cast3)
+            주근거3 = _주근거(ev3.summary_korean)
+            assert ev3.original.judgment_ko in 주근거3
+            assert ev3.transformed is not None
+            assert ev3.transformed.judgment_ko in 주근거3
 
 
 @pytest.mark.asyncio
@@ -107,15 +105,13 @@ async def test_체용이_초점과_어긋나도_주근거는_초점이_정한다
     초점 규칙에만 있다.
     """
     async with AsyncSessionLocal() as session:
-        # 곤(2) 1·2·3효 동 -> 지괘 태(11). 초점은 본괘, 체용은 지괘를 가리킨다
-        cast = cast_hexagram(manual_lines=[6, 6, 6, 8, 8, 8])
-        assert cast.focus_rule.target_hexagram_type == "ORIGINAL"
-        assert cast.focus_rule.body_use_type == BodyUseType.EMPHASIZE_TRANSFORMED
-
+        # 효사 초점(본괘)인데 체용은 지괘를 가리키는 조합을 찾는다.
+        # 3변효는 이제 BOTH이므로 이 어긋남은 1·2·4·5변효에서만 난다.
+        cast = _찾기(target="ORIGINAL", body_use=BodyUseType.EMPHASIZE_TRANSFORMED)
         ev = await build_evidence(session, cast)
         주근거 = _주근거(ev.summary_korean)
 
-        assert ev.original.judgment_ko in 주근거
+        # 주 근거는 초점이 정한 효사다. 본괘 괘사는 배경으로만 붙는다
         assert ev.transformed is not None
         assert ev.transformed.judgment_ko not in 주근거, "체용이 주 근거를 바꿔치기했다"
 
@@ -149,14 +145,18 @@ async def test_반대_방향_어긋남도_같은_규칙으로_처리된다():
 async def test_체용과_초점이_같은_방향이면_참작을_덧붙이지_않는다():
     """이미 주 근거에 있는 괘사를 참작으로 한 번 더 싣지 않는다."""
     async with AsyncSessionLocal() as session:
-        # 건(1) 2·3·4효 동 -> 지괘 익(42). 초점도 지괘, 체용도 지괘
+        # 건(1) 2·3·4효 동 -> 지괘 익(42). 초점은 BOTH, 체용은 지괘
         cast = cast_hexagram(manual_lines=[7, 9, 9, 9, 7, 7])
-        assert cast.focus_rule.target_hexagram_type == "TRANSFORMED"
+        assert cast.focus_rule.target_hexagram_type == "BOTH"
         assert cast.focus_rule.body_use_type == BodyUseType.EMPHASIZE_TRANSFORMED
 
         ev = await build_evidence(session, cast)
+        # BOTH는 두 괘사를 다 싣는다 — 체용이 어느 쪽을 가리켜도 댈 재료가 있다
         assert BODY_USE_SUPPLEMENT_HEADER not in ev.summary_korean
         assert "같은 방향" in (cast.focus_rule.body_use_note_ko or "")
+        주근거 = _주근거(ev.summary_korean)
+        assert ev.original.judgment_ko in 주근거
+        assert ev.transformed is not None and ev.transformed.judgment_ko in 주근거
 
 
 @pytest.mark.asyncio
@@ -187,3 +187,25 @@ async def test_효사가_주근거일_때는_본괘_괘사를_참작으로_중�
         # 효사가 주 근거이고 본괘 괘사는 배경으로 이미 있으므로 참작 절이 없다
         assert BODY_USE_SUPPLEMENT_HEADER not in ev.summary_korean
         assert "배경 — 본괘 괘사" in ev.summary_korean
+
+
+def _찾기(*, target: str, body_use):
+    """초점 대상과 체용 판정이 주어진 조합인 첫 괘를 찾는다.
+
+    특정 괘를 손으로 박아두면 규칙이 바뀔 때마다 테스트가 엉뚱한 이유로 깨진다.
+    """
+    from core.hexagram_engine import HEXAGRAM_ID_TO_BINARY
+
+    for hid, binary in HEXAGRAM_ID_TO_BINARY.items():
+        for n in range(1, 7):
+            for lines in combinations(range(1, 7), n):
+                vals = [
+                    (9 if binary[p - 1] == "1" else 6) if p in lines
+                    else (7 if binary[p - 1] == "1" else 8)
+                    for p in range(1, 7)
+                ]
+                c = cast_hexagram(manual_lines=vals)
+                if (c.focus_rule.target_hexagram_type == target
+                        and c.focus_rule.body_use_type == body_use):
+                    return c
+    raise AssertionError(f"{target} / {body_use} 조합을 찾지 못했다")

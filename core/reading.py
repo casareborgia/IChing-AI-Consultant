@@ -111,23 +111,37 @@ class ReadingEvidence:
 
         return "\n".join(parts)
 
+    def _judgments_already_shown(self) -> set:
+        """주 해석 근거 절에 어느 괘의 괘사가 이미 실렸는지.
+
+        효사가 주 근거인 경우 본괘 괘사는 '배경'으로 실린다 — 참작으로 또
+        얹을 필요가 없다.
+        """
+        focus = self.focus_rule.focus_type
+        if focus == FocusType.ORIGINAL_JUDGMENT:
+            return {"ORIGINAL"}
+        if focus == FocusType.TRANSFORMED_JUDGMENT:
+            return {"TRANSFORMED"}
+        if focus == FocusType.BOTH_JUDGMENTS:
+            return {"ORIGINAL", "TRANSFORMED"}
+        return {"ORIGINAL"}  # 효사 초점 — 본괘 괘사가 배경으로 있다
+
     def _body_use_supplement(self) -> Optional[str]:
         """체용이 가리키는 괘의 괘사가 주 근거에 없으면 그 한 줄을 돌려준다.
 
-        이미 주 근거에 들어 있으면 None이다 — 같은 괘사를 두 번 싣지 않는다.
-        효사가 주 근거인 경우 본괘 괘사는 '배경'으로 이미 실려 있으므로 본괘
-        쪽은 보탤 것이 없다.
+        이미 실려 있으면 None이다 — 같은 괘사를 두 번 싣지 않는다. 3변효처럼
+        두 괘사가 다 실리는 경우(BOTH)에는 보탤 것이 없다.
         """
         body_use = self.focus_rule.body_use_type
-        focus = self.focus_rule.focus_type
+        실림 = self._judgments_already_shown()
 
         if body_use == BodyUseType.EMPHASIZE_TRANSFORMED:
-            if self.transformed and focus != FocusType.TRANSFORMED_JUDGMENT:
+            if self.transformed and "TRANSFORMED" not in 실림:
                 return f"- 지괘 괘사: {self.transformed.judgment_ko}"
             return None
 
         if body_use == BodyUseType.EMPHASIZE_ORIGINAL:
-            if focus == FocusType.TRANSFORMED_JUDGMENT:
+            if "ORIGINAL" not in 실림:
                 return f"- 본괘 괘사: {self.original.judgment_ko}"
             return None
 

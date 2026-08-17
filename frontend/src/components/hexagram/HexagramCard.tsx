@@ -168,14 +168,22 @@ export const HexagramCard: React.FC<HexagramCardProps> = ({
           </div>
         )}
 
-        {/* 성찰 화두 */}
+        {/* 괘의 성격 — 사실 서술만 둔다.
+            예전에는 "…의 태도로 유연하게 전환해 나가는 지혜가 권장됩니다"를 붙였는데,
+            조건이 지괘 유무 하나뿐이라 동효가 있으면 무조건 전환을 권했다. 체용이
+            본괘 위주를 가리키는 288개 조합에서는 위 지침과 정반대 권고였다.
+            게다가 이 문장은 정적 표(hexagramsData)에서 조립된다 — 괘사도 초점 규칙도
+            거치지 않은 권고다. 권고는 근거를 갖춘 상담 답변에서만 나가야 한다.
+            그래서 이 블록은 괘의 성격과 흐름만 말하고, 어느 쪽에 무게를 둘지는
+            위 초점·체용 블록이, 무엇을 할지는 상담이 말한다. */}
         <div className="p-4 rounded-xl bg-amber-500/5 border border-amber-500/20 text-stone-300">
           <div className="text-xs font-semibold text-amber-400 flex items-center gap-1.5 mb-1.5">
-            <span>💡 오늘의 성찰 화두</span>
+            <span>💡 이 괘의 성격</span>
           </div>
           <p className="text-sm font-normal leading-relaxed text-stone-200">
-            {originalMeta.coreTheme}
-            {hasTransformation && `을 바탕으로, ${transformedMeta.coreTheme}의 태도로 유연하게 전환해 나가는 지혜가 권장됩니다.`}
+            {hasTransformation
+              ? `${originalMeta.coreTheme}의 자리에서 ${transformedMeta.coreTheme}의 성격으로 옮겨 가는 흐름입니다.`
+              : `${originalMeta.coreTheme}의 자리입니다.`}
           </p>
         </div>
       </div>

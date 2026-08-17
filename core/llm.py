@@ -330,7 +330,18 @@ class GeminiClient:
         retries: int = 3,
         system_prompt: Optional[str] = None,
         max_tokens: int = 8192,
+        json_mode: bool = True,
     ):
+        # `json_mode`는 역할에 따라 갈라야 한다. 실측이 그렇게 말한다.
+        #
+        # 켜지 않으면 Gemini가 프롬프트의 "JSON만 출력하라"를 무시하고 산문으로
+        # 답한다 — 상담 에이전트 7건 중 4건이 파싱 실패로 죽었고, 켠 뒤 24/24가 됐다.
+        # 그런데 안전 스크리너는 켜면 점수가 내려간다: 같은 프롬프트·같은 시험
+        # 세트로 109/115 → 106/115였고, 두 번씩 돌려 판정이 각각 완전히 같았다.
+        # 제약 디코딩이 판정의 결을 바꾸는 것으로 보인다.
+        #
+        # 그래서 안전에는 끄고 나머지에는 켠다(`get_client` 참고). 안전 프롬프트는
+        # 끈 상태에서도 230회 호출에 형식 실패가 없었다 — 스스로 JSON을 낸다.
         from google import genai
         from google.genai import types
 
@@ -349,6 +360,7 @@ class GeminiClient:
         self.retries = retries
         self.system_prompt = system_prompt
         self.max_tokens = max_tokens
+        self.json_mode = json_mode
         self.endpoint_desc = f"vertexai:{loc}"
         self._types = types
 
@@ -369,12 +381,14 @@ class GeminiClient:
         #
         # 스키마(`response_schema`)까지는 주지 않는다. 에이전트마다 모양이 달라
         # 클라이언트가 알아야 할 것이 늘고, LM Studio에서 같은 이유로 한 번 데였다.
-        config = self._types.GenerateContentConfig(
+        config_kwargs = dict(
             temperature=temperature,
             system_instruction=sys_prompt,
             max_output_tokens=max_tokens,
-            response_mime_type="application/json",
         )
+        if self.json_mode:
+            config_kwargs["response_mime_type"] = "application/json"
+        config = self._types.GenerateContentConfig(**config_kwargs)
         last_err = None
         for attempt in range(1, self.retries + 1):
             try:
@@ -452,7 +466,14 @@ def get_client(
             or settings.GEMINI_MODEL
             or os.getenv("GEMINI_MODEL", "gemini-2.5-pro")
         )
-        return GeminiClient(model_name=model_name, system_prompt=system_prompt)
+        # 안전 스크리너만 JSON 강제를 끈다. 켜면 시험 세트 점수가 109 → 106으로
+        # 내려간다(GeminiClient 주석의 실측). 나머지 역할은 켜지 않으면 산문이 와서
+        # 파싱이 깨진다.
+        return GeminiClient(
+            model_name=model_name,
+            system_prompt=system_prompt,
+            json_mode=(role != "safety"),
+        )
 
     else:
         raise ValueError(f"지원하지 않는 LLM provider입니다: {prov}")

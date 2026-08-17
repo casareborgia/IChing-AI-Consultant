@@ -71,6 +71,7 @@ async def start_consultation_endpoint(req: StartConsultationRequest):
                 "is_crisis": is_crisis,
                 "is_duplicate": result.is_duplicate,
                 "journal_summary": result.journal_summary,
+                "focus_rule": result.focus_rule,
             }
         except Exception as e:
             await db_session.rollback()
@@ -105,6 +106,7 @@ async def counsel_turn_endpoint(req: ConsultationTurnApiRequest):
                 "is_crisis": is_crisis,
                 "is_duplicate": result.is_duplicate,
                 "journal_summary": result.journal_summary,
+                "focus_rule": result.focus_rule,
             }
         except Exception as e:
             await db_session.rollback()

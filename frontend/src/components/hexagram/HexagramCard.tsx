@@ -142,14 +142,42 @@ export const HexagramCard: React.FC<HexagramCardProps> = ({
       </div>
 
       {/* 핵심 의미 가이드 영역 */}
-      <div className="mt-6 p-4 rounded-xl bg-amber-500/5 border border-amber-500/20 text-stone-300">
-        <div className="text-xs font-semibold text-amber-400 flex items-center gap-1.5 mb-1.5">
-          <span>💡 오늘의 성찰 화두</span>
+      <div className="mt-6 space-y-3">
+        {/* 고변점 해석 초점 */}
+        {castResult.focusRule?.descriptionKo && (
+          <div className="p-3.5 rounded-xl bg-stone-950/60 border border-stone-800/80 text-stone-300">
+            <div className="text-xs font-medium text-stone-400 flex items-center gap-1.5 mb-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+              <span>해석 초점 (주자 고변점)</span>
+            </div>
+            <p className="text-xs sm:text-sm text-stone-200 leading-relaxed">
+              {castResult.focusRule.descriptionKo}
+            </p>
+          </div>
+        )}
+
+        {/* 체용(體用) 보완 규칙 안내 */}
+        {castResult.focusRule?.bodyUseNoteKo && (
+          <div className="p-3.5 rounded-xl bg-amber-950/20 border border-amber-500/30 text-amber-200/90">
+            <div className="text-xs font-semibold text-amber-400 flex items-center gap-1.5 mb-1">
+              <span>⚖️ 체용(體用) 보완 지침</span>
+            </div>
+            <p className="text-xs sm:text-sm leading-relaxed">
+              {castResult.focusRule.bodyUseNoteKo}
+            </p>
+          </div>
+        )}
+
+        {/* 성찰 화두 */}
+        <div className="p-4 rounded-xl bg-amber-500/5 border border-amber-500/20 text-stone-300">
+          <div className="text-xs font-semibold text-amber-400 flex items-center gap-1.5 mb-1.5">
+            <span>💡 오늘의 성찰 화두</span>
+          </div>
+          <p className="text-sm font-normal leading-relaxed text-stone-200">
+            {originalMeta.coreTheme}
+            {hasTransformation && `을 바탕으로, ${transformedMeta.coreTheme}의 태도로 유연하게 전환해 나가는 지혜가 권장됩니다.`}
+          </p>
         </div>
-        <p className="text-sm font-normal leading-relaxed text-stone-200">
-          {originalMeta.coreTheme}
-          {hasTransformation && `을 바탕으로, ${transformedMeta.coreTheme}의 태도로 유연하게 전환해 나가는 지혜가 권장됩니다.`}
-        </p>
       </div>
 
       {/* 상담 시작 버튼 (옵션) */}

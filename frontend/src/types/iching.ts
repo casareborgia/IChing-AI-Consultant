@@ -20,11 +20,23 @@ export interface LineInfo {
   isChanging: boolean;
 }
 
+export type BodyUseType = 'EMPHASIZE_ORIGINAL' | 'EMPHASIZE_TRANSFORMED' | 'STANDARD';
+
+export interface FocusRuleInfo {
+  focusType: string;
+  targetHexagramType: 'ORIGINAL' | 'TRANSFORMED' | 'BOTH';
+  targetLineNumbers: number[];
+  descriptionKo: string;
+  bodyUseType?: BodyUseType;
+  bodyUseNoteKo?: string | null;
+}
+
 export interface CastResult {
   originalHexId: number;
   transformedHexId: number;
   lines: LineInfo[];
   changingPositions: number[]; // 1-based index (e.g. [3, 5])
+  focusRule?: FocusRuleInfo;
 }
 
 export type ConsultationStep =

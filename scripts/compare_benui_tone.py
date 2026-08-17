@@ -76,14 +76,18 @@ async def main_async(provider: str, repeats: int) -> None:
     client = get_client(role="interpret", provider=provider)
     rows = []
 
-    async with AsyncSessionLocal() as session:
-        for question, lines in CASES:
-            for r in range(repeats):
+    # 세션을 케이스마다 새로 연다. 한 세션으로 전부 돌리면 느린 외부 호출 사이에
+    # 커넥션이 유휴로 끊겨 중간에 죽는다 — 실제로 그렇게 한 번 날렸다
+    # (asyncpg ConnectionDoesNotExistError). 서버리스에서 풀러가 필요한 이유와
+    # 같은 성질의 문제다.
+    for question, lines in CASES:
+        for r in range(repeats):
+            async with AsyncSessionLocal() as session:
                 끄고 = await 한번(session, question, lines, client, 0)
                 켜고 = await 한번(session, question, lines, client, 2)
-                rows.append({"질문": question, "반복": r, "정전만": 끄고, "본의포함": 켜고})
-                print(f"[{len(rows)}/{len(CASES) * repeats}] {question[:20]}… "
-                      f"본의청크 {켜고['본의청크']}개")
+            rows.append({"질문": question, "반복": r, "정전만": 끄고, "본의포함": 켜고})
+            print(f"[{len(rows)}/{len(CASES) * repeats}] {question[:20]}… "
+                  f"본의청크 {켜고['본의청크']}개")
 
     def 합(키, 필드):
         return sum(len(row[키][필드]) for row in rows)

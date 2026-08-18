@@ -2,7 +2,7 @@
 
 import pytest
 
-from agents.interpret import _annotation_block, run_interpret
+from agents.interpret import _annotation_block, _render_mapping, run_interpret
 from core.db import AsyncSessionLocal
 from core.rag import RetrievedChunk
 
@@ -109,3 +109,39 @@ def test_번역이_빈_주석은_근거로도_프롬프트로도_나가지_않�
 
     assert used == []
     assert lines == []
+
+
+def test_칸들이_매핑_앞에_렌더된다():
+    """이 값은 `counsel_turns.contextual_mapping`을 타고 후속 턴까지 간다.
+
+    칸을 스키마에만 두면 세션 둘째 턴부터 사라진다 — 매핑을 저장하지 않아 사연이
+    그 자리를 메우던 것과 똑같은 일이 벌어진다.
+    """
+    렌더 = _render_mapping(
+        {
+            "focus_image": "누런 소가죽으로 묶어 아무도 풀 수 없음",
+            "image_position": "붙드는 쪽",
+            "only_this_line": "물러나는 때인데도 뜻만은 놓지 않는다",
+        },
+        "접더라도 놓지 않을 것이 무엇인지가 이 자리의 물음입니다.",
+    )
+
+    assert 렌더.splitlines()[0].startswith("효사의 형상:")
+    assert "이 효만의 것: 물러나는 때인데도" in 렌더
+    assert 렌더.splitlines()[-1].startswith("— 접더라도")
+
+
+def test_빈_칸은_머리만_남기지_않는다():
+    """머리만 남은 칸은 모델이 채워 넣을 빈자리가 된다."""
+    렌더 = _render_mapping(
+        {"focus_image": "", "image_position": "   ", "only_this_line": None},
+        "괘사가 주 근거라 형상이라 할 것이 없습니다.",
+    )
+
+    assert 렌더 == "괘사가 주 근거라 형상이라 할 것이 없습니다."
+    assert "효사의 형상" not in 렌더
+
+
+def test_칸을_안_채우는_모델도_예전처럼_돌아간다():
+    """구조를 안 따르는 모델에게 없는 칸을 만들어 넣지 않는다."""
+    assert _render_mapping({}, "지금은 힘을 모을 때입니다.") == "지금은 힘을 모을 때입니다."

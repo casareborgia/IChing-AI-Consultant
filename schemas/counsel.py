@@ -59,7 +59,19 @@ class HexagramInterpretationSchema(BaseModel):
     transformed_hexagram_id: Optional[int] = Field(None, description="지괘 ID (1~64)")
     changing_lines: List[int] = Field(default_factory=list, description="변효 위치 리스트 (예: [1, 4])")
     raw_text: str = Field(..., description="DB 조회로 확정된 괘사/효사 원문 및 해석 가이드")
-    contextual_mapping: str = Field(..., description="사용자의 고민 상황과 괘상의 연결 초안")
+
+    # 매핑을 쓰기 전에 거쳐야 하는 칸들.
+    #
+    # 자유 서술 한 칸만 두면 모델은 어느 괘에나 맞는 문장("지금은 멈추어 성찰할 때입니다")을
+    # 쓴다. 그런 문장은 괘를 바꿔도 그대로라 다리 역할을 못 한다. 칸을 나눠 두면 효사를
+    # 보지 않고는 채울 수 없다 — 특히 `only_this_line`이 그렇다.
+    #
+    # 채울 수 없으면 빈 문자열이다. 지어내는 것보다 비우는 편이 낫다.
+    focus_image: str = Field("", description="초점 효사가 그리는 장면. 효사에 실제로 있는 것만")
+    image_position: str = Field("", description="그 장면 안에서 내담자가 서 있는 자리")
+    only_this_line: str = Field("", description="이 효가 말하는 것 중 괘 이름의 통념으로는 나오지 않는 것")
+
+    contextual_mapping: str = Field(..., description="위 칸들을 딛고 쓴 상황 연결 초안")
     evidences: List[EvidenceItem] = Field(
         default_factory=list,
         description="해석 초안을 만들 때 프롬프트에 실제로 들어간 주석",

@@ -49,7 +49,7 @@ import json
 import os
 import re
 import sys
-from typing import Any, Dict, List, Set
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -111,16 +111,37 @@ def 유사도(x: str, y: str) -> float:
     return len(a & b) / len(a | b)
 
 
-def 근거_텍스트(res: Any) -> str:
-    """그 괘로 상담사가 손에 쥔 근거 전부 — 확정 근거 + 프롬프트에 실린 주석."""
-    주석 = " ".join(e.content for e in res.evidences)
-    return f"{res.raw_text} {주석}"
+def 근거_텍스트(res: Any, chunks: Optional[List[Any]] = None) -> str:
+    """그 괘로 상담사가 손에 쥔 근거 전부 — 확정 근거 + 프롬프트에 실린 주석.
+
+    main 브랜치 호환:
+    - 새 경로: res.evidences (EvidenceItem, 한글 주석은 .content)
+    - 옛 경로: res.evidences가 없으면 검색 전량 chunks 중 모델이 본 앞의 4건[:4]을 사용.
+      RetrievedChunk는 한문이 .content, 한글이 .content_ko이므로 hasattr(c, "content_ko")로 분기.
+    """
+    if hasattr(res, "evidences") and res.evidences is not None:
+        주석 = " ".join(e.content for e in res.evidences)
+    else:
+        # main 기준선: 프롬프트에 실렸던 앞의 4건만 주석으로 취한다
+        주석_항목들 = []
+        for c in (chunks or [])[:4]:
+            if hasattr(c, "content_ko"):
+                주석_항목들.append(c.content_ko)
+            elif hasattr(c, "content"):
+                주석_항목들.append(c.content)
+        주석 = " ".join(주석_항목들)
+
+    raw = getattr(res, "raw_text", "")
+    return f"{raw} {주석}".strip()
 
 
 async def 한판(session, question: str, lines: List[int], clients) -> Dict[str, Any]:
-    interp, evidence, _ = await run_interpret(
+    ret = await run_interpret(
         session, question, manual_lines=lines, client=clients["interpret"],
     )
+    interp, evidence = ret[0], ret[1]
+    raw_chunks = ret[2] if len(ret) > 2 else None
+
     turn = await run_counsel_turn(
         question, interp, turn_number=1, client=clients["counsel"],
     )
@@ -128,7 +149,7 @@ async def 한판(session, question: str, lines: List[int], clients) -> Dict[str,
         "괘": evidence.original.hexagram_id,
         "괘이름": evidence.original.name_full,
         "초점": evidence.focus_rule.description_ko,
-        "근거": 근거_텍스트(interp),
+        "근거": 근거_텍스트(interp, raw_chunks),
         "답변": turn.message,
     }
 
@@ -152,35 +173,73 @@ async def main_async(provider: str, repeats: int) -> None:
                 rows.append(판)
                 print(f"[{len(rows)}/{총}] {question[:16]}… × {이름} → 제{판['괘']}괘")
 
-    보고(rows, repeats)
+    out = f"/tmp/hexagram_effect_{provider}.json"
+    보고(rows, repeats, provider=provider, out_path=out)
 
 
-def 보고(rows: List[Dict[str, Any]], repeats: int) -> None:
+def 열_중심화_보정(같은사연: List[Dict[str, Any]]) -> Dict[Tuple[str, int], float]:
+    """근거별 배경 점수(열 평균)를 구한다.
+
+    짧거나 보편적인 근거가 남의 자리를 뺏는 것을 막는다.
+    사연이 같을 때 각 근거 j마다 '그 근거가 모든 답변에 평균적으로 얼마나 겹치는가'를
+    배경값으로 구하고 빼준다:
+        배경[j] = mean_k 포함도(답변_k, 근거_j)
+        보정점수[k][j] = 포함도(답변_k, 근거_j) - 배경[j]
+    """
+    근거들 = {(r["배치"], r["회차"]): r["근거"] for r in 같은사연}
+    배경: Dict[Tuple[str, int], float] = {}
+    for 키, 근거 in 근거들.items():
+        점수들 = [포함도(r["답변"], 근거) for r in 같은사연]
+        배경[키] = sum(점수들) / len(점수들) if 점수들 else 0.0
+    return 배경
+
+
+def 보고(
+    rows: List[Dict[str, Any]],
+    repeats: int,
+    provider: str = "ollama",
+    out_path: Optional[str] = None,
+) -> None:
     print("\n" + "=" * 72)
 
     # ── 1. 괘 판별 적중률 ───────────────────────────────────────────────
     # 답변이 자기 괘의 근거와 가장 닮았는가. 사연이 같으므로 답변에 섞인 사연
     # 어휘는 어느 비교에나 똑같이 들어가고, 갈라지는 것은 근거 쪽 어휘뿐이다.
-    적중, 전체 = 0, 0
+    #
+    # [원값] 포함도(답변, 근거)
+    # [보정] 포함도(답변, 근거) - 배경값 (짧거나 보편적인 근거의 과대평가 방지)
+    적중_원, 적중_보정, 전체 = 0, 0, 0
     표: List[str] = []
     for question in {r["질문"] for r in rows}:
         같은사연 = [r for r in rows if r["질문"] == question]
         근거들 = {(r["배치"], r["회차"]): r["근거"] for r in 같은사연}
+        배경 = 열_중심화_보정(같은사연)
+
         for r in 같은사연:
-            점수 = {키: 포함도(r["답변"], 근거) for 키, 근거 in 근거들.items()}
-            최고 = max(점수, key=점수.get)
-            맞음 = 최고[0] == r["배치"]
-            적중 += int(맞음)
+            자기키 = (r["배치"], r["회차"])
+            원_점수 = {키: 포함도(r["답변"], 근거) for 키, 근거 in 근거들.items()}
+            보정_점수 = {키: 원_점수[키] - 배경[키] for 키 in 근거들}
+
+            최고_원 = max(원_점수, key=원_점수.get)
+            맞음_원 = 최고_원[0] == r["배치"]
+            적중_원 += int(맞음_원)
+
+            최고_보정 = max(보정_점수, key=보정_점수.get)
+            맞음_보정 = 최고_보정[0] == r["배치"]
+            적중_보정 += int(맞음_보정)
+
             전체 += 1
             표.append(
-                f"  {'○' if 맞음 else '✗'} {r['질문'][:14]}… × {r['배치']:<12} "
-                f"자기근거 {점수[(r['배치'], r['회차'])]:.3f} / 최고 {점수[최고]:.3f} ({최고[0]})"
+                f"  {'○' if 맞음_보정 else '✗'} {r['질문'][:14]}… × {r['배치']:<12} "
+                f"자기근거 {보정_점수[자기키]:+.3f} / 최고 {보정_점수[최고_보정]:+.3f} ({최고_보정[0]})  "
+                f"[원값 {'○' if 맞음_원 else '✗'} {원_점수[자기키]:.3f} / {원_점수[최고_원]:.3f} ({최고_원[0]})]"
             )
 
     # 반복 회차가 여럿이면 같은 배치의 다른 회차도 정답으로 친다. 후보는 K×R이고
     # 그중 R개가 정답이므로 우연은 R/(K×R) = 1/K다 — 반복을 늘려도 변하지 않는다.
     우연 = 1.0 / len(HEXAGRAMS)
-    print(f"[1] 괘 판별 적중률: {적중}/{전체} = {적중 / max(전체, 1):.1%}  (우연 {우연:.1%})")
+    print(f"[1] 괘 판별 적중률: {적중_보정}/{전체} = {적중_보정 / max(전체, 1):.1%} (보정) · "
+          f"{적중_원}/{전체} = {적중_원 / max(전체, 1):.1%} (원값)  (우연 {우연:.1%} = 1/{len(HEXAGRAMS)})")
     print("\n".join(표))
 
     # ── 2. 답변 쌍 유사도 (대조군 대비) ────────────────────────────────
@@ -204,18 +263,27 @@ def 보고(rows: List[Dict[str, Any]], repeats: int) -> None:
         print("  대조군 없음 — `-n 2` 이상으로 돌려야 같은 괘 반복 쌍이 생긴다.")
 
     # ── 3. 근거 도달도 ─────────────────────────────────────────────────
-    도달 = [포함도(r["답변"], r["근거"]) for r in rows]
-    print(f"\n[3] 근거 도달도(자기 괘): 평균 {평균(도달):.3f} · "
-          f"최저 {min(도달):.3f} · 최고 {max(도달):.3f}")
+    도달_원 = [포함도(r["답변"], r["근거"]) for r in rows]
+    도달_보정 = []
+    for question in {r["질문"] for r in rows}:
+        같은사연 = [r for r in rows if r["질문"] == question]
+        배경 = 열_중심화_보정(같은사연)
+        for r in 같은사연:
+            자기키 = (r["배치"], r["회차"])
+            도달_보정.append(포함도(r["답변"], r["근거"]) - 배경[자기키])
+
+    print(f"\n[3] 근거 도달도(자기 괘)")
+    print(f"  보정: 평균 {평균(도달_보정):+.3f} · 최저 {min(도달_보정):+.3f} · 최고 {max(도달_보정):+.3f}")
+    print(f"  원값: 평균 {평균(도달_원):.3f} · 최저 {min(도달_원):.3f} · 최고 {max(도달_원):.3f}")
     바닥 = sorted(rows, key=lambda r: 포함도(r["답변"], r["근거"]))[:3]
-    print("  가장 낮은 셋 (근거가 답변에 닿지 않은 자리):")
+    print("  가장 낮은 셋 (원값 기준):")
     for r in 바닥:
         print(f"    {포함도(r['답변'], r['근거']):.3f}  {r['질문'][:14]}… × {r['배치']}")
 
-    out = "/tmp/hexagram_effect.json"
-    with open(out, "w", encoding="utf-8") as f:
-        json.dump(rows, f, ensure_ascii=False, indent=2)
-    print(f"\n전문 → {out}")
+    if out_path:
+        with open(out_path, "w", encoding="utf-8") as f:
+            json.dump(rows, f, ensure_ascii=False, indent=2)
+        print(f"\n전문 → {out_path}")
 
 
 def main() -> None:
@@ -224,8 +292,17 @@ def main() -> None:
     ap.add_argument("-p", "--provider", default="ollama")
     ap.add_argument("-n", "--repeats", type=int, default=1,
                     help="같은 조합 반복 횟수. 2 이상이어야 대조군이 생긴다")
+    ap.add_argument("--rescore", type=str, default=None,
+                    help="이미 저장된 결과 JSON 파일 경로. 모델 호출 없이 보고()만 다시 돌린다")
     args = ap.parse_args()
-    asyncio.run(main_async(args.provider, args.repeats))
+
+    if args.rescore:
+        with open(args.rescore, "r", encoding="utf-8") as f:
+            rows = json.load(f)
+        repeats = max((r.get("회차", 0) for r in rows), default=0) + 1
+        보고(rows, repeats, provider=args.provider, out_path=None)
+    else:
+        asyncio.run(main_async(args.provider, args.repeats))
 
 
 if __name__ == "__main__":

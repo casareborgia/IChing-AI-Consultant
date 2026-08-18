@@ -59,6 +59,19 @@ class CounselTurn(Base):
     # 사용자의 질문을 대신 넣었고, 상담사는 사연을 괘의 해석으로 알고 읽었다.
     # 세션당 한 번(괘를 뽑은 턴)만 채워지고 나머지 턴은 비어 있다.
     contextual_mapping: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+    # 그 턴에 프롬프트로 들어간 주석. 매핑과 같은 이유로 저장한다.
+    #
+    # 첫 턴에만 검색이 돌기 때문에, 저장하지 않으면 상담사가 근거 주석을 보는 것도
+    # 첫 턴뿐이다. 둘째 턴부터 손이 비면 모델은 괘 이름의 통념으로 물러난다 —
+    # 자르기 문제로 첫 턴이 그랬던 것과 같은 일이 뒤 턴에서 벌어진다.
+    #
+    # 청크 ID만 두고 다시 읽지 않고 내용을 통째로 박아 둔다. 이 값은 "그때 모델이
+    # 실제로 본 것"의 기록이라, 나중에 번역을 고쳤다고 지난 답변의 근거까지 조용히
+    # 바뀌면 안 된다.
+    evidence_items: Mapped[Optional[list]] = mapped_column(
+        JSON().with_variant(postgresql.JSONB, "postgresql"), nullable=True
+    )
     
     needs_followup: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     is_final: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)

@@ -518,8 +518,9 @@ async def run_turn(
             agent_response=counsel_turn_res.message,
             needs_followup=counsel_turn_res.needs_followup,
             is_final=counsel_turn_res.is_final,
-            # 이 턴에서만 매핑이 만들어진다. 후속 턴이 이 값을 되살려 쓴다.
+            # 이 턴에서만 검색과 매핑이 돈다. 후속 턴이 이 둘을 되살려 쓴다.
             contextual_mapping=interp_res.contextual_mapping,
+            evidence_items=[e.model_dump() for e in interp_res.evidences],
         )
         session.add(new_turn)
         await session.commit()
@@ -571,6 +572,15 @@ async def run_turn(
         # 상담 프롬프트에서 그 절이 통째로 빠지게 한다 — 사연으로 메우느니 없는
         # 편이 낫다. 확정 근거(`raw_text`)는 그대로 간다.
         contextual_mapping=reading_turn.contextual_mapping or "",
+        # 근거 주석도 함께 되살린다.
+        #
+        # 검색은 괘를 뽑은 턴에만 돈다. 이 값을 넘기지 않으면 상담사가 주석을 손에
+        # 쥐는 것은 첫 턴뿐이고, 둘째 턴부터는 괘사·효사 한 줄만 들고 이야기하게 된다.
+        # 압축된 한 줄만 남으면 모델은 괘 이름의 통념으로 물러난다.
+        #
+        # 이 칼럼이 생기기 전 세션은 값이 없다. 그때는 빈 목록이고, 상담 프롬프트에서
+        # 근거 주석 블록이 통째로 빠진다 — 예전과 같은 상태로 돌아갈 뿐이다.
+        evidences=[EvidenceItem(**item) for item in (reading_turn.evidence_items or [])],
     )
 
     # 후속 턴이야말로 재검색이 필요한 자리다. 첫 검색은 정리된 첫 질문으로 돌았고,
@@ -617,5 +627,5 @@ async def run_turn(
         safety_category=safety_res.category,
         journal_summary=journal_summary,
         focus_rule=evidence.focus_rule.model_dump(),
-        evidences=_merge_evidences(counsel_turn_res.evidences),
+        evidences=_merge_evidences(interp_stub.evidences, counsel_turn_res.evidences),
     )

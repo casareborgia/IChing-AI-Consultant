@@ -4,7 +4,7 @@ import pytest
 
 from agents.counsel import MAX_RAG_SEARCHES, MAX_TURNS_LIMIT, run_counsel_turn
 from core.rag import RetrievedChunk
-from schemas.counsel import HexagramInterpretationSchema
+from schemas.counsel import EvidenceItem, HexagramInterpretationSchema
 
 INTERP = HexagramInterpretationSchema(
     original_hexagram_id=1,
@@ -428,3 +428,41 @@ async def test_재검색이_없는_턴은_근거가_비어_있다():
     res = await run_counsel_turn("조금 더 이야기하고 싶어요", INTERP, turn_number=2,
                                  client=PromptCaptureLLM())
     assert res.evidences == []
+
+
+@pytest.mark.asyncio
+async def test_근거_주석이_상담사_프롬프트에_들어간다():
+    """예전에는 해석 에이전트가 검색한 주석이 상담사까지 오지 않았다.
+
+    매핑 초안을 만드는 데만 쓰고 버렸고(파이프라인이 받아놓고 넘기지 않았다),
+    상담사 손에는 압축된 효사 한 줄만 남았다. 풀 것이 없으면 모델은 괘 이름의
+    통념으로 물러나고, 통념은 여러 괘가 공유하므로 어느 괘를 뽑아도 같은 말이 나온다.
+    """
+    llm = PromptCaptureLLM()
+    with_evidence = INTERP.model_copy(update={"evidences": [
+        EvidenceItem(
+            source_type="line_comm", source_title="효사 주석(2효)",
+            content="어려움을 무릅쓰는 것은 제 한 몸의 이해를 넘어선 일이기 때문이다.",
+            hexagram_id=39, line_number=2,
+        ),
+        EvidenceItem(
+            source_type="guasa_comm", source_title="괘사 주석",
+            content="갈 수 있는 방향과 갈 수 없는 방향을 가리는 것이 이 괘의 일이다.",
+            hexagram_id=39, line_number=None,
+        ),
+    ]})
+
+    await run_counsel_turn("어떻게 보아야 할까요", with_evidence, turn_number=1, client=llm)
+
+    prompt = llm.prompts[0]
+    assert "[근거 주석 (한글)]" in prompt
+    assert "제 한 몸의 이해를 넘어선 일" in prompt
+    assert prompt.index("효사 주석(2효)") < prompt.index("괘사 주석"), "초점 효 주석이 앞에 와야 한다"
+    assert prompt.index("[근거 주석") < prompt.index("[상황 매핑 초안]")
+
+
+@pytest.mark.asyncio
+async def test_근거_주석이_없으면_그_블록도_내지_않는다():
+    llm = PromptCaptureLLM()
+    await run_counsel_turn("어떻게 보아야 할까요", INTERP, turn_number=1, client=llm)
+    assert "[근거 주석" not in llm.prompts[0]

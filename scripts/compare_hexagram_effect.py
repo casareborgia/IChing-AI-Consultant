@@ -57,6 +57,8 @@ from agents.counsel import run_counsel_turn  # noqa: E402
 from agents.interpret import run_interpret  # noqa: E402
 from core.db import AsyncSessionLocal  # noqa: E402
 from core.llm import get_client  # noqa: E402
+from scripts.measure_boilerplate import 분석 as 상용구_분석  # noqa: E402
+from scripts.measure_boilerplate import 출력 as 상용구_출력  # noqa: E402
 
 # 사연은 고정하고 괘만 바꾼다. 사연이 서로 다르면 답변이 달라진 이유가 괘인지
 # 사연인지 갈라낼 수 없다 — 그것이 이 하네스의 전부다.
@@ -279,6 +281,13 @@ def 보고(
     print("  가장 낮은 셋 (원값 기준):")
     for r in 바닥:
         print(f"    {포함도(r['답변'], r['근거']):.3f}  {r['질문'][:14]}… × {r['배치']}")
+
+    # ── 4. 상용구 (신고된 증상을 그대로 세는 자) ───────────────────────
+    #
+    # 위 세 지표는 "답변을 보고 어느 괘인지 알아볼 수 있는가"를 잰다. 신고는 그게
+    # 아니라 "괘가 다른데 같은 문구가 나온다"였다. 확정 근거의 어휘만 조금 섞여도
+    # 괘는 알아볼 수 있지만, 답변의 뼈대가 같으면 읽는 사람에게는 같은 답이다.
+    상용구_출력("이번 측정", 상용구_분석(rows))
 
     if out_path:
         with open(out_path, "w", encoding="utf-8") as f:

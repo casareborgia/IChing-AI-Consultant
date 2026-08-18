@@ -68,6 +68,34 @@ def _annotation_block(
     return lines, used
 
 
+# 매핑 앞에 붙는 칸들. 표시 이름은 상담사 프롬프트에 그대로 나간다.
+BRIDGE_FIELDS = (
+    ("focus_image", "효사의 형상"),
+    ("image_position", "그 장면에서의 자리"),
+    ("only_this_line", "이 효만의 것"),
+)
+
+
+def _render_mapping(data: dict, mapping: str) -> str:
+    """구조화된 칸들과 매핑 문장을 한 덩어리로 렌더한다.
+
+    **왜 따로 들고 다니지 않고 합치는가.** 이 값은 `counsel_turns.contextual_mapping`에
+    저장되어 후속 턴에서 되살아난다. 칸들을 스키마에만 두면 세션의 둘째 턴부터 사라지고,
+    그러면 매핑을 저장하지 않아 사연이 그 자리를 메우던 것과 똑같은 일이 벌어진다.
+    한 덩어리로 렌더해 두면 기존 칼럼을 그대로 타고 간다.
+
+    빈 칸은 싣지 않는다. 머리만 남은 칸은 모델이 채워 넣을 빈자리가 된다.
+    """
+    lines = []
+    for key, 이름 in BRIDGE_FIELDS:
+        값 = str(data.get(key) or "").strip()
+        if 값:
+            lines.append(f"{이름}: {값}")
+    if mapping:
+        lines.append(f"— {mapping}" if lines else mapping)
+    return "\n".join(lines)
+
+
 async def run_interpret(
     session: AsyncSession,
     clarified_question: str,
@@ -164,18 +192,26 @@ async def run_interpret(
 
     user_msg = "\n".join(prompt_lines)
 
+    data: dict = {}
     try:
         data = llm.complete_json(user_msg, system=sys_prompt, temperature=0.0)
         mapping = data.get("contextual_mapping", "도출된 괘상의 흐름을 바탕으로 상황을 성찰합니다.")
     except Exception:
         mapping = f"제{evidence.original.hexagram_id}괘 {evidence.original.name_full}의 지혜를 바탕으로 마음을 살핍니다."
 
+    # 칸을 안 채우는 모델도 있다. 그때는 예전처럼 매핑 문장만 나간다 — 없는 칸을
+    # 만들어 넣지 않는다.
+    bridge = {k: str(data.get(k) or "").strip() for k, _ in BRIDGE_FIELDS}
+
     schema_out = HexagramInterpretationSchema(
         original_hexagram_id=cast_result.original_hexagram_id,
         transformed_hexagram_id=cast_result.transformed_hexagram_id,
         changing_lines=cast_result.changing_lines,
         raw_text=evidence.summary_korean,
-        contextual_mapping=mapping,
+        focus_image=bridge["focus_image"],
+        image_position=bridge["image_position"],
+        only_this_line=bridge["only_this_line"],
+        contextual_mapping=_render_mapping(data, mapping),
         evidences=[
             EvidenceItem(
                 source_type=c.source_type,

@@ -87,6 +87,31 @@ def format_retrieved(query: str, chunks: List[RetrievedChunk]) -> str:
     return "\n".join(lines)
 
 
+def format_evidences(items: List[EvidenceItem]) -> str:
+    """확정 근거를 푼 주석을 상담사 프롬프트에 붙일 블록으로 만든다.
+
+    예전에는 이 주석이 상담사에게 오지 않았다. 해석 에이전트가 검색해 매핑 초안을
+    만드는 데만 쓰고 버렸고(파이프라인이 받아놓고 아무 데도 넘기지 않았다), 상담사
+    손에 남는 것은 괘사·효사 한 줄과 그 매핑뿐이었다.
+
+    효사는 "왕의 신하로서 간난하고 또 간난하니 몸을 위한 까닭이 아니다"처럼 압축돼
+    있어 그 한 줄만으로는 무슨 말인지 풀리지 않는다. 풀 것이 없으면 모델은 아는
+    통념으로 물러나고, 통념은 여러 괘가 공유하므로 어느 괘를 뽑아도 같은 답이 나온다.
+
+    한글(`content`)만 나간다. 한문은 애초에 이 경로에 실리지 않는다.
+    """
+    lines = [
+        "[근거 주석 (한글)]",
+        "※ 위 확정 근거를 옛 주석이 풀어놓은 것입니다. 초점 효의 주석이 맨 앞입니다.",
+        "   답변의 뿌리를 괘 이름의 인상이 아니라 여기에 두십시오.",
+    ]
+    for e in items:
+        content = (e.content or "").strip()
+        if content:
+            lines.append(f"- {e.source_title}: {content}")
+    return "\n".join(lines) + "\n"
+
+
 async def run_counsel_turn(
     user_message: str,
     interpretation: Optional[HexagramInterpretationSchema],
@@ -131,6 +156,9 @@ async def run_counsel_turn(
         prompt_lines = [
             f"[도출된 괘 및 해설 요약(한글)]\n{interpretation.raw_text}\n",
         ]
+        if interpretation.evidences:
+            prompt_lines.append(format_evidences(interpretation.evidences))
+
         # 매핑이 비어 있으면 그 절을 아예 내지 않는다.
         #
         # 예전에는 후속 턴에서 이 자리에 **사용자의 질문 원문**이 들어갔다. 상담사는

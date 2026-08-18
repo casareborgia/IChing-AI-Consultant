@@ -913,3 +913,58 @@ async def test_괘를_뽑은_턴은_프롬프트에_실린_주석을_근거로_�
         assert item["content"].strip()
         assert item["source_title"] and "_" not in item["source_title"]
     assert any(item["line_number"] for item in res.evidences), "초점 효 주석이 근거에 있어야 한다"
+
+
+@pytest.mark.asyncio
+async def test_후속_턴도_근거_주석을_손에_쥔다(monkeypatch):
+    """검색은 괘를 뽑은 턴에만 돈다.
+
+    저장하지 않으면 상담사가 주석을 보는 것도 그 한 턴뿐이고, 둘째 턴부터는
+    압축된 효사 한 줄만 들고 이야기하게 된다. 첫 턴에서 고친 문제가 뒤 턴에서
+    그대로 되살아난다.
+    """
+    from core.rag import RetrievedChunk
+
+    주석 = "어려움을 무릅쓰는 것은 제 한 몸의 이해를 넘어선 일이기 때문이다."
+
+    async def mock_search_chunks(*args, **kwargs):
+        return [
+            RetrievedChunk(
+                chunk_id="c1", hexagram_id=3, line_number=kwargs.get("line_number"),
+                source_type="line_comm" if kwargs.get("line_number") else "guasa_comm",
+                category="annotation", content="원문", content_ko=주석, similarity=0.8,
+            )
+        ]
+
+    monkeypatch.setattr("agents.interpret.search_balanced", mock_search_chunks)
+
+    counsel = MockLLMDispatcher({"default": {
+        "message": "그 마음을 조금 더 들여다볼까요?",
+        "needs_followup": True, "followup_question": None, "is_final": False,
+    }})
+    mock_clients = {
+        "safety": MockLLMDispatcher({"default": {"category": "NORMAL"}}),
+        "intake": MockLLMDispatcher({"default": {
+            "clarified_question": "지금 시작해도 될지",
+            "topic_category": "결단",
+            "is_duplicate_question": False,
+            "duplicate_session_ref": None,
+        }}),
+        "interpret": MockLLMDispatcher({"default": {"contextual_mapping": "시작의 어려움"}}),
+        "counsel": counsel,
+    }
+
+    async with AsyncSessionLocal() as session:
+        res1 = await run_turn(
+            session, user_id="evidence_carry_user", message="지금 시작해도 될까요?",
+            manual_lines=[9, 8, 8, 8, 6, 8], clients=mock_clients,
+        )
+        res2 = await run_turn(
+            session, counsel_session_id=res1.session_id, user_id="evidence_carry_user",
+            message="조금 더 이야기하고 싶어요.", clients=mock_clients,
+        )
+
+    첫턴_프롬프트, 후속_프롬프트 = counsel.calls[0]["user"], counsel.calls[-1]["user"]
+    assert 주석 in 첫턴_프롬프트
+    assert 주석 in 후속_프롬프트, "둘째 턴에서 근거 주석이 사라지면 안 된다"
+    assert res2.evidences, "후속 턴 화면에도 근거가 실려야 한다"

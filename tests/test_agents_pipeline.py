@@ -805,3 +805,111 @@ async def test_모든_턴이_예외없이_스크리닝을_먼저_거친다(monke
     for i, (종류, _) in enumerate(호출순서):
         if 종류 == "cast":
             assert any(t == "screen" for t, _ in 호출순서[:i]), "괘를 스크리닝보다 먼저 뽑았다"
+
+
+@pytest.mark.asyncio
+async def test_후속_턴은_저장된_매핑을_쓰고_사연을_해석_자리에_넣지_않는다(monkeypatch):
+    """예전에는 후속 턴의 상황 매핑 자리에 사용자의 질문 원문이 들어갔다.
+
+    상담사는 "[상황 매핑 초안]"이라는 이름표가 붙은 내담자의 사연을 괘의 해석으로
+    알고 읽었고, 그것을 말만 바꿔 되돌려줬다. 세션의 대부분 턴이 이 경로다.
+    """
+    from core.rag import RetrievedChunk
+
+    async def mock_search_chunks(*args, **kwargs):
+        return [
+            RetrievedChunk(
+                chunk_id="c1", hexagram_id=3, line_number=None, source_type="guasa_comm",
+                category="annotation", content="원문", content_ko="주석 번역",
+                similarity=0.8,
+            )
+        ]
+
+    monkeypatch.setattr("agents.interpret.search_balanced", mock_search_chunks)
+
+    사연 = "3년 다닌 회사를 옮길지 고민이에요. 조건은 더 좋은데 팀이 좋아서요."
+    매핑 = "머무름과 나아감 사이에서 때를 살피는 자리입니다."
+
+    counsel = MockLLMDispatcher({"default": {
+        "message": "그 마음을 조금 더 들여다볼까요?",
+        "needs_followup": True,
+        "followup_question": None,
+        "is_final": False,
+    }})
+    mock_clients = {
+        "safety": MockLLMDispatcher({"default": {"category": "NORMAL"}}),
+        "intake": MockLLMDispatcher({"default": {
+            "clarified_question": 사연,
+            "topic_category": "커리어/진로",
+            "is_duplicate_question": False,
+            "duplicate_session_ref": None,
+        }}),
+        "interpret": MockLLMDispatcher({"default": {"contextual_mapping": 매핑}}),
+        "counsel": counsel,
+    }
+
+    async with AsyncSessionLocal() as session:
+        res1 = await run_turn(
+            session, user_id="mapping_user", message=사연,
+            manual_lines=[9, 8, 8, 8, 6, 8], clients=mock_clients,
+        )
+        await run_turn(
+            session, counsel_session_id=res1.session_id, user_id="mapping_user",
+            message="사람 때문에 남는 게 맞는 선택인지 모르겠어요.", clients=mock_clients,
+        )
+
+    후속_프롬프트 = counsel.calls[-1]["user"]
+    매핑_절 = 후속_프롬프트.split("[상황 매핑 초안]")[1].split("[")[0]
+
+    assert 매핑 in 매핑_절
+    assert 사연 not in 매핑_절, "사연이 괘의 해석 자리에 들어가면 안 된다"
+
+
+@pytest.mark.asyncio
+async def test_괘를_뽑은_턴은_프롬프트에_실린_주석을_근거로_돌려준다(monkeypatch):
+    """화면의 근거 패널이 쓰는 값이다.
+
+    예전에는 프론트엔드가 정적 표에서 "정전(程傳) 및 본의(本義) 주석"이라는 제목을
+    달아 문장을 지어냈다 — 정전을 한 번도 거치지 않은 템플릿이었다.
+    """
+    from core.rag import RetrievedChunk
+
+    async def mock_search_chunks(*args, **kwargs):
+        line_number = kwargs.get("line_number")
+        return [
+            RetrievedChunk(
+                chunk_id=f"c-{line_number}", hexagram_id=3, line_number=line_number,
+                source_type="line_comm" if line_number else "guasa_comm",
+                category="annotation", content="원문",
+                content_ko="어려움 속에서도 바름을 지킨다는 뜻이다.", similarity=0.8,
+            )
+        ]
+
+    monkeypatch.setattr("agents.interpret.search_balanced", mock_search_chunks)
+
+    mock_clients = {
+        "safety": MockLLMDispatcher({"default": {"category": "NORMAL"}}),
+        "intake": MockLLMDispatcher({"default": {
+            "clarified_question": "지금 시작해도 될지",
+            "topic_category": "결단",
+            "is_duplicate_question": False,
+            "duplicate_session_ref": None,
+        }}),
+        "interpret": MockLLMDispatcher({"default": {"contextual_mapping": "시작의 어려움"}}),
+        "counsel": MockLLMDispatcher({"default": {
+            "message": "지금 자리에서 무엇이 가장 걸리시나요?",
+            "needs_followup": True, "followup_question": None, "is_final": False,
+        }}),
+    }
+
+    async with AsyncSessionLocal() as session:
+        res = await run_turn(
+            session, user_id="evidence_user", message="지금 시작해도 될까요?",
+            manual_lines=[9, 8, 8, 8, 6, 8], clients=mock_clients,
+        )
+
+    assert res.evidences, "괘를 뽑은 턴에는 근거가 실려야 한다"
+    for item in res.evidences:
+        assert item["content"].strip()
+        assert item["source_title"] and "_" not in item["source_title"]
+    assert any(item["line_number"] for item in res.evidences), "초점 효 주석이 근거에 있어야 한다"

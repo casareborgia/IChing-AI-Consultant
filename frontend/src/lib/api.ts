@@ -1,4 +1,4 @@
-import { CastResult, ChatMessage, JournalSummary, LineInfo, LineValue } from '../types/iching';
+import { CastResult, ChatMessage, GroundEvidence, JournalSummary, LineInfo, LineValue } from '../types/iching';
 import { HEXAGRAMS_META, HEXAGRAM_ID_TO_BINARY } from '../data/hexagramsData';
 
 const BACKEND_API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8008';
@@ -62,6 +62,44 @@ function buildCastResultFromBackend(
   };
 }
 
+/** 백엔드가 내려준 근거를 화면 표시용으로 옮긴다.
+ *
+ * 예전에는 이 자리에서 정적 표(HEXAGRAMS_META)로 근거를 조립했다. "정전(程傳) 및
+ * 본의(本義) 주석"이라는 제목을 달았지만 정전을 한 번도 거치지 않은 템플릿 문장이었고,
+ * "괘사"라고 표시한 것도 괘사가 아니라 natureSummary(정적 요약)였다. 2,536건 인덱스를
+ * 쌓아두고 화면에 나가는 근거는 그중 한 건도 아니었다.
+ *
+ * 이제는 백엔드가 "답변을 만들 때 프롬프트에 실제로 들어간 청크"만 내려준다.
+ * 근거가 없는 턴이면 빈 배열이고, 그때는 패널 자체가 뜨지 않는다 — 없는 근거를
+ * 있는 것처럼 채우지 않는다.
+ */
+function mapEvidences(raw: unknown): GroundEvidence[] | undefined {
+  if (!Array.isArray(raw) || raw.length === 0) return undefined;
+
+  return raw
+    .map((item) => {
+      const e = item as {
+        source_type?: string;
+        source_title?: string;
+        content?: string;
+      };
+      const sourceType: GroundEvidence['sourceType'] = e.source_type?.startsWith('benui')
+        ? 'benui'
+        : e.source_type?.startsWith('sosang')
+          ? 'sosang'
+          : e.source_type === 'guasa_comm'
+            ? 'guasa'
+            : 'jeongjeon';
+
+      return {
+        sourceType,
+        sourceTitle: e.source_title || '해설',
+        content: (e.content || '').trim(),
+      };
+    })
+    .filter((e) => e.content.length > 0);
+}
+
 /**
  * 실제 백엔드 API 호출: 상담 시작 (안전 스크리닝 -> 접수 -> 괘 도출 -> 1턴 응답)
  */
@@ -102,7 +140,6 @@ export async function startConsultationApi(question: string): Promise<{
     const changingLines = data.changing_lines || [];
 
     const castResult = buildCastResultFromBackend(hexId, transHexId, changingLines, data.focus_rule);
-    const hexMeta = HEXAGRAMS_META[hexId];
 
     const firstMessage: ChatMessage = {
       id: `msg-${Date.now()}`,
@@ -110,18 +147,7 @@ export async function startConsultationApi(question: string): Promise<{
       content: data.user_facing_message,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       isDuplicateAlert: data.is_duplicate,
-      evidences: [
-        {
-          sourceType: 'guasa',
-          sourceTitle: `『주역』 ${hexMeta.fullNameHangul} 괘사`,
-          content: `${hexMeta.fullNameHangul} (${hexMeta.nameHanja}) - ${hexMeta.natureSummary}`,
-        },
-        {
-          sourceType: 'jeongjeon',
-          sourceTitle: '정전(程傳) 및 본의(本義) 주석',
-          content: `${hexMeta.coreTheme}의 관점에서 지금 상황의 중심을 살핍니다.`,
-        },
-      ],
+      evidences: mapEvidences(data.evidences),
     };
 
     return {
@@ -186,6 +212,7 @@ export async function sendConsultationTurnApi(
         sender: 'assistant',
         content: data.user_facing_message,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        evidences: mapEvidences(data.evidences),
         followupQuestion: data.needs_followup ? '마음에 떠오르는 생각이나 더 들여다보고 싶은 부분이 있다면 편안하게 말씀해 주세요.' : undefined,
       },
       isFinal: data.is_final,

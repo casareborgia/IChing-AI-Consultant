@@ -52,6 +52,13 @@ class CounselTurn(Base):
     
     user_message: Mapped[str] = mapped_column(Text, nullable=False)
     agent_response: Mapped[str] = mapped_column(Text, nullable=False)
+
+    # 괘를 뽑은 턴에서 해석 에이전트가 만든 상황 매핑 초안.
+    #
+    # 저장하는 이유는 후속 턴 때문이다. 이 값이 없던 동안 파이프라인은 그 자리에
+    # 사용자의 질문을 대신 넣었고, 상담사는 사연을 괘의 해석으로 알고 읽었다.
+    # 세션당 한 번(괘를 뽑은 턴)만 채워지고 나머지 턴은 비어 있다.
+    contextual_mapping: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     
     needs_followup: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     is_final: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)

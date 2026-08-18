@@ -28,7 +28,7 @@ from core.models.hexagram import Hexagram
 from core.prompts import load_prompt_block
 from core.rag import make_retriever
 from core.reading import build_evidence
-from schemas.counsel import HexagramInterpretationSchema, SafetyVerdict
+from schemas.counsel import EvidenceItem, HexagramInterpretationSchema, SafetyVerdict
 
 
 @dataclass
@@ -47,6 +47,27 @@ class TurnResult:
     is_duplicate: bool = False
     journal_summary: Optional[str] = None
     focus_rule: Optional[Dict[str, Any]] = None
+    evidences: List[Dict[str, Any]] = field(default_factory=list)  # 답변에 실제로 쓰인 주석
+
+
+def _merge_evidences(*groups: List[EvidenceItem]) -> List[Dict[str, Any]]:
+    """여러 단계에서 쓰인 근거를 화면용 목록으로 합친다.
+
+    같은 주석이 해석 초안과 상담 재검색에 모두 걸릴 수 있어 중복을 걷어낸다.
+    **여기 담기는 것은 프롬프트에 실제로 들어간 청크뿐이다** — 화면에 "이것을
+    근거로 답했습니다"라고 내보내는 값이므로, 찾기만 하고 안 쓴 것이 섞이면
+    근거 패널이 거짓이 된다.
+    """
+    out: List[Dict[str, Any]] = []
+    seen = set()
+    for group in groups:
+        for item in group:
+            key = (item.source_type, item.hexagram_id, item.line_number, item.content)
+            if key in seen or not item.content:
+                continue
+            seen.add(key)
+            out.append(item.model_dump())
+    return out
 
 
 async def _get_past_sessions(
@@ -458,10 +479,13 @@ async def run_turn(
                 needs_followup=counsel_turn_res.needs_followup,
                 is_final=counsel_turn_res.is_final,
                 safety_category=safety_res.category,
+                evidences=_merge_evidences(counsel_turn_res.evidences),
             )
 
         # 3-3. 괘 도출 및 해석
-        interp_res, evidence, chunks = await run_interpret(
+        # 세 번째 반환값은 검색이 가져온 전량이다. 화면에 낼 근거는 그중 프롬프트에
+        # 실린 몫(`interp_res.evidences`)만 쓰므로 여기서는 받지 않는다.
+        interp_res, evidence, _ = await run_interpret(
             session,
             intake_res.clarified_question,
             method=method,
@@ -494,6 +518,8 @@ async def run_turn(
             agent_response=counsel_turn_res.message,
             needs_followup=counsel_turn_res.needs_followup,
             is_final=counsel_turn_res.is_final,
+            # 이 턴에서만 매핑이 만들어진다. 후속 턴이 이 값을 되살려 쓴다.
+            contextual_mapping=interp_res.contextual_mapping,
         )
         session.add(new_turn)
         await session.commit()
@@ -515,6 +541,7 @@ async def run_turn(
             safety_category=safety_res.category,
             journal_summary=journal_summary,
             focus_rule=evidence.focus_rule.model_dump(),
+            evidences=_merge_evidences(interp_res.evidences, counsel_turn_res.evidences),
         )
 
     # 4. 이미 괘가 있는 세션 -> 그 괘를 되살려 상담을 잇는다
@@ -532,7 +559,18 @@ async def run_turn(
         transformed_hexagram_id=cast.transformed_hexagram_id,
         changing_lines=cast.changing_lines,
         raw_text=evidence.summary_korean,
-        contextual_mapping=c_session.clarified_question or c_session.raw_question,
+        # 괘를 뽑은 턴에서 만든 매핑을 되살린다.
+        #
+        # 예전에는 이 자리에 `c_session.clarified_question or c_session.raw_question`,
+        # 곧 **사용자의 질문 원문**을 넣었다. 상담사는 "[상황 매핑 초안]"이라는
+        # 이름표가 붙은 자기 내담자의 사연을 괘의 해석으로 알고 읽었고, 그것을 말만
+        # 바꿔 되돌려줬다. 세션의 대부분 턴이 이 경로라 증상이 대화가 길어질수록
+        # 짙어졌다.
+        #
+        # 이 칼럼이 생기기 전에 시작된 세션은 값이 없다. 그때는 빈 문자열로 두어
+        # 상담 프롬프트에서 그 절이 통째로 빠지게 한다 — 사연으로 메우느니 없는
+        # 편이 낫다. 확정 근거(`raw_text`)는 그대로 간다.
+        contextual_mapping=reading_turn.contextual_mapping or "",
     )
 
     # 후속 턴이야말로 재검색이 필요한 자리다. 첫 검색은 정리된 첫 질문으로 돌았고,
@@ -579,4 +617,5 @@ async def run_turn(
         safety_category=safety_res.category,
         journal_summary=journal_summary,
         focus_rule=evidence.focus_rule.model_dump(),
+        evidences=_merge_evidences(counsel_turn_res.evidences),
     )

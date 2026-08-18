@@ -353,3 +353,78 @@ async def test_코드가_먼저_찾은_것도_상한에_포함된다():
     await run_counsel_turn("무슨 근거로 그렇게 보시나요?", INTERP, client=llm, retrieve=retrieve)
 
     assert len(calls) == MAX_RAG_SEARCHES, "강제 검색이 상한 밖에 있으면 상한이 무의미해진다"
+
+
+class PromptCaptureLLM:
+    """프롬프트를 붙들어 두는 대역. 무엇이 모델 손에 들어갔는지를 본다."""
+
+    def __init__(self):
+        self.prompts = []
+
+    def complete_json(self, user: str, *, system: str = "", **kwargs) -> dict:
+        self.prompts.append(user)
+        return {
+            "message": "그 마음을 조금 더 들여다볼까요?",
+            "needs_followup": True,
+            "followup_question": None,
+            "is_final": False,
+            "search_query": None,
+        }
+
+
+@pytest.mark.asyncio
+async def test_매핑이_비면_상황_매핑_절이_통째로_빠진다():
+    """후속 턴에서 이 자리에 사용자의 사연이 들어가던 일이 있었다.
+
+    상담사는 "[상황 매핑 초안]"이라는 이름표가 붙은 내담자의 사연을 괘의 해석으로
+    알고 읽었다. 이제 매핑이 없으면 절 자체를 내지 않는다 — 머리만 남겨 빈 절을
+    내보내도 모델이 바로 위 대화에서 그 자리를 메우기 때문이다.
+    """
+    llm = PromptCaptureLLM()
+    빈매핑 = INTERP.model_copy(update={"contextual_mapping": "   "})
+
+    await run_counsel_turn("사람 때문에 남는 게 맞을까요", 빈매핑, turn_number=2, client=llm)
+
+    prompt = llm.prompts[0]
+    assert "[상황 매핑 초안]" not in prompt
+    assert "주 해석 근거" in prompt, "확정 근거는 그대로 가야 한다"
+
+
+@pytest.mark.asyncio
+async def test_재검색으로_붙인_주석만_근거로_돌려준다():
+    """화면의 근거 패널이 이 값을 받는다.
+
+    찾기만 하고 프롬프트에 못 넣은 것, 번역이 빈 것은 답변에 영향을 준 적이 없으므로
+    근거가 아니다. 그런 것을 근거라고 보여주면 패널이 거짓말을 한다.
+    """
+    async def retrieve(query: str):
+        return [
+            RetrievedChunk(
+                chunk_id="c1", hexagram_id=39, line_number=2, source_type="line_comm",
+                category="annotation", content="원문",
+                content_ko="왕의 신하가 어려움 속에 애쓰는 것은 제 몸을 위한 일이 아니다.",
+                similarity=0.8,
+            ),
+            RetrievedChunk(
+                chunk_id="c2", hexagram_id=39, line_number=2, source_type="benui_line",
+                category="annotation", content="원문", content_ko="   ", similarity=0.7,
+            ),
+        ]
+
+    res = await run_counsel_turn(
+        "왜 그렇게 보시나요", INTERP,
+        conversation_history=[{"role": "counselor", "message": "지금은 나아갈 때가 아니라고 봅니다."}],
+        turn_number=2, client=PromptCaptureLLM(), retrieve=retrieve,
+    )
+
+    assert [e.source_title for e in res.evidences] == ["효사 주석(2효)"]
+    assert res.evidences[0].hexagram_id == 39
+    assert res.evidences[0].line_number == 2
+
+
+@pytest.mark.asyncio
+async def test_재검색이_없는_턴은_근거가_비어_있다():
+    """근거가 없으면 없다고 해야 한다. 화면은 이때 패널을 띄우지 않는다."""
+    res = await run_counsel_turn("조금 더 이야기하고 싶어요", INTERP, turn_number=2,
+                                 client=PromptCaptureLLM())
+    assert res.evidences == []

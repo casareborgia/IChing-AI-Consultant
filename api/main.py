@@ -72,6 +72,9 @@ async def start_consultation_endpoint(req: StartConsultationRequest):
                 "is_duplicate": result.is_duplicate,
                 "journal_summary": result.journal_summary,
                 "focus_rule": result.focus_rule,
+                # 답변을 만드는 데 실제로 쓰인 주석. 화면의 근거 패널이 이 값만 쓴다 —
+                # 프론트엔드가 정적 표에서 근거를 지어내던 자리를 대신한다.
+                "evidences": result.evidences,
             }
         except Exception as e:
             await db_session.rollback()
@@ -107,6 +110,9 @@ async def counsel_turn_endpoint(req: ConsultationTurnApiRequest):
                 "is_duplicate": result.is_duplicate,
                 "journal_summary": result.journal_summary,
                 "focus_rule": result.focus_rule,
+                # 답변을 만드는 데 실제로 쓰인 주석. 화면의 근거 패널이 이 값만 쓴다 —
+                # 프론트엔드가 정적 표에서 근거를 지어내던 자리를 대신한다.
+                "evidences": result.evidences,
             }
         except Exception as e:
             await db_session.rollback()

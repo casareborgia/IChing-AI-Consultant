@@ -2,7 +2,7 @@
 
 import pytest
 
-from agents.interpret import run_interpret
+from agents.interpret import _annotation_block, run_interpret
 from core.db import AsyncSessionLocal
 from core.rag import RetrievedChunk
 
@@ -70,3 +70,42 @@ async def test_모든_RAG_검색이_괘로_좁혀진다(monkeypatch):
     for call in rec.calls:
         assert isinstance(call["hexagram_id"], int)
         assert 1 <= call["hexagram_id"] <= 64
+
+
+def _chunk(hid, line, stype, ko="번역"):
+    return RetrievedChunk(
+        chunk_id=f"{stype}-{hid}-{line}", hexagram_id=hid, line_number=line,
+        source_type=stype, category="annotation", content="원문", content_ko=ko,
+        similarity=0.7,
+    )
+
+
+def test_괘_단위_주석이_많아도_초점_효_주석이_잘리지_않는다():
+    """예전에는 합친 목록을 `chunks[:4]`로 잘랐다.
+
+    붙는 순서가 괘 단위 → 초점 효 → 지괘라, 괘 단위가 4건 이상이면 초점 효의 주석이
+    한 건도 남지 않았다. 규칙이 주 근거로 지목한 효의 주석을 통째로 버리고 괘 전체의
+    일반론만 넘긴 셈이다. 그러면 모델은 괘 이름의 통념으로 물러나고, 통념은 여러 괘가
+    공유하므로 어느 괘를 뽑아도 답이 비슷해진다.
+    """
+    괘단위 = [_chunk(39, None, "guasa_comm") for _ in range(3)] + \
+             [_chunk(39, None, "benui_guasa") for _ in range(2)]
+    초점효 = [_chunk(39, 2, "line_comm"), _chunk(39, 2, "line_comm"),
+              _chunk(39, 2, "benui_line")]
+
+    lines, used = _annotation_block(초점효, 괘단위, [])
+    block = "\n".join(lines)
+
+    assert used[:3] == 초점효, "초점 효 주석이 맨 앞에 와야 한다"
+    assert sum(1 for c in used if c.line_number == 2) == 3
+    assert block.index("초점 효의 주석") < block.index("괘 전체의 주석")
+    assert "효사 주석(2효)" in block and "본의 효사 주석(2효)" in block
+    assert "line_comm" not in block, "내부 출처 코드가 프롬프트에 새면 안 된다"
+
+
+def test_번역이_빈_주석은_근거로도_프롬프트로도_나가지_않는다():
+    """한문으로 대신하지 않는다. 근거 패널에도 빈 항목을 내지 않는다."""
+    lines, used = _annotation_block([], [_chunk(39, None, "guasa_comm", ko="  ")], [])
+
+    assert used == []
+    assert lines == []

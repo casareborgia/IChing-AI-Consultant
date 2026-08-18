@@ -13,10 +13,59 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from core.hexagram_engine import cast_hexagram
 from core.llm import LLMClient, get_client
 from core.prompts import load_system_prompt
-from core.rag import RetrievedChunk, search_balanced
+from core.rag import RetrievedChunk, search_balanced, source_label
 from core.reading import ReadingEvidence, build_evidence
-from schemas.counsel import HexagramInterpretationSchema
+from schemas.counsel import EvidenceItem, HexagramInterpretationSchema
 from schemas.hexagram_engine import BodyUseType
+
+
+# 프롬프트에 실을 주석의 출처별 몫.
+#
+# 예전에는 세 검색 결과를 한 목록으로 합쳐 `chunks[:4]`로 잘랐다. 붙는 순서가
+# 괘 단위 → 초점 효 → 지괘라서, 괘 단위가 4건 이상이면 **초점 효의 주석이 한 건도
+# 남지 않는다.** 실제로 그랬다 — 8건을 찾아 4건을 넘겼고 그 4건이 전부 괘 단위였다.
+#
+# 이것이 "괘가 달라도 답이 비슷하다"의 원인이다. 효사는 "왕의 신하로서 간난하고 또
+# 간난하니 몸을 위한 까닭이 아니다"처럼 압축돼 있어 주석 없이는 풀리지 않는다.
+# 풀 것이 손에 없으면 모델은 괘 이름의 통념(건蹇=막힘, 둔遯=물러남)으로 물러나고,
+# 통념은 여러 괘가 공유하므로 어느 괘를 뽑아도 같은 말이 나온다.
+#
+# 그래서 자르지 않고 몫을 나눈다. 초점 효 주석이 가장 앞이다 — 초점 규칙이 주
+# 근거로 지목한 자리이기 때문이다.
+PROMPT_QUOTA_FOCUS_LINE = 3    # 초점 효 주석. 검색이 가져오는 전량이다
+PROMPT_QUOTA_HEXAGRAM = 3      # 괘 단위 주석
+PROMPT_QUOTA_TRANSFORMED = 2   # 지괘 주석
+
+
+def _annotation_block(
+    focus_line_chunks: List[RetrievedChunk],
+    hexagram_chunks: List[RetrievedChunk],
+    transformed_chunks: List[RetrievedChunk],
+) -> Tuple[List[str], List[RetrievedChunk]]:
+    """주석 블록 문자열과, 거기에 실제로 들어간 청크 목록을 함께 돌려준다.
+
+    들어간 것을 함께 돌려주는 이유는 화면의 근거 패널 때문이다. 프롬프트에 못 들어간
+    청크는 답변에 영향을 준 적이 없으므로 근거로 보여주면 거짓이 된다.
+    """
+    묶음 = (
+        ("■ 초점 효의 주석 — 주 해석 근거입니다. 여기부터 보십시오",
+         focus_line_chunks[:PROMPT_QUOTA_FOCUS_LINE]),
+        ("■ 괘 전체의 주석 — 배경입니다", hexagram_chunks[:PROMPT_QUOTA_HEXAGRAM]),
+        ("■ 지괘의 주석 — 옮겨 갈 국면입니다", transformed_chunks[:PROMPT_QUOTA_TRANSFORMED]),
+    )
+
+    lines: List[str] = []
+    used: List[RetrievedChunk] = []
+    for 머리, 몫 in 묶음:
+        실린 = [c for c in 몫 if (c.content_ko or "").strip()]
+        if not 실린:
+            continue
+        lines.append(머리)
+        for c in 실린:
+            lines.append(f"- {source_label(c)}: {c.content_ko.strip()}")
+            used.append(c)
+
+    return lines, used
 
 
 async def run_interpret(
@@ -53,13 +102,15 @@ async def run_interpret(
     # 정전과 본의를 갈라 뽑는다. 한 풀에 던지면 무엇을 근거로 삼을지가 검색 순위의
     # 우연에 맡겨진다 — 본의는 중앙값 31자로 짧아 밀리거나, 반대로 질의어와 촘촘히
     # 겹쳐 정전을 밀어낸다. 비율은 `core.rag.search_balanced`에 드러나 있다.
-    chunks = await search_balanced(
+    hexagram_chunks = await search_balanced(
         session,
         clarified_question,
         hexagram_id=cast_result.original_hexagram_id,
         k_jeongjeon=3,
         k_benui=k_benui,
     )
+    focus_line_chunks: List[RetrievedChunk] = []
+    transformed_chunks: List[RetrievedChunk] = []
     # 특정 효가 포커스인 경우 해당 효사 주석 추가 검색.
     #
     # 괘 ID는 반드시 `evidence.target_hexagram_id`를 쓴다. 동효가 4~5개면 초점이
@@ -76,7 +127,7 @@ async def run_interpret(
                 k_jeongjeon=2,
                 k_benui=1 if k_benui else 0,
             )
-            chunks.extend(line_chunks)
+            focus_line_chunks.extend(line_chunks)
 
     # 지괘가 있고 포커스가 지괘이거나 체용 규칙상 지괘(用) 강조인 경우 지괘 주석도 검색
     should_search_trans = (
@@ -94,7 +145,7 @@ async def run_interpret(
             k_jeongjeon=2,
             k_benui=1 if k_benui else 0,
         )
-        chunks.extend(trans_chunks)
+        transformed_chunks.extend(trans_chunks)
 
     # 4. LLM 상황 매핑(contextual_mapping) 초안 생성
     sys_prompt = load_system_prompt("interpret")
@@ -104,10 +155,12 @@ async def run_interpret(
         f"[내담자 고민] {clarified_question}\n",
         f"[도출된 괘 확정 근거]\n{evidence.summary_korean}\n",
     ]
-    if chunks:
+    block_lines, used_chunks = _annotation_block(
+        focus_line_chunks, hexagram_chunks, transformed_chunks
+    )
+    if block_lines:
         prompt_lines.append("[관련 주석 및 해설 (참고용)]")
-        for c in chunks[:4]:
-            prompt_lines.append(f"- {c.source_type}: {c.content_ko}")
+        prompt_lines.extend(block_lines)
 
     user_msg = "\n".join(prompt_lines)
 
@@ -123,6 +176,21 @@ async def run_interpret(
         changing_lines=cast_result.changing_lines,
         raw_text=evidence.summary_korean,
         contextual_mapping=mapping,
+        evidences=[
+            EvidenceItem(
+                source_type=c.source_type,
+                source_title=source_label(c),
+                content=(c.content_ko or "").strip(),
+                hexagram_id=c.hexagram_id,
+                line_number=c.line_number,
+            )
+            for c in used_chunks
+        ],
     )
+
+    # 반환하는 목록은 검색이 가져온 전량이다. 프롬프트에 실린 몫만 보고 싶으면
+    # `schema_out.evidences`를 쓴다 — 두 값이 다른 것을 재는 하네스가 있다
+    # (`scripts/compare_benui_tone.py`는 인덱스에 무엇이 걸리는지를 본다).
+    chunks = hexagram_chunks + focus_line_chunks + transformed_chunks
 
     return schema_out, evidence, chunks

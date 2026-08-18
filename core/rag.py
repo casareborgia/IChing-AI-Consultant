@@ -172,6 +172,36 @@ BENUI_TYPES = [
     "benui_guasa", "benui_line", "benui_tanjon", "benui_daesang", "benui_sosang",
 ]
 
+# 출처 코드를 사람 말로 옮긴다. `source_type`은 내부 값이라, 모델 프롬프트에 그대로
+# 넣으면 'line_comm' 같은 문자열을 근거인 양 읽고 답변에까지 새어 나온다. 화면의
+# 근거 패널도 이 라벨을 쓴다 — 사용자에게 보이는 출처 이름과 모델이 보는 출처 이름이
+# 갈라지면, 근거를 대조할 방법이 없어진다.
+SOURCE_LABELS = {
+    "line_comm": "효사 주석",
+    "sosang": "소상전",
+    "sosang_comm": "소상전 주석",
+    "tanjon": "단전",
+    "tanjon_comm": "단전 주석",
+    "daesang": "대상전",
+    "daesang_comm": "대상전 주석",
+    "guasa_comm": "괘사 주석",
+    "gwa_intro": "괘 서두 해설",
+    "benui_guasa": "본의 괘사 주석",
+    "benui_line": "본의 효사 주석",
+    "benui_tanjon": "본의 단전 주석",
+    "benui_daesang": "본의 대상전 주석",
+    "benui_sosang": "본의 소상전 주석",
+}
+
+
+def source_label(chunk: RetrievedChunk) -> str:
+    """청크의 출처를 사람이 읽는 이름으로. 효 단위면 몇 효인지까지 붙인다."""
+    label = SOURCE_LABELS.get(chunk.source_type, "해설")
+    if chunk.line_number and chunk.line_number <= 6:
+        label = f"{label}({chunk.line_number}효)"
+    return label
+
+
 # 질의 문자열 하나만 받는 검색 함수. 상담 루프가 대화 중 다시 찾을 때 쓴다.
 Retriever = Callable[[str], Awaitable[List[RetrievedChunk]]]
 

@@ -10,8 +10,8 @@ from typing import Any, Dict, List, Optional
 
 from core.llm import LLMClient, get_client
 from core.prompts import load_system_prompt
-from core.rag import RetrievedChunk, Retriever
-from schemas.counsel import CounselTurnSchema, HexagramInterpretationSchema
+from core.rag import RetrievedChunk, Retriever, source_label
+from schemas.counsel import CounselTurnSchema, EvidenceItem, HexagramInterpretationSchema
 
 MAX_TURNS_LIMIT = 12
 
@@ -20,20 +20,6 @@ MAX_TURNS_LIMIT = 12
 # Agentic RAG는 "조금만 더 찾아보자"를 스스로 반복할 수 있다. 상한이 없으면 한 턴이
 # 무한정 길어지고 호출도 그만큼 늘어난다.
 MAX_RAG_SEARCHES = 3
-
-# 검색 결과의 출처를 사람 말로 옮긴다. `source_type`은 내부 값이라 그대로 두면
-# 답변에 'line_comm' 같은 문자열이 새어 나올 여지가 생긴다.
-SOURCE_LABELS = {
-    "line_comm": "효사 주석",
-    "sosang": "소상전",
-    "sosang_comm": "소상전 주석",
-    "tanjon": "단전",
-    "tanjon_comm": "단전 주석",
-    "daesang": "대상전",
-    "daesang_comm": "대상전 주석",
-    "guasa_comm": "괘사 주석",
-    "gwa_intro": "괘 서두 해설",
-}
 
 # 답변에 나오면 안 되는 진단성 표현. 설계 원칙 4이자 SaMD 판정선과 닿는 자리다
 # (CLAUDE.md 법적 확인 사항 — "고위험군입니다" 류의 등급·병명 표시는 의료기기 쪽으로
@@ -93,10 +79,7 @@ def format_retrieved(query: str, chunks: List[RetrievedChunk]) -> str:
         ko = (c.content_ko or "").strip()
         if not ko:
             continue  # 번역이 비어 있으면 건너뛴다. 한문으로 대신하지 않는다
-        label = SOURCE_LABELS.get(c.source_type, "해설")
-        if c.line_number and c.line_number <= 6:
-            label = f"{label}({c.line_number}효)"
-        lines.append(f"- {label}: {ko}")
+        lines.append(f"- {source_label(c)}: {ko}")
 
     if len(lines) == 1:
         lines.append("찾은 해설이 없습니다. 지금 가진 근거 안에서 답하고, 없는 말을 지어내지 마십시오.")
@@ -147,8 +130,20 @@ async def run_counsel_turn(
     else:
         prompt_lines = [
             f"[도출된 괘 및 해설 요약(한글)]\n{interpretation.raw_text}\n",
-            f"[상황 매핑 초안]\n{interpretation.contextual_mapping}\n",
         ]
+        # 매핑이 비어 있으면 그 절을 아예 내지 않는다.
+        #
+        # 예전에는 후속 턴에서 이 자리에 **사용자의 질문 원문**이 들어갔다. 상담사는
+        # "상황 매핑 초안"이라는 이름표가 붙은 자기 내담자의 사연을 괘의 해석인 줄
+        # 알고 읽었고, 그것을 말만 바꿔 되돌려줬다. 사연에 괘를 맞추는 것처럼 보이던
+        # 증상의 큰 몫이 여기였다.
+        #
+        # 빈 절을 머리만 남겨 내보내도 같은 일이 벌어진다 — 모델은 빈 자리를 바로
+        # 위 대화에서 메운다. 없으면 없는 채로 두고, 확정 근거로만 말하게 한다.
+        if (interpretation.contextual_mapping or "").strip():
+            prompt_lines.append(
+                f"[상황 매핑 초안]\n{interpretation.contextual_mapping}\n"
+            )
 
     if conversation_history:
         prompt_lines.append("[지금까지의 대화 흐름]")
@@ -175,6 +170,9 @@ async def run_counsel_turn(
     # 답변에 섞인다.
     searched = 0
     notes: List[str] = []
+    # 프롬프트에 실제로 붙은 청크만 모은다. 화면의 근거 패널이 이 목록을 받는다 —
+    # 찾기만 하고 안 쓴 것을 근거라고 보여주면 그 패널이 거짓말을 하게 된다.
+    used_chunks: List[RetrievedChunk] = []
     data: Optional[Dict[str, Any]] = None
     final_prompt = user_prompt
 
@@ -195,6 +193,7 @@ async def run_counsel_turn(
         chunks = await retrieve(seed_query)
         searched += 1
         notes.append(format_retrieved(seed_query, chunks))
+        used_chunks.extend(c for c in chunks if (c.content_ko or "").strip())
 
     while True:
         final_prompt = user_prompt + ("\n\n" + "\n\n".join(notes) if notes else "")
@@ -215,6 +214,7 @@ async def run_counsel_turn(
         chunks = await retrieve(query)
         searched += 1
         notes.append(format_retrieved(query, chunks))
+        used_chunks.extend(c for c in chunks if (c.content_ko or "").strip())
 
         # 없는 것은 다시 찾아도 없다. 같은 괘 안에서 빈 결과가 나오면 질의를 바꿔도
         # 나아질 여지가 크지 않으므로 검색 예산을 여기서 닫는다.
@@ -308,4 +308,14 @@ async def run_counsel_turn(
         needs_followup=needs_f,
         followup_question=f_q,
         is_final=is_fin,
+        evidences=[
+            EvidenceItem(
+                source_type=c.source_type,
+                source_title=source_label(c),
+                content=(c.content_ko or "").strip(),
+                hexagram_id=c.hexagram_id,
+                line_number=c.line_number,
+            )
+            for c in used_chunks
+        ],
     )

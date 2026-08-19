@@ -48,6 +48,11 @@ class TurnResult:
     journal_summary: Optional[str] = None
     focus_rule: Optional[Dict[str, Any]] = None
     evidences: List[Dict[str, Any]] = field(default_factory=list)  # 답변에 실제로 쓰인 주석
+    # 확정 근거 요약(괘사·효사 한글 + 초점 규칙). `evidences`가 그 위에 쌓인 주석이라면
+    # 이건 뿌리다. 반증 하네스가 "근거 도달도"를 재려면 둘 다 있어야 한다 — evidences만
+    # 가지고는 초점 효사 자체(가장 짧고 가장 결정적인 어휘)가 빠진 채로 재게 된다.
+    # 괘가 없는 턴(주역 문의·위기·되묻기)에는 자연히 None이다.
+    raw_text: Optional[str] = None
 
 
 def _merge_evidences(*groups: List[EvidenceItem]) -> List[Dict[str, Any]]:
@@ -543,6 +548,7 @@ async def run_turn(
             journal_summary=journal_summary,
             focus_rule=evidence.focus_rule.model_dump(),
             evidences=_merge_evidences(interp_res.evidences, counsel_turn_res.evidences),
+            raw_text=interp_res.raw_text,
         )
 
     # 4. 이미 괘가 있는 세션 -> 그 괘를 되살려 상담을 잇는다
@@ -628,4 +634,5 @@ async def run_turn(
         journal_summary=journal_summary,
         focus_rule=evidence.focus_rule.model_dump(),
         evidences=_merge_evidences(interp_stub.evidences, counsel_turn_res.evidences),
+        raw_text=interp_stub.raw_text,
     )

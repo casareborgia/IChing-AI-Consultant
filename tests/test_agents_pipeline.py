@@ -853,7 +853,7 @@ async def test_후속_턴은_저장된_매핑을_쓰고_사연을_해석_자리�
             session, user_id="mapping_user", message=사연,
             manual_lines=[9, 8, 8, 8, 6, 8], clients=mock_clients,
         )
-        await run_turn(
+        res2 = await run_turn(
             session, counsel_session_id=res1.session_id, user_id="mapping_user",
             message="사람 때문에 남는 게 맞는 선택인지 모르겠어요.", clients=mock_clients,
         )
@@ -863,6 +863,12 @@ async def test_후속_턴은_저장된_매핑을_쓰고_사연을_해석_자리�
 
     assert 매핑 in 매핑_절
     assert 사연 not in 매핑_절, "사연이 괘의 해석 자리에 들어가면 안 된다"
+
+    # 확정 근거(raw_text)도 후속 턴까지 살아 있어야 한다. `TurnResult.evidences`만
+    # 있고 `raw_text`가 없으면 반증 하네스가 초점 효사 자체(가장 짧고 결정적인
+    # 어휘)를 빼고 근거 도달도를 잰다.
+    assert res1.raw_text and res2.raw_text
+    assert res1.raw_text == res2.raw_text, "같은 세션이면 같은 괘의 확정 근거여야 한다"
 
 
 @pytest.mark.asyncio

@@ -37,3 +37,6 @@ data/.cache/
 # Frontend local env
 frontend/.env.local
 frontend/.env*.local
+
+# Local tuning
+로컬튜닝용/

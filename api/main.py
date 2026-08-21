@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from agents.pipeline import run_turn
+from core.crisis_resources import get_all_crisis_resources, get_crisis_resources_by_context
 from core.db import AsyncSessionLocal
 
 app = FastAPI(
@@ -43,6 +44,14 @@ async def health_check():
     return {"status": "ok", "service": "iching-oracle-api"}
 
 
+@app.get("/api/safety/resources")
+async def get_safety_resources_endpoint(context: Optional[str] = None):
+    """한국 위기상담 공공 리소스 목록을 반환합니다."""
+    if context:
+        return {"resources": get_crisis_resources_by_context(context)}
+    return {"resources": get_all_crisis_resources()}
+
+
 @app.post("/api/counsel/start")
 async def start_consultation_endpoint(req: StartConsultationRequest):
     """최초 질문으로 상담 세션을 시작하고 괘 도출 및 1턴 결과를 반환합니다."""
@@ -57,6 +66,7 @@ async def start_consultation_endpoint(req: StartConsultationRequest):
             await db_session.commit()
 
             is_crisis = result.safety_category == "BLOCK_CRISIS"
+            crisis_resources = get_crisis_resources_by_context() if is_crisis else []
 
             return {
                 "session_id": result.session_id,
@@ -69,6 +79,7 @@ async def start_consultation_endpoint(req: StartConsultationRequest):
                 "changing_lines": result.changing_lines,
                 "safety_category": result.safety_category,
                 "is_crisis": is_crisis,
+                "crisis_resources": [r.dict() for r in crisis_resources],
                 "is_duplicate": result.is_duplicate,
                 "journal_summary": result.journal_summary,
                 "focus_rule": result.focus_rule,
@@ -95,6 +106,7 @@ async def counsel_turn_endpoint(req: ConsultationTurnApiRequest):
             await db_session.commit()
 
             is_crisis = result.safety_category == "BLOCK_CRISIS"
+            crisis_resources = get_crisis_resources_by_context() if is_crisis else []
 
             return {
                 "session_id": result.session_id,
@@ -107,6 +119,7 @@ async def counsel_turn_endpoint(req: ConsultationTurnApiRequest):
                 "changing_lines": result.changing_lines,
                 "safety_category": result.safety_category,
                 "is_crisis": is_crisis,
+                "crisis_resources": [r.dict() for r in crisis_resources],
                 "is_duplicate": result.is_duplicate,
                 "journal_summary": result.journal_summary,
                 "focus_rule": result.focus_rule,

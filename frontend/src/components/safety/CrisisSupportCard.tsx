@@ -2,17 +2,36 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Phone, Heart, ShieldAlert, RotateCcw } from 'lucide-react';
+import { Phone, Heart, RotateCcw } from 'lucide-react';
+
+export interface CrisisResourceItem {
+  id: string;
+  name: string;
+  tel: string;
+  hours: string;
+  description?: string;
+  online_url?: string;
+}
 
 interface CrisisSupportCardProps {
   onRestart?: () => void;
+  resources?: CrisisResourceItem[];
   className?: string;
 }
 
 export const CrisisSupportCard: React.FC<CrisisSupportCardProps> = ({
   onRestart,
+  resources,
   className = '',
 }) => {
+  const subHotlines = resources && resources.length > 0
+    ? resources.filter((r) => r.tel !== '109')
+    : [
+        { id: '1577-0199', name: '정신건강 상담', tel: '1577-0199' },
+        { id: '1388', name: '청소년 전화', tel: '1388' },
+        { id: '1366', name: '여성긴급 전화', tel: '1366' },
+      ];
+
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
@@ -33,44 +52,32 @@ export const CrisisSupportCard: React.FC<CrisisSupportCardProps> = ({
         주역의 괘를 뽑는 것보다, 지금은 당신의 소중한 이야기를 안전하게 들어줄 수 있는 전문 상담사와 이야기를 나누는 것이 무엇보다 중요합니다.
       </p>
 
-      {/* 긴급 지원 핫라인 목록 */}
+      {/* 긴급 지원 핫라인 목록 (단순 안내) */}
       <div className="space-y-3 mb-6">
-        <a
-          href="tel:109"
-          className="flex items-center justify-between p-4 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 transition group cursor-pointer"
-        >
+        <div className="flex items-center justify-between p-4 rounded-xl bg-amber-500/10 border border-amber-500/30">
           <div>
             <div className="text-xs text-amber-400 font-medium">자살예방 및 위기상담전화</div>
-            <div className="text-lg font-bold text-stone-100 group-hover:text-amber-300">국번없이 109</div>
+            <div className="text-lg font-bold text-stone-100">국번없이 109</div>
           </div>
           <div className="flex items-center gap-1 text-xs text-amber-400 font-medium bg-amber-500/20 px-3 py-1.5 rounded-lg">
             <Phone className="w-3.5 h-3.5" />
             <span>24시간 무료</span>
           </div>
-        </a>
+        </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-          <a
-            href="tel:15770199"
-            className="p-3 rounded-lg bg-stone-800/60 hover:bg-stone-800 border border-stone-700/60 transition flex justify-between items-center"
-          >
-            <div>
-              <span className="text-stone-400 block text-[11px]">정신건강 위기상담</span>
-              <span className="font-semibold text-stone-200">1577-0199</span>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+          {subHotlines.map((item) => (
+            <div
+              key={item.id || item.tel}
+              className="p-3 rounded-lg bg-stone-800/60 border border-stone-700/60 flex justify-between items-center"
+            >
+              <div>
+                <span className="text-stone-400 block text-[11px] truncate">{item.name}</span>
+                <span className="font-semibold text-stone-200">{item.tel}</span>
+              </div>
+              <Phone className="w-3.5 h-3.5 text-stone-500 flex-shrink-0 ml-1" />
             </div>
-            <Phone className="w-3.5 h-3.5 text-stone-400" />
-          </a>
-
-          <a
-            href="tel:1388"
-            className="p-3 rounded-lg bg-stone-800/60 hover:bg-stone-800 border border-stone-700/60 transition flex justify-between items-center"
-          >
-            <div>
-              <span className="text-stone-400 block text-[11px]">청소년 전화</span>
-              <span className="font-semibold text-stone-200">1388</span>
-            </div>
-            <Phone className="w-3.5 h-3.5 text-stone-400" />
-          </a>
+          ))}
         </div>
       </div>
 

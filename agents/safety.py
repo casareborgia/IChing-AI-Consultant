@@ -9,6 +9,7 @@
 from functools import lru_cache
 from typing import Optional
 
+from core.crisis_resources import CrisisResource, get_all_crisis_resources, get_crisis_resources_by_context
 from core.llm import LLMClient, get_client
 from core.prompts import load_prompt_block, load_system_prompt
 from schemas.counsel import SafetyVerdict

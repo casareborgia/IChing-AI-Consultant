@@ -157,3 +157,30 @@ async def test_LLM_통신_장애_시_안전한_차단_및_시스템_에러_출�
     # 위기 핫라인도, 범위 밖 안내도 섞이면 안 된다
     assert "109" not in err_msg
     assert "변호사" not in err_msg
+
+
+@pytest.mark.asyncio
+async def test_reason이_null이어도_판정이_살아남는다():
+    """모델이 키를 담고 값만 null로 보내는 경우.
+
+    `.get("reason", "")`의 기본값은 키가 **없을 때만** 쓰인다. 값이 null이면
+    None이 그대로 스키마로 넘어가 검증에 걸리고, 그 예외를 except가 받아
+    ERROR로 바꾼다 — 멀쩡한 발화가 "연결 지연" 문구로 끝난다.
+    gemini-2.5-flash에서 2턴째 이후 발화로 5/5 재현됐다.
+    """
+    llm = DummyMockLLM({"category": "NORMAL", "signals": None, "reason": None})
+    verdict = await screen("자유와 안정 중에 뭘 택해야 하나 싶어요.", client=llm)
+
+    assert verdict.category == "NORMAL"   # ERROR로 떨어지지 않는다
+    assert verdict.reason == ""
+    assert verdict.signals == []
+
+
+@pytest.mark.asyncio
+async def test_위기_판정도_reason_null에_무너지지_않는다():
+    """같은 버그가 위기 판정에서 터지면 핫라인 대신 오류 문구가 나간다."""
+    llm = DummyMockLLM({"category": "BLOCK_CRISIS", "signals": None, "reason": None})
+    verdict = await screen("죽고 싶어요", client=llm)
+
+    assert verdict.category == "BLOCK_CRISIS"
+    assert format_safety_response(verdict) is not None

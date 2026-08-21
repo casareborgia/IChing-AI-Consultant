@@ -129,8 +129,12 @@ async def screen(
             category=cat,
             ask=data.get("ask"),
             context=ctx,
-            signals=data.get("signals", []),
-            reason=data.get("reason", ""),
+            # `.get`의 기본값은 키가 **없을 때만** 쓰인다. 모델은 키를 담고 값을
+            # null로 보내는 일이 있고, 그러면 None이 그대로 넘어가 스키마 검증에
+            # 걸린다 — 그 예외를 아래 except가 받아 ERROR로 바꾸므로, 멀쩡한
+            # 발화가 "연결 지연" 문구로 끝난다. 실제로 2턴째 이후에서 그랬다.
+            signals=data.get("signals") or [],
+            reason=data.get("reason") or "",
         )
     except Exception as e:
         # 스크리닝이 실패하면 괘를 뽑지 않는다(닫는 쪽). 다만 낙인은 남기지 않는다 —

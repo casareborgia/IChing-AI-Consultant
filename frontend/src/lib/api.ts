@@ -100,12 +100,30 @@ function mapEvidences(raw: unknown): GroundEvidence[] | undefined {
     .filter((e) => e.content.length > 0);
 }
 
+import { CrisisResourceItem } from '../components/safety/CrisisSupportCard';
+
+export async function fetchCrisisResourcesApi(context?: string): Promise<CrisisResourceItem[]> {
+  try {
+    const url = context
+      ? `${BACKEND_API_BASE}/api/safety/resources?context=${encodeURIComponent(context)}`
+      : `${BACKEND_API_BASE}/api/safety/resources`;
+    const res = await fetch(url);
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.resources || [];
+  } catch (e) {
+    console.error('위기 리소스 조회 실패:', e);
+    return [];
+  }
+}
+
 /**
  * 실제 백엔드 API 호출: 상담 시작 (안전 스크리닝 -> 접수 -> 괘 도출 -> 1턴 응답)
  */
 export async function startConsultationApi(question: string): Promise<{
   sessionId: string;
   isCrisis: boolean;
+  crisisResources?: CrisisResourceItem[];
   isDuplicate: boolean;
   castResult?: CastResult;
   firstMessage?: ChatMessage;
@@ -131,6 +149,7 @@ export async function startConsultationApi(question: string): Promise<{
       return {
         sessionId: data.session_id || `crisis-${Date.now()}`,
         isCrisis: true,
+        crisisResources: data.crisis_resources || [],
         isDuplicate: false,
       };
     }

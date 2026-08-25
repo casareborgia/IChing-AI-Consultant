@@ -64,7 +64,7 @@ async def write_journal(
     user_msg = "\n".join(prompt_lines)
 
     try:
-        data = llm.complete_json(user_msg, system=sys_prompt, temperature=0.2)
+        data = llm.complete_json(user_msg, system=sys_prompt, temperature=0.2, max_tokens=1024)
         summary = data.get("summary", "주역 괘를 바탕으로 마음을 성찰한 상담 세션입니다.")
         key_insights = data.get("key_insights", "상황을 주체적으로 바라보는 지혜를 나눔.")
         action_items = data.get("action_items")

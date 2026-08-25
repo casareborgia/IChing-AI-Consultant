@@ -114,7 +114,7 @@ async def screen(
         user_msg += f"\n[앞선 대화 요약] {history}"
 
     try:
-        data = llm.complete_json(user_msg, system=sys_prompt, temperature=0.0)
+        data = llm.complete_json(user_msg, system=sys_prompt, temperature=0.0, max_tokens=512)
         cat = data.get("category", "")
         if cat not in VALID_CATEGORIES:
             raise ValueError(f"유효하지 않은 안전 카테고리 응답: {cat}")

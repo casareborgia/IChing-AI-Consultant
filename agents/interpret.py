@@ -194,7 +194,7 @@ async def run_interpret(
 
     data: dict = {}
     try:
-        data = llm.complete_json(user_msg, system=sys_prompt, temperature=0.0)
+        data = llm.complete_json(user_msg, system=sys_prompt, temperature=0.0, max_tokens=1536)
         mapping = data.get("contextual_mapping", "도출된 괘상의 흐름을 바탕으로 상황을 성찰합니다.")
     except Exception:
         mapping = f"제{evidence.original.hexagram_id}괘 {evidence.original.name_full}의 지혜를 바탕으로 마음을 살핍니다."

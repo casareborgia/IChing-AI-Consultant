@@ -345,23 +345,29 @@ class GeminiClient:
         from google import genai
         from google.genai import types
 
+        api_key = os.getenv("GEMINI_API_KEY") or settings.GEMINI_API_KEY
         proj = project_id or settings.GOOGLE_CLOUD_PROJECT or os.getenv("GOOGLE_CLOUD_PROJECT")
         loc = location or settings.GEMINI_LOCATION or os.getenv("GEMINI_LOCATION", "us-central1")
-        if not proj:
-            raise ValueError("GOOGLE_CLOUD_PROJECT가 설정되지 않았습니다.")
 
-        self.client = genai.Client(
-            vertexai=True,
-            project=proj,
-            location=loc,
-        )
+        if api_key:
+            self.client = genai.Client(api_key=api_key)
+            self.endpoint_desc = "gemini:direct_api"
+        elif proj:
+            self.client = genai.Client(
+                vertexai=True,
+                project=proj,
+                location=loc,
+            )
+            self.endpoint_desc = f"vertexai:{loc}"
+        else:
+            raise ValueError("GEMINI_API_KEY 또는 GOOGLE_CLOUD_PROJECT 설정이 필요합니다.")
+
         self.model_name = model_name
         self.location = loc
         self.retries = retries
         self.system_prompt = system_prompt
         self.max_tokens = max_tokens
         self.json_mode = json_mode
-        self.endpoint_desc = f"vertexai:{loc}"
         self._types = types
 
     def complete_json(
@@ -385,6 +391,7 @@ class GeminiClient:
             temperature=temperature,
             system_instruction=sys_prompt,
             max_output_tokens=max_tokens,
+            thinking_config=self._types.ThinkingConfig(thinking_budget=0),
         )
         if self.json_mode:
             config_kwargs["response_mime_type"] = "application/json"
@@ -464,7 +471,7 @@ def get_client(
             model
             or role_model
             or settings.GEMINI_MODEL
-            or os.getenv("GEMINI_MODEL", "gemini-2.5-pro")
+            or os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
         )
         # 안전 스크리너만 JSON 강제를 끈다. 켜면 시험 세트 점수가 109 → 106으로
         # 내려간다(GeminiClient 주석의 실측). 나머지 역할은 켜지 않으면 산문이 와서

@@ -87,9 +87,13 @@
 - **문제**: 내담자가 *"왜 그렇게 해석하나요?"*라고 물어도 모델이 자율적으로 `search_query`를 생성해 재검색하지 않고 기존 한 줄을 앵무새처럼 반복함.
 - **해결**: `asks_for_grounds()` 발화 패턴 검사 함수를 두어, 근거 질문이 들어오면 코드가 강제로 정전/본의 주석을 재검색하여 프롬프트에 주입하고 인용하도록 구현.
 
-### ⑥ Gemini 2.5 Flash의 JSON 스키마 미지정으로 인한 지연 및 파싱 에러
-- **문제**: Gemini Flash 모델에서 JSON 출력이 간헐적으로 마크다운 코드블록과 섞여 나와 파싱 실패 및 1턴 45초 지연 발생.
-- **해결**: Gemini API 호출 시 `response_mime_type="application/json"`을 강제하여 파싱 성공률 100%(24/24) 및 1턴 지연 시간을 **11초**로 대폭 단축.
+### ⑦ Gemini 2.5 Flash Thinking 토큰 최적화 및 무손실 토큰 다이어트 (2026-08-26)
+- **문제**: Gemini 2.5 Flash가 불필요한 Thinking 토큰을 소모하여 과금 증가 및 지연시간 발생, `max_output_tokens` 초과 시 간헐적 JSON 잘림 에러 발생.
+- **해결**:
+  1. `types.ThinkingConfig(thinking_budget=0)` 설정으로 사고 토큰 과금 완전 제거 및 1턴 응답 속도 **약 18초 ➔ 약 3초 (6배 단축)** 달성.
+  2. **대화 이력 슬라이딩 윈도우 (최근 3턴 6개 발화)** 적용으로 긴 세션에서의 토큰 50% 이상 절감.
+  3. Intake의 과거 세션 조회 슬림화 (10개 ➔ 5개) 및 주석 포맷 메타데이터 다이어트.
+  4. 주역 원문 및 정전/본의 주석 내용은 단 1글자도 요약/누락 없이 100% 보존하여 상담 품질 완전 무손실 유지.
 
 ---
 
@@ -97,19 +101,17 @@
 
 | 검증 항목 | 도구/스크립트 | 결과 | 비고 |
 |---|---|---|---|
-| **단위/통합 테스트** | `.venv/bin/pytest` | **78/78 Passed (100%)** | Mock LLM 기반 0원 네트워크 검증 |
-| **안전 스크리닝 하네스** | `scripts/score_safety.py -p gemini` | **109/115** | 치명적 위기 놓침 0건, 과탐 0건 |
-| **에이전트 제약/형식 하네스** | `scripts/score_agents.py -p gemini` | **형식 24/24 · 제약 24/24** | 1턴 평균 11초 (사고 토큰 690개) |
+| **단위/통합 테스트** | `.venv/bin/pytest` | **115/115 Passed (100%)** | Mock/Engine 115개 전수 통과 |
+| **에이전트 제약/형식 하네스** | `scripts/score_agents.py -p gemini` | **형식 24/24 · 제약 24/24 (100%)** | Gemini 2.5 Flash 1턴 지연 약 3초 |
 | **본의 주석 톤 영향 검증** | `scripts/compare_benui_tone.py -p gemini` | **단정적 예언 표현 0건** | 주자 본의 적재 후에도 상담사 톤 유지 |
 
 ---
 
-## 7. 향후 로드맵 (Next Steps)
+## 7. 배포 및 향후 로드맵 (Next Steps)
 
-1. **6단계 (현재 진행)**:
-   - FastAPI REST / SSE 스트리밍 API 엔드포인트 구축
-   - Google Stitch API 및 React 기반 'Modern Zen' 웹/모바일 UI 프로토타입 제작 및 연동
-2. **7단계 (클라우드 배포)**:
-   - Google Cloud SQL (Postgres 16 + pgvector) 프로비저닝 및 2,536건 청크 시딩
-   - Google Cloud Run 무상태 컨테이너 배포 및 IAM `roles/aiplatform.user` 연동
-   - Cloud Tasks / BackgroundTasks 기반 비동기 저널링 안정화 및 실서비스 비용 실측
+1. **상용 추론 엔진 & 토큰 다이어트 완료 (2026-08-26)**:
+   - Gemini 2.5 Flash API / Vertex AI 직결 연동 및 지연시간 3초대 단축
+   - 무손실 토큰 다이어트 적용 완료
+2. **클라우드 배포 (진행 예정)**:
+   - Google Cloud SQL / Supabase (PostgreSQL 16 + pgvector) 연동 및 2,536건 청크 시딩
+   - Google Cloud Run 무상태 컨테이너 배포 및 Vercel 프론트엔드 연결

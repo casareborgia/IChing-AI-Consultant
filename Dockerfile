@@ -19,8 +19,12 @@ RUN pip install --no-cache-dir -r requirements.txt
 # 애플리케이션 코드 복사
 COPY . .
 
+# 비루트 사용자 생성 및 권한 설정 (컨테이너 보안)
+RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
+USER appuser
+
 # Cloud Run 기본 포트 8080 노출
 EXPOSE 8080
 
-# ASGI 서버 실행 (앱 진입점에 맞춤 설정)
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]
+# ASGI 서버 실행 (api/main.py 진입점)
+CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8080"]

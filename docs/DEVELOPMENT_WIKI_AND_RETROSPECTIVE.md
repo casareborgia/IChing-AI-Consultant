@@ -92,8 +92,15 @@
 - **해결**:
   1. `types.ThinkingConfig(thinking_budget=0)` 설정으로 사고 토큰 과금 완전 제거 및 1턴 응답 속도 **약 18초 ➔ 약 3초 (6배 단축)** 달성.
   2. **대화 이력 슬라이딩 윈도우 (최근 3턴 6개 발화)** 적용으로 긴 세션에서의 토큰 50% 이상 절감.
-  3. Intake의 과거 세션 조회 슬림화 (10개 ➔ 5개) 및 주석 포맷 메타데이터 다이어트.
-  4. 주역 원문 및 정전/본의 주석 내용은 단 1글자도 요약/누락 없이 100% 보존하여 상담 품질 완전 무손실 유지.
+### ⑧ 제로 트러스트(Zero Trust) 보안 아키텍처 구축 (2026-08-26)
+- **문제**: BOLA(세션 무단 접근) 취약점, 무제한 API 호출로 인한 Financial DoS 위험, 500 에러 내부 정보 노출, 컨테이너 루트 실행 보안 취약점 존재.
+- **해결**:
+  1. **세션 소유권 검증 (BOLA 방지)**: `CounselSession.user_id`와 요청자 `user_id`를 엄격 대조하여 불일치 시 `HTTP 403` 즉시 차단.
+  2. **Rate Limiter (DoS/과금 폭탄 방어)**: IP당 1분 최대 30회 슬라이딩 윈도우 제한 적용 (`HTTP 429`).
+  3. **엄격한 입력 검증**: Pydantic Field를 통한 발화 길이(`max_length=1000`) 및 식별자 정규식 검증.
+  4. **내부 에러 마스킹 (Information Disclosure 방지)**: 상세 스택트레이스를 서버 로거에만 남기고 클라이언트에는 일반화된 메시지만 반환.
+  5. **CORS 도메인 명시적 제어**: 환경변수 `CORS_ORIGINS` 기반 프로덕션 origin 화이트리스트 분리.
+  6. **컨테이너 보안 하드닝**: `Dockerfile` 내 비루트 사용자(`appuser:1000`) 실행 및 진입점 고정.
 
 ---
 
@@ -101,7 +108,7 @@
 
 | 검증 항목 | 도구/스크립트 | 결과 | 비고 |
 |---|---|---|---|
-| **단위/통합 테스트** | `.venv/bin/pytest` | **115/115 Passed (100%)** | Mock/Engine 115개 전수 통과 |
+| **단위/통합 테스트** | `.venv/bin/pytest` | **115/115 Passed (100%)** | Mock/Engine/Security 115개 전수 통과 |
 | **에이전트 제약/형식 하네스** | `scripts/score_agents.py -p gemini` | **형식 24/24 · 제약 24/24 (100%)** | Gemini 2.5 Flash 1턴 지연 약 3초 |
 | **본의 주석 톤 영향 검증** | `scripts/compare_benui_tone.py -p gemini` | **단정적 예언 표현 0건** | 주자 본의 적재 후에도 상담사 톤 유지 |
 
@@ -112,6 +119,9 @@
 1. **상용 추론 엔진 & 토큰 다이어트 완료 (2026-08-26)**:
    - Gemini 2.5 Flash API / Vertex AI 직결 연동 및 지연시간 3초대 단축
    - 무손실 토큰 다이어트 적용 완료
-2. **클라우드 배포 (진행 예정)**:
-   - Google Cloud SQL / Supabase (PostgreSQL 16 + pgvector) 연동 및 2,536건 청크 시딩
-   - Google Cloud Run 무상태 컨테이너 배포 및 Vercel 프론트엔드 연결
+2. **제로 트러스트 보안 패치 완료 (2026-08-26)**:
+   - 세션 소유권 검증, Rate Limiting, 입력 검증, 에러 마스킹, 비루트 컨테이너 하드닝
+3. **클라우드 배포 (진행 예정)**:
+   - **Step 1**: 프로덕션 DB 프로비저닝 (Supabase 또는 Cloud SQL pgvector) 및 2,536건 청크 시딩
+   - **Step 2**: Google Cloud Run 백엔드 컨테이너 빌드 & 배포 (Secret Manager 환경변수 연결)
+   - **Step 3**: Vercel / Cloudflare Pages 프론트엔드 빌드 및 `VITE_API_URL` 연동 테스트

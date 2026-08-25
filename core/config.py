@@ -8,6 +8,8 @@ class Settings(BaseSettings):
     POSTGRES_HOST: str = "localhost"
     POSTGRES_PORT: int = 5432
     DATABASE_URL: str = "postgresql+asyncpg://iching:changeme@localhost:5432/iching"
+    ENVIRONMENT: str = "development"  # "development" | "production"
+    CORS_ORIGINS: str = "http://localhost:3000,http://localhost:5173,http://localhost:8765"
 
     # --- LLM Providers & Models ---
     # 시험은 로컬, 서비스는 상용 API다(CLAUDE.md 모델 운영 절).

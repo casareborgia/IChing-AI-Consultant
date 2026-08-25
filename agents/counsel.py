@@ -88,22 +88,9 @@ def format_retrieved(query: str, chunks: List[RetrievedChunk]) -> str:
 
 
 def format_evidences(items: List[EvidenceItem]) -> str:
-    """확정 근거를 푼 주석을 상담사 프롬프트에 붙일 블록으로 만든다.
-
-    예전에는 이 주석이 상담사에게 오지 않았다. 해석 에이전트가 검색해 매핑 초안을
-    만드는 데만 쓰고 버렸고(파이프라인이 받아놓고 아무 데도 넘기지 않았다), 상담사
-    손에 남는 것은 괘사·효사 한 줄과 그 매핑뿐이었다.
-
-    효사는 "왕의 신하로서 간난하고 또 간난하니 몸을 위한 까닭이 아니다"처럼 압축돼
-    있어 그 한 줄만으로는 무슨 말인지 풀리지 않는다. 풀 것이 없으면 모델은 아는
-    통념으로 물러나고, 통념은 여러 괘가 공유하므로 어느 괘를 뽑아도 같은 답이 나온다.
-
-    한글(`content`)만 나간다. 한문은 애초에 이 경로에 실리지 않는다.
-    """
+    """확정 근거를 푼 주석을 상담사 프롬프트에 붙일 블록으로 만든다."""
     lines = [
         "[근거 주석 (한글)]",
-        "※ 위 확정 근거를 옛 주석이 풀어놓은 것입니다. 초점 효의 주석이 맨 앞입니다.",
-        "   답변의 뿌리를 괘 이름의 인상이 아니라 여기에 두십시오.",
     ]
     for e in items:
         content = (e.content or "").strip()
@@ -122,29 +109,10 @@ async def run_counsel_turn(
     caution_append: bool = False,
     retrieve: Optional[Retriever] = None,
 ) -> CounselTurnSchema:
-    """내담자와 상담 대화 1턴을 수행하고 응답 및 후속 질문 여부를 반환합니다.
-
-    Args:
-        user_message: 이번 턴의 사용자 발화
-        interpretation: [2] 해석 에이전트의 산출물
-        conversation_history: 이전 대화 이력 (list of {"role": "user"|"counselor", "message": "..."})
-        turn_number: 현재 세션의 턴 번호 (1부터 시작)
-        client: 주입할 LLM 클라이언트
-        caution_append: CAUTION 문구를 말미에 덧붙여야 하는지 여부
-        retrieve: 대화 중 해설을 다시 찾을 검색 함수 (`core.rag.make_retriever`).
-            None이면 재검색 없이 진행한다 — 괘가 없는 턴에는 좁힐 괘가 없으므로 None이다
-
-    Returns:
-        CounselTurnSchema 객체
-    """
+    """내담자와 상담 대화 1턴을 수행하고 응답 및 후속 질문 여부를 반환합니다."""
     sys_prompt = load_system_prompt("counsel")
     llm = client or get_client(role="counsel")
 
-    # 프롬프트 조립.
-    #
-    # 괘가 없는 턴이 있다. 주역 자체를 묻는 질문("대흉이 무슨 뜻인가요")에는 괘를
-    # 뽑지 않는다. 예전에는 이 경우에도 괘를 뽑아서 "지금 보신 괘는…"이라고 답했는데,
-    # 묻는 사람은 괘를 뽑은 적이 없으므로 없는 일을 사실처럼 말한 셈이었다.
     if interpretation is None:
         prompt_lines = [
             "[이번 턴에는 도출된 괘가 없습니다]\n"
@@ -159,15 +127,6 @@ async def run_counsel_turn(
         if interpretation.evidences:
             prompt_lines.append(format_evidences(interpretation.evidences))
 
-        # 매핑이 비어 있으면 그 절을 아예 내지 않는다.
-        #
-        # 예전에는 후속 턴에서 이 자리에 **사용자의 질문 원문**이 들어갔다. 상담사는
-        # "상황 매핑 초안"이라는 이름표가 붙은 자기 내담자의 사연을 괘의 해석인 줄
-        # 알고 읽었고, 그것을 말만 바꿔 되돌려줬다. 사연에 괘를 맞추는 것처럼 보이던
-        # 증상의 큰 몫이 여기였다.
-        #
-        # 빈 절을 머리만 남겨 내보내도 같은 일이 벌어진다 — 모델은 빈 자리를 바로
-        # 위 대화에서 메운다. 없으면 없는 채로 두고, 확정 근거로만 말하게 한다.
         if (interpretation.contextual_mapping or "").strip():
             prompt_lines.append(
                 f"[상황 매핑 초안]\n{interpretation.contextual_mapping}\n"
@@ -175,7 +134,12 @@ async def run_counsel_turn(
 
     if conversation_history:
         prompt_lines.append("[지금까지의 대화 흐름]")
-        for h in conversation_history:
+        # 최근 3턴(최대 6개 메시지) 슬라이딩 윈도우 적용
+        # 그 이상의 대화가 누적된 경우 이전 턴은 상황 매핑과 질문 맥락으로 유지
+        effective_history = conversation_history[-6:] if len(conversation_history) > 6 else conversation_history
+        if len(conversation_history) > 6:
+            prompt_lines.append("... (이전 대화 생략됨 — 초기 고민 매핑 참조) ...")
+        for h in effective_history:
             role_label = "내담자" if h.get("role") == "user" else "상담사"
             prompt_lines.append(f"{role_label}: {h.get('message', '')}")
 
@@ -226,7 +190,7 @@ async def run_counsel_turn(
     while True:
         final_prompt = user_prompt + ("\n\n" + "\n\n".join(notes) if notes else "")
         try:
-            data = llm.complete_json(final_prompt, system=sys_prompt, temperature=0.3)
+            data = llm.complete_json(final_prompt, system=sys_prompt, temperature=0.3, max_tokens=2048)
         except Exception:
             data = None
             break
@@ -286,7 +250,7 @@ async def run_counsel_turn(
                 " 그 단어를 한 번도 쓰지 말고 다시 쓰십시오. 부정문으로도 쓰지 마십시오."
                 " '그 이름', '말씀하신 그것'처럼 가리키기만 하고 넘어가십시오."
             )
-            data = llm.complete_json(retry_prompt, system=sys_prompt, temperature=0.3)
+            data = llm.complete_json(retry_prompt, system=sys_prompt, temperature=0.3, max_tokens=2048)
             retried = data.get("message", "")
             if retried and not find_diagnosis_terms(retried):
                 msg = retried

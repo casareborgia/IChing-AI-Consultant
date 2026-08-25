@@ -78,7 +78,7 @@ def _merge_evidences(*groups: List[EvidenceItem]) -> List[Dict[str, Any]]:
 async def _get_past_sessions(
     session: AsyncSession,
     user_id: Optional[str],
-    limit: int = 10,
+    limit: int = 5,
     exclude_session_id: Optional[str] = None,
 ) -> List[Dict[str, Any]]:
     """사용자의 최근 과거 세션과 저널 요약을 조회합니다.

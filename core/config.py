@@ -29,10 +29,11 @@ class Settings(BaseSettings):
     # 한정되어 있어 Gemini와 같은 리전을 쓰지 못할 수 있다. 하나로 합치지 말 것.
     GOOGLE_CLOUD_PROJECT: str = ""
     GEMINI_LOCATION: str = "us-central1"
+    GEMINI_API_KEY: str = ""
     # 서비스 기본값은 Flash 계열이다. Pro는 건당 사고 토큰을 2,000~3,100개 쓰는 것이
     # 3단계에서 실측됐고(scripts/translate.py 참고), 세션당 8호출이면 사고만 2만
     # 토큰이라 출력 과금이 통째로 달라진다. Pro로 올리려면 그 값을 먼저 재볼 것.
-    # 실제 모델 ID는 배포 전에 Vertex 콘솔에서 확인해 고정한다.
+    # 실제 모델 ID는 배포 전에 Vertex 콘솔 또는 Gemini API에서 확인해 고정한다.
     GEMINI_MODEL: str = "gemini-2.5-flash"
     CLAUDE_LOCATION: str = "us-east5"
     CLAUDE_MODEL: str = ""  # e.g., claude-sonnet-4-5-20250929 (직결) / claude-sonnet-4-5@20250929 (Vertex)

@@ -47,7 +47,7 @@ async def run_intake(
     user_msg = "\n".join(user_lines)
 
     try:
-        data = llm.complete_json(user_msg, system=sys_prompt, temperature=0.0)
+        data = llm.complete_json(user_msg, system=sys_prompt, temperature=0.0, max_tokens=512)
         is_dup = bool(data.get("is_duplicate_question", False))
         ref_id = data.get("duplicate_session_ref")
 

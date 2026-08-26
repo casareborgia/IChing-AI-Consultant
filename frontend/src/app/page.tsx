@@ -15,6 +15,8 @@ import { CrisisSupportCard } from '../components/safety/CrisisSupportCard';
 import { JournalSummaryCard } from '../components/journal/JournalSummaryCard';
 import { startConsultationApi, sendConsultationTurnApi } from '../lib/api';
 
+import { MicroLandingSection } from '../components/landing/MicroLandingSection';
+
 const EXAMPLE_QUESTIONS = [
   '새로운 이직 기회가 왔는데, 지금 옮기는 것이 맞을까요?',
   '어려운 결정을 앞두고 마음이 자꾸 흔들리고 조급해집니다.',
@@ -104,17 +106,16 @@ export default function Home() {
     setIsLoading(true);
 
     try {
-      const turnCount = messages.filter((m) => m.sender === 'user').length + 1;
-      const res = await sendConsultationTurnApi(sessionId, text, turnCount, castResult);
+      const turnCount = Math.floor(messages.length / 2) + 1;
+      const apiRes = await sendConsultationTurnApi(sessionId, text, turnCount, castResult);
 
-      setMessages((prev) => [...prev, res.replyMessage]);
+      setMessages((prev) => [...prev, apiRes.replyMessage]);
 
-      if (res.isFinal && res.journal) {
-        setJournal(res.journal);
-        // 짧은 딜레이 후 저널 카드 표시
-        setTimeout(() => {
-          setStep('completed');
-        }, 1200);
+      if (apiRes.isFinal) {
+        if (apiRes.journal) {
+          setJournal(apiRes.journal);
+        }
+        setStep('completed');
       }
     } catch (err) {
       console.error(err);
@@ -161,15 +162,23 @@ export default function Home() {
             </div>
           </div>
 
-          {step !== 'intake' && (
-            <button
-              onClick={handleRestart}
-              className="text-xs text-stone-400 hover:text-stone-200 flex items-center gap-1 px-3 py-1.5 rounded-lg bg-stone-900 border border-stone-800 transition cursor-pointer"
-            >
-              <RotateCcw className="w-3 h-3" />
-              <span>처음으로</span>
-            </button>
-          )}
+          <div className="flex items-center gap-2">
+            {/* 웰컴 크레딧 배지 */}
+            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-300 font-medium">
+              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+              <span>50 크레딧 보유</span>
+            </div>
+
+            {step !== 'intake' && (
+              <button
+                onClick={handleRestart}
+                className="text-xs text-stone-400 hover:text-stone-200 flex items-center gap-1 px-3 py-1.5 rounded-lg bg-stone-900 border border-stone-800 transition cursor-pointer"
+              >
+                <RotateCcw className="w-3 h-3" />
+                <span>처음으로</span>
+              </button>
+            )}
+          </div>
         </div>
       </header>
 
@@ -179,18 +188,18 @@ export default function Home() {
       )}
 
       {/* 메인 컨텐츠 영역 */}
-      <main className="flex-1 max-w-4xl w-full mx-auto p-4 sm:p-6 flex flex-col justify-center">
+      <main className="flex-1 max-w-4xl w-full mx-auto p-4 sm:p-6 flex flex-col">
         <AnimatePresence mode="wait">
-          {/* 1. 인테이크 단계 (고민 입력) */}
+          {/* 1. 인테이크 단계 (고민 입력 & 마이크로 랜딩) */}
           {step === 'intake' && (
             <motion.div
               key="intake"
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -15 }}
-              className="max-w-xl w-full mx-auto my-auto py-8"
+              className="max-w-3xl w-full mx-auto py-6 sm:py-10"
             >
-              <div className="text-center mb-8">
+              <div className="text-center mb-8 max-w-xl mx-auto">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 text-xs mb-4">
                   <Feather className="w-3.5 h-3.5" />
                   <span>마음을 가다듬는 시간</span>
@@ -205,7 +214,7 @@ export default function Home() {
                 </p>
               </div>
 
-              <div className="bg-stone-900/80 border border-stone-800 rounded-2xl p-4 sm:p-5 shadow-2xl backdrop-blur-md">
+              <div className="max-w-xl mx-auto bg-stone-900/80 border border-stone-800 rounded-2xl p-4 sm:p-5 shadow-2xl backdrop-blur-md">
                 <textarea
                   rows={4}
                   value={question}
@@ -227,7 +236,7 @@ export default function Home() {
               </div>
 
               {/* 추천 예시 질문 칩 */}
-              <div className="mt-6">
+              <div className="mt-6 max-w-xl mx-auto">
                 <span className="text-[11px] text-stone-500 block mb-2 font-medium">
                   이런 질문으로 시작해 볼 수 있습니다:
                 </span>
@@ -245,6 +254,9 @@ export default function Home() {
                   ))}
                 </div>
               </div>
+
+              {/* 고품격 마이크로 랜딩 섹션 (How it Works, Core Values, Welcome Badge) */}
+              <MicroLandingSection onSelectQuestion={(q) => setQuestion(q)} />
             </motion.div>
           )}
 

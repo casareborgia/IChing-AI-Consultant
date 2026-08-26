@@ -366,13 +366,27 @@ export default function Home() {
         </AnimatePresence>
       </main>
 
-      {/* 푸터 */}
-      <footer className="border-t border-stone-900 py-3 text-center text-[11px] text-stone-600 font-light">
-        <span>© 2026 주역 AI 상담 서비스 · 본 서비스는 의학적·심리적 진단을 제공하지 않으며 자율적 성찰을 지원합니다.</span>
-        <span className="mt-1 block text-stone-700">
-          주역 원문, 정전(程傳) 및 본의(本義) 주석 텍스트: Kanseki Repository (漢籍リポジトリ),
-          교토대학 인문과학연구소. CC BY-SA 4.0.
-        </span>
+      {/* 푸터: 저작권(Kanripo CC BY-SA 4.0) 및 SaMD 웰니스 의료 면책 고지 */}
+      <footer className="border-t border-stone-800/80 bg-stone-950/90 py-8 px-4 mt-12 text-center text-xs text-stone-400 font-light leading-relaxed">
+        <div className="max-w-3xl mx-auto space-y-3">
+          <div className="p-4 rounded-xl bg-stone-900/60 border border-stone-800 text-[11px] text-stone-400 text-left sm:text-center space-y-1.5">
+            <p className="font-medium text-stone-300">
+              🛡️ <span className="text-amber-400/90">서비스 성격 및 웰니스 면책 고지:</span> 본 서비스는 의학적·심리적 진단을 제공하지 않으며, 자율적 성찰을 돕는 개인용 건강관리(웰니스) 도구입니다.
+            </p>
+            <p className="text-stone-400">
+              급박한 심리적 위기나 자해·자살 충동을 느끼실 경우, 즉시 <span className="text-amber-300 font-medium underline">109 자살예방 상담전화</span>(24시간) 또는 <span className="text-amber-300 font-medium underline">1577-0199 정신건강상담전화</span>로 연락하여 전문 의료진의 도움을 받으시기 바랍니다.
+            </p>
+          </div>
+
+          <div className="pt-2 text-[11px] text-stone-500 space-y-1">
+            <p>
+              📜 <span className="font-medium text-stone-400">원문 및 역사적 주석 출처:</span> 漢籍리포지토리(Kanseki Repository) KR1a0001·KR1a0016·KR1a0031 (CC BY-SA 4.0), 교토대학 인문과학연구소.
+            </p>
+            <p>
+              현대 한국어 번역 주석 데이터 및 AI 성찰 파이프라인 시스템 © 2026 주역 AI 성찰 연구소 (I-Ching Oracle). All rights reserved.
+            </p>
+          </div>
+        </div>
       </footer>
     </div>
   );

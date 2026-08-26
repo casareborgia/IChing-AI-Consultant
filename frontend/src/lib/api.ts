@@ -145,7 +145,7 @@ export async function startConsultationApi(question: string): Promise<{
 
     const data = await res.json();
 
-    if (data.is_crisis || data.safety_category === 'BLOCK_CRISIS') {
+    if (data.is_crisis) {
       return {
         sessionId: data.session_id || `crisis-${Date.now()}`,
         isCrisis: true,

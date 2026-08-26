@@ -116,12 +116,17 @@
 
 ## 7. 배포 및 향후 로드맵 (Next Steps)
 
+상세 설계는 [통합 배포 및 수익화 블루프린트 문서](file:///Users/leeseungjun/coding/주역기반상담앱/docs/DEPLOYMENT_AND_MONETIZATION_BLUEPRINT.md)를 참조합니다.
+
 1. **상용 추론 엔진 & 토큰 다이어트 완료 (2026-08-26)**:
    - Gemini 2.5 Flash API / Vertex AI 직결 연동 및 지연시간 3초대 단축
    - 무손실 토큰 다이어트 적용 완료
 2. **제로 트러스트 보안 패치 완료 (2026-08-26)**:
    - 세션 소유권 검증, Rate Limiting, 입력 검증, 에러 마스킹, 비루트 컨테이너 하드닝
-3. **클라우드 배포 (진행 예정)**:
-   - **Step 1**: 프로덕션 DB 프로비저닝 (Supabase 또는 Cloud SQL pgvector) 및 2,536건 청크 시딩
-   - **Step 2**: Google Cloud Run 백엔드 컨테이너 빌드 & 배포 (Secret Manager 환경변수 연결)
-   - **Step 3**: Vercel / Cloudflare Pages 프론트엔드 빌드 및 `VITE_API_URL` 연동 테스트
+3. **SaMD 웰니스 규제 및 라이선스 고지 완료 (2026-08-27)**:
+   - `safety_category` 외부 노출 제거, 웰니스 면책 및 Kanripo CC BY-SA 4.0 표기
+4. **통합 클라우드 배포 및 인증·과금 구축 (진행 예정)**:
+   - **M4. Supabase DB & Auth**: Supabase Seoul 프로젝트 생성, 2,536건 청크 시딩, Kakao/Google OAuth 연동
+   - **M5. Cloud Run 백엔드 배포**: 무상태 컨테이너 배포 및 JWT 검증 연동
+   - **M6. Vercel 프론트엔드 배포**: Next.js 16 배포, 소셜 로그인 UI & 50 웰컴 크레딧 배지 연동
+   - **M7. 결제 인프라 (선택)**: PortOne 국내 간편결제 연동 및 크레딧 충전 시스템 구축

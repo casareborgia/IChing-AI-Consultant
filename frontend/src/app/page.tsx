@@ -357,6 +357,10 @@ export default function Home() {
       {/* 푸터 */}
       <footer className="border-t border-stone-900 py-3 text-center text-[11px] text-stone-600 font-light">
         <span>© 2026 주역 AI 상담 서비스 · 본 서비스는 의학적·심리적 진단을 제공하지 않으며 자율적 성찰을 지원합니다.</span>
+        <span className="mt-1 block text-stone-700">
+          주역 원문, 정전(程傳) 및 본의(本義) 주석 텍스트: Kanseki Repository (漢籍リポジトリ),
+          교토대학 인문과학연구소. CC BY-SA 4.0.
+        </span>
       </footer>
     </div>
   );

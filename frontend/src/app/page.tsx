@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Compass, Sparkles, Feather, HelpCircle, ArrowRight, RotateCcw, Check } from 'lucide-react';
+import { Compass, Sparkles, Feather, HelpCircle, ArrowRight, RotateCcw, Check, LogIn, LogOut, User } from 'lucide-react';
 
 import { CastResult, ChatMessage as ChatMessageType, ConsultationStep, JournalSummary } from '../types/iching';
 import { HexagramCard } from '../components/hexagram/HexagramCard';
@@ -14,6 +14,8 @@ import { TypingIndicator } from '../components/chat/TypingIndicator';
 import { CrisisSupportCard } from '../components/safety/CrisisSupportCard';
 import { JournalSummaryCard } from '../components/journal/JournalSummaryCard';
 import { startConsultationApi, sendConsultationTurnApi } from '../lib/api';
+import { AuthModal } from '../components/auth/AuthModal';
+import { useAuth } from '../context/AuthContext';
 
 import { MicroLandingSection } from '../components/landing/MicroLandingSection';
 
@@ -25,6 +27,8 @@ const EXAMPLE_QUESTIONS = [
 ];
 
 export default function Home() {
+  const { user, profile, signOut } = useAuth();
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [step, setStep] = useState<ConsultationStep>('intake');
   const [question, setQuestion] = useState('');
   const [sessionId, setSessionId] = useState<string>('');
@@ -163,11 +167,40 @@ export default function Home() {
           </div>
 
           <div className="flex items-center gap-2">
-            {/* 웰컴 크레딧 배지 */}
-            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-300 font-medium">
+            {/* 웰컴 크레딧 배지 (클릭 시 로그인 모달) */}
+            <button
+              onClick={() => !user && setIsAuthModalOpen(true)}
+              className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-300 font-medium hover:bg-amber-500/20 transition cursor-pointer"
+            >
               <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-              <span>50 크레딧 보유</span>
-            </div>
+              <span>{user ? `${profile?.credit ?? 50} 크레딧` : '✨ 50 웰컴 크레딧'}</span>
+            </button>
+
+            {/* 로그인 / 로그아웃 버튼 */}
+            {user ? (
+              <div className="flex items-center gap-2">
+                <div className="hidden md:flex items-center gap-1.5 text-xs text-stone-300 px-2 py-1 rounded-lg bg-stone-900 border border-stone-800">
+                  <User className="w-3.5 h-3.5 text-stone-400" />
+                  <span className="max-w-[120px] truncate">{user.email?.split('@')[0] || '사용자'}</span>
+                </div>
+                <button
+                  onClick={() => signOut()}
+                  className="text-xs text-stone-400 hover:text-stone-200 flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-stone-900 border border-stone-800 transition cursor-pointer"
+                  title="로그아웃"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">로그아웃</span>
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setIsAuthModalOpen(true)}
+                className="text-xs font-medium text-stone-900 bg-amber-400 hover:bg-amber-300 flex items-center gap-1.5 px-3 py-1.5 rounded-lg shadow-sm transition cursor-pointer"
+              >
+                <LogIn className="w-3.5 h-3.5" />
+                <span>로그인</span>
+              </button>
+            )}
 
             {step !== 'intake' && (
               <button
@@ -388,6 +421,9 @@ export default function Home() {
           </div>
         </div>
       </footer>
+
+      {/* 소셜 로그인 모달 */}
+      <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
     </div>
   );
 }

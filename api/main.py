@@ -11,6 +11,7 @@ import time
 from typing import Dict, List, Optional
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 
@@ -29,19 +30,47 @@ app = FastAPI(
 )
 
 # 1. CORS 설정 (제로 트러스트 도메인 명시적 제어)
+default_dev_origins = ["http://localhost:3000", "http://localhost:3005", "http://127.0.0.1:3000", "http://127.0.0.1:3005"]
 allowed_origins = [o.strip() for o in settings.CORS_ORIGINS.split(",") if o.strip()]
 if not allowed_origins:
-    allowed_origins = ["http://localhost:3000", "http://localhost:5173"]
+    allowed_origins = default_dev_origins
+else:
+    allowed_origins = list(set(allowed_origins + default_dev_origins))
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allowed_origins if settings.ENVIRONMENT == "production" else ["*"],
+    allow_origins=allowed_origins,
+    allow_origin_regex=r"^https://.*\.vercel\.app$",
     allow_credentials=True,
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
 )
 
-# 2. Rate Limiting (IP당 1분 최대 30회 DoS/과금폭탄 방어)
+# 2. 제로 트러스트 보안 헤더 및 요청 크기 제한 미들웨어
+_MAX_BODY_SIZE = 1024 * 1024  # 최대 1MB
+
+
+@app.middleware("http")
+async def add_security_headers_and_limit_size(request: Request, call_next):
+    # 본문 크기 사전 검사 (Content-Length 헤더 기반)
+    content_length = request.headers.get("content-length")
+    if content_length and int(content_length) > _MAX_BODY_SIZE:
+        return JSONResponse(
+            status_code=413,
+            content={"detail": "요청 페이로드 크기가 허용 범위(1MB)를 초과했습니다."},
+        )
+
+    response = await call_next(request)
+    # OWASP 권장 표준 보안 헤더
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    return response
+
+
+# 3. Rate Limiting (IP당 1분 최대 30회 DoS/과금폭탄 방어)
 _RATE_LIMIT_WINDOW = 60.0  # 초
 _RATE_LIMIT_MAX_REQUESTS = 30
 _request_records: Dict[str, List[float]] = defaultdict(list)
@@ -168,8 +197,8 @@ async def counsel_turn_endpoint(req: ConsultationTurnApiRequest):
             if not c_session:
                 raise HTTPException(status_code=404, detail="존재하지 않는 상담 세션입니다.")
 
-            # 세션에 기록된 user_id와 요청 user_id 대조
-            if c_session.user_id and req.user_id and c_session.user_id != req.user_id:
+            # 세션 소유권 엄격 대조 (BOLA / 세션 하이재킹 방어)
+            if c_session.user_id and c_session.user_id != req.user_id:
                 logger.warning(
                     "세션 접근 권한 불일치 감지: session=%s, owner=%s, req_user=%s",
                     req.session_id,

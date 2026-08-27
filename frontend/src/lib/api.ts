@@ -120,7 +120,10 @@ export async function fetchCrisisResourcesApi(context?: string): Promise<CrisisR
 /**
  * 실제 백엔드 API 호출: 상담 시작 (안전 스크리닝 -> 접수 -> 괘 도출 -> 1턴 응답)
  */
-export async function startConsultationApi(question: string): Promise<{
+export async function startConsultationApi(
+  question: string,
+  userId?: string
+): Promise<{
   sessionId: string;
   isCrisis: boolean;
   crisisResources?: CrisisResourceItem[];
@@ -136,6 +139,7 @@ export async function startConsultationApi(question: string): Promise<{
       },
       body: JSON.stringify({
         question,
+        user_id: userId || undefined,
       }),
     });
 
@@ -189,7 +193,8 @@ export async function sendConsultationTurnApi(
   sessionId: string,
   userMessage: string,
   turnCount: number,
-  castResult: CastResult
+  castResult: CastResult,
+  userId?: string
 ): Promise<{
   replyMessage: ChatMessage;
   isFinal: boolean;
@@ -204,6 +209,7 @@ export async function sendConsultationTurnApi(
       body: JSON.stringify({
         session_id: sessionId,
         user_message: userMessage,
+        user_id: userId || undefined,
       }),
     });
 

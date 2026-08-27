@@ -46,10 +46,16 @@ export default function Home() {
     }
   }, [messages, isLoading, step]);
 
-  // 1. 상담 시작 및 괘 도출
+  // 1. 상담 시작 및 괘 도출 (로그인 필수 게이트)
   const handleStartConsultation = async (submittedQuestion?: string) => {
     const q = submittedQuestion || question;
     if (!q.trim() || isLoading) return;
+
+    // 로그인 필수 검증 (미로그인 시 모달 오픈)
+    if (!user) {
+      setIsAuthModalOpen(true);
+      return;
+    }
 
     setIsLoading(true);
     setStep('casting'); // 괘 도출 애니메이션 단계
@@ -57,11 +63,12 @@ export default function Home() {
     try {
       // 1.2초간 명상적 드로잉 연출
       const [apiRes] = await Promise.all([
-        startConsultationApi(q),
+        startConsultationApi(q, user.id),
         new Promise((resolve) => setTimeout(resolve, 1400)),
       ]);
 
       if (apiRes.isCrisis) {
+        setSessionId(apiRes.sessionId);
         setStep('safety_redirect');
         return;
       }
@@ -111,7 +118,7 @@ export default function Home() {
 
     try {
       const turnCount = Math.floor(messages.length / 2) + 1;
-      const apiRes = await sendConsultationTurnApi(sessionId, text, turnCount, castResult);
+      const apiRes = await sendConsultationTurnApi(sessionId, text, turnCount, castResult, user?.id);
 
       setMessages((prev) => [...prev, apiRes.replyMessage]);
 
@@ -256,13 +263,24 @@ export default function Home() {
                   className="w-full bg-stone-950/60 border border-stone-800/80 rounded-xl p-3.5 text-sm text-stone-100 placeholder-stone-600 focus:outline-none focus:border-amber-500/50 resize-none transition"
                 />
 
-                <div className="mt-4 flex justify-end">
+                <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+                  {!user ? (
+                    <span className="text-[11px] text-amber-400/90 flex items-center gap-1">
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>로그인 시 50 웰컴 크레딧 자동 지급</span>
+                    </span>
+                  ) : (
+                    <span className="text-[11px] text-stone-400">
+                      보유 잔액: <strong className="text-amber-300">{profile?.credit ?? 50} 크레딧</strong> (상담 1회: 10C)
+                    </span>
+                  )}
+
                   <button
                     onClick={() => handleStartConsultation()}
                     disabled={!question.trim() || isLoading}
-                    className="w-full sm:w-auto px-6 py-3 rounded-xl bg-amber-600 hover:bg-amber-500 disabled:bg-stone-800 text-stone-950 disabled:text-stone-600 font-medium text-sm transition-all flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed shadow-lg shadow-amber-950/30"
+                    className="w-full sm:w-auto px-6 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:bg-stone-800 text-stone-950 disabled:text-stone-600 font-medium text-sm transition-all flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed shadow-lg shadow-amber-950/30 active:scale-[0.98]"
                   >
-                    <span>마음을 모아 괘 도출하기</span>
+                    <span>{user ? '마음을 모아 괘 도출하기' : '✨ 로그인하고 괘 도출하기'}</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>

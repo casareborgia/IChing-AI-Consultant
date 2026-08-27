@@ -128,7 +128,17 @@
 4. **Modern Zen 마이크로 랜딩 및 웰컴 배지 구현 완료 (2026-08-27)**:
    - 3단계 성찰 대화 프로세스 가이드, 3대 철학 차별점, 50 웰컴 크레딧 배지 및 프로모션 배너 구현
 5. **통합 클라우드 배포 및 인증·과금 구축 (진행 예정)**:
-   - **M4. Supabase DB & Auth**: Supabase Seoul 프로젝트 생성, 2,536건 청크 시딩, Kakao/Google OAuth 연동
-   - **M5. Cloud Run 백엔드 배포**: 무상태 컨테이너 배포 및 JWT 검증 연동
-   - **M6. Vercel 프론트엔드 배포**: Next.js 16 배포, 소셜 로그인 UI 연동
+   - **M4. Supabase DB & Auth**: Supabase Seoul 프로젝트 생성, 2,536건 청크 시딩, Kakao/Google OAuth
+
+### 2단계: 백엔드 컨테이너라이징 및 Google Cloud Run 배포 (완료)
+- **배포 서비스**: `iching-counsel-api` (Google Cloud Run)
+- **프로젝트 및 리전**: `southern-engine-495314-p2` / `asia-northeast3` (서울 리전)
+- **프로덕션 엔드포인트**: `https://iching-counsel-api-517419857386.asia-northeast3.run.app`
+- **스케일링**: 0 ~ 10 인스턴스 (트래픽 없을 시 0으로 무과금 스케일다운)
+- **보안**: CORS 제어 (Localhost & Vercel 정규식), Rate Limiter, Non-root 컨테이너
+
+### 3단계: 프론트엔드 Vercel 배포 및 소셜 로그인 실연동 (다음 순서)
+- Next.js 16 Vercel 연동 배포
+- Supabase Auth (구글/카카오 OAuth) 연동 및 웰컴 50 크레딧 UI 연계
+
    - **M7. 결제 인프라 (선택)**: PortOne 국내 간편결제 연동 및 크레딧 충전 시스템 구축

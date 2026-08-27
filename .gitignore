@@ -40,3 +40,17 @@ frontend/.env*.local
 
 # Local tuning
 로컬튜닝용/
+
+# Secrets & Certificates
+*.pem
+*.key
+*.p12
+service_account.json
+credentials.json
+*.tfstate
+*.tfstate.backup
+
+# Generated Seed Batches
+scripts/supabase_batches/
+scripts/production_seed_dump.sql
+

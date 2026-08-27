@@ -127,18 +127,37 @@
    - `safety_category` 외부 노출 제거, 109 핫라인 웰니스 면책 박스 및 Kanripo CC BY-SA 4.0 표기 강화
 4. **Modern Zen 마이크로 랜딩 및 웰컴 배지 구현 완료 (2026-08-27)**:
    - 3단계 성찰 대화 프로세스 가이드, 3대 철학 차별점, 50 웰컴 크레딧 배지 및 프로모션 배너 구현
-5. **통합 클라우드 배포 및 인증·과금 구축 (진행 예정)**:
-   - **M4. Supabase DB & Auth**: Supabase Seoul 프로젝트 생성, 2,536건 청크 시딩, Kakao/Google OAuth
+5. **통합 클라우드 3계층 배포 및 보안 구축 완료 (2026-08-28)**:
+   - **1단계 (DB)**: Supabase Seoul 데이터베이스 구축 (64괘, 386효, 2,536건 HNSW 벡터 청크 주입 완료, `match_chunks` RPC 생성)
+   - **2단계 (Backend)**: Google Cloud Run 무상태 컨테이너 배포 (`iching-counsel-api`, 서울 리전 `asia-northeast3`, Gemini 2.5 Flash 연동, 0~10 오토스케일링)
+   - **3단계 (Frontend)**: Next.js 16 Vercel 배포 설정 (`vercel.json`), Supabase Auth(카카오/Google OAuth) 연동, 로그인 필수 게이트(Auth Gate) 적용
+   - **보안 하드닝 (`/sec`)**: 자체 보안 스캐너(0 Issues Clean), BOLA 방지 소유권 엄격 대조, OWASP 표준 보안 헤더, 1MB 페이로드 제한, Supabase RLS SELECT Only 잠금
 
-### 2단계: 백엔드 컨테이너라이징 및 Google Cloud Run 배포 (완료)
-- **배포 서비스**: `iching-counsel-api` (Google Cloud Run)
-- **프로젝트 및 리전**: `southern-engine-495314-p2` / `asia-northeast3` (서울 리전)
-- **프로덕션 엔드포인트**: `https://iching-counsel-api-517419857386.asia-northeast3.run.app`
-- **스케일링**: 0 ~ 10 인스턴스 (트래픽 없을 시 0으로 무과금 스케일다운)
-- **보안**: CORS 제어 (Localhost & Vercel 정규식), Rate Limiter, Non-root 컨테이너
+---
 
-### 3단계: 프론트엔드 Vercel 배포 및 소셜 로그인 실연동 (다음 순서)
-- Next.js 16 Vercel 연동 배포
-- Supabase Auth (구글/카카오 OAuth) 연동 및 웰컴 50 크레딧 UI 연계
+## 🧭 향후 작업 로드맵 (Next Action Items)
 
-   - **M7. 결제 인프라 (선택)**: PortOne 국내 간편결제 연동 및 크레딧 충전 시스템 구축
+다음 세션에서 진행할 4대 과제입니다:
+
+### 1. 실서비스 라이브 오픈 & OAuth 실키 등록 (P1)
+- **Google Cloud Console**: OAuth Client ID / Secret 발급 $\rightarrow$ Supabase Auth Provider 등록
+- **Kakao Developers**: 카카오 로그인 활성화, REST API 키 및 Client Secret 등록
+- **Vercel 실도메인 배포**: GitHub 저장소 연결 및 환경변수 3종 등록, 프로덕션 도메인 확정
+- **OAuth Callback 검증**: 실제 카카오/구글 로그인 $\rightarrow$ 50 웰컴 크레딧 자동 지급 E2E 실측
+
+### 2. 사용자 경험(UX) 강화: '나의 성찰 저널 보관함' (P2)
+- **히스토리 보관함 (`/journals`)**:
+  - 로그인 사용자가 과거 상담 세션(본괘/지괘, 3턴 대화록, 성찰 저널)을 다시 열람할 수 있는 아카이빙 페이지 구축
+  - Supabase `counsel_sessions`, `counsel_turns` 테이블과 실시간 연동
+
+### 3. 수익화(BM) 인프라: 크레딧 결제 및 충전 연동 (P3)
+- **PortOne / 토스페이먼츠 연동**:
+  - 50 웰컴 크레딧 소진 시 충전 모달 팝업 (예: 50크레딧 2,900원 / 100크레딧 4,900원)
+  - 결제 승인 웹훅을 통한 `credit_ledger` 자동 충전 트랜잭션 및 `deduct_credit` RPC 연동
+
+### 4. 운영 & KPI 지표 수집 파이프라인 (P4)
+- **GA4 / PostHog 이벤트 트래킹**:
+  - 상담 시작율 $\rightarrow$ 괘 도출율 $\rightarrow$ 3턴 완주율 $\rightarrow$ 저널 보관율 퍼널 지표 수집
+- **관리자 KPI 대시보드 (`building-data-apps`)**:
+  - Supabase DB 통계 기반 일일 상담 건수, 크레딧 소모량, 활성 사용자(DAU) 대시보드 구현
+

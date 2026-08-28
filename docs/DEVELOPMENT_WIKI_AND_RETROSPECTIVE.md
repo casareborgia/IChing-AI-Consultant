@@ -137,9 +137,43 @@
 
 ## 🧭 향후 작업 로드맵 (Next Action Items)
 
-다음 세션에서 진행할 4대 과제입니다:
+> **최종 업데이트**: 2026-08-29
 
-### 1. 실서비스 라이브 오픈 & OAuth 실키 등록 (P1)
+### ✅ 오늘 완료 (2026-08-28~29)
+
+| 항목 | 상태 | 내용 |
+|---|---|---|
+| **카카오 OAuth 실키 등록** | ✅ 완료 | REST API Key + Client Secret → Supabase Kakao Provider 활성화 |
+| **Google OAuth 실키 등록** | ✅ 완료 | Web Client ID + Secret → Supabase Google Provider 활성화 |
+| **Vercel 프로덕션 배포** | ✅ 완료 | https://i-ching-ai-consultant.vercel.app 라이브 |
+| **NEXT_PUBLIC_SITE_URL 환경변수** | ✅ 완료 | Vercel 프로젝트 환경변수 등록 완료 |
+
+### 🔴 내일 이어서 (P1 마무리)
+
+1. **Supabase URL Configuration 업데이트**
+   - Site URL: `https://i-ching-ai-consultant.vercel.app`
+   - Redirect URL 추가: `https://i-ching-ai-consultant.vercel.app/auth/callback`
+2. **카카오/구글 Redirect URI 등록 확인**
+   - 카카오: `https://developers.kakao.com/console/app/1560078/product/login`
+   - 구글: Google Cloud Console OAuth 클라이언트
+3. **E2E 로그인 테스트**: 프로덕션에서 카카오/구글 로그인 → 50 크레딧 지급 → 상담 시작 실측
+
+### 2. 사용자 경험(UX) 강화: '나의 성찰 저널 보관함' (P2)
+- **히스토리 보관함 (`/journals`)**:
+  - 로그인 사용자가 과거 상담 세션(본괘/지괘, 3턴 대화록, 성찰 저널)을 다시 열람할 수 있는 아카이빙 페이지 구축
+  - Supabase `counsel_sessions`, `counsel_turns` 테이블과 실시간 연동
+
+### 3. 운영 & KPI 지표 수집 파이프라인 (P3)
+- **GA4 / PostHog 이벤트 트래킹**:
+  - 상담 시작율 → 괘 도출율 → 3턴 완주율 → 저널 보관율 퍼널 지표 수집
+- **관리자 KPI 대시보드**:
+  - Supabase DB 통계 기반 일일 상담 건수, 크레딧 소모량, DAU 대시보드 구현
+
+### 4. 수익화(BM) 인프라: 크레딧 결제 및 충전 연동 (P4 - 최후순위)
+- **PortOne / 토스페이먼츠 연동**:
+  - 50 웰컴 크레딧 소진 시 충전 모달 팝업 (예: 50크레딧 2,900원 / 100크레딧 4,900원)
+  - 결제 승인 웹훅을 통한 `credit_ledger` 자동 충전 트랜잭션 및 `deduct_credit` RPC 연동
+
 - **Google Cloud Console**: OAuth Client ID / Secret 발급 $\rightarrow$ Supabase Auth Provider 등록
 - **Kakao Developers**: 카카오 로그인 활성화, REST API 키 및 Client Secret 등록
 - **Vercel 실도메인 배포**: GitHub 저장소 연결 및 환경변수 3종 등록, 프로덕션 도메인 확정

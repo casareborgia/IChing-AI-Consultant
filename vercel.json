@@ -1,6 +1,7 @@
 {
   "framework": "nextjs",
   "buildCommand": "npm run build",
-  "installCommand": "npm install",
-  "rootDirectory": "frontend"
+  "installCommand": "npm install --legacy-peer-deps",
+  "rootDirectory": "frontend",
+  "nodeVersion": "20.x"
 }

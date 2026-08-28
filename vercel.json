@@ -1,7 +1,7 @@
 {
   "framework": "nextjs",
   "buildCommand": "npm run build",
-  "installCommand": "npm install",
+  "installCommand": "npm install --no-package-lock",
   "rootDirectory": "frontend",
   "nodeVersion": "20.x",
   "regions": ["icn1"]

@@ -20,7 +20,6 @@ interface AuthContextType {
   profile: Profile | null;
   isLoading: boolean;
   signInWithGoogle: () => Promise<void>;
-  signInWithKakao: () => Promise<void>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -120,16 +119,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  const signInWithKakao = async () => {
-    const siteUrl = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
-    await supabase.auth.signInWithOAuth({
-      provider: 'kakao',
-      options: {
-        redirectTo: `${siteUrl}/auth/callback`,
-      },
-    });
-  };
-
   const signOut = async () => {
     await supabase.auth.signOut();
     setUser(null);
@@ -151,7 +140,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         profile,
         isLoading,
         signInWithGoogle,
-        signInWithKakao,
         signOut,
         refreshProfile,
       }}

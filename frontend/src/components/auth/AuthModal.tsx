@@ -5,13 +5,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Sparkles, ShieldCheck, HeartHandshake } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
+
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
-  const { signInWithGoogle, signInWithKakao } = useAuth();
+  const { signInWithGoogle } = useAuth();
 
   if (!isOpen) return null;
 
@@ -78,18 +79,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           </div>
 
           {/* Social Login Buttons */}
-          <div className="mt-6 space-y-3">
-            {/* 카카오 로그인 버튼 */}
-            <button
-              onClick={signInWithKakao}
-              className="flex w-full items-center justify-center gap-3 rounded-2xl bg-[#FEE500] px-5 py-3.5 text-sm font-semibold text-[#191919] shadow-md transition hover:bg-[#FADA0A] active:scale-[0.98]"
-            >
-              <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 3c-5.523 0-10 3.582-10 8 0 2.828 1.83 5.31 4.608 6.726l-1.18 4.34a.5.5 0 0 0 .744.542l5.12-3.393c.23.018.464.028.708.028 5.523 0 10-3.582 10-8s-4.477-8-10-8z"/>
-              </svg>
-              카카오로 3초 만에 시작하기
-            </button>
-
+          <div className="mt-6">
             {/* 구글 로그인 버튼 */}
             <button
               onClick={signInWithGoogle}

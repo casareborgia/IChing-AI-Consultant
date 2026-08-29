@@ -27,7 +27,7 @@ const EXAMPLE_QUESTIONS = [
 ];
 
 export default function Home() {
-  const { user, profile, signOut } = useAuth();
+  const { user, profile, signOut, updateCredit } = useAuth();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [step, setStep] = useState<ConsultationStep>('intake');
   const [question, setQuestion] = useState('');
@@ -67,6 +67,10 @@ export default function Home() {
         new Promise((resolve) => setTimeout(resolve, 1400)),
       ]);
 
+      if (typeof apiRes.remainingCredits === 'number') {
+        updateCredit(apiRes.remainingCredits);
+      }
+
       if (apiRes.isCrisis) {
         setSessionId(apiRes.sessionId);
         setStep('safety_redirect');
@@ -88,9 +92,8 @@ export default function Home() {
         setMessages([initialUserMsg, apiRes.firstMessage]);
         setStep('revealed'); // 괘 결과 확인 단계
       }
-    } catch (err) {
-      console.error(err);
-      alert('상담을 시작하는 중 오류가 발생했습니다.');
+    } catch (err: any) {
+      alert(err.message || '상담을 시작하는 중 오류가 발생했습니다.');
       setStep('intake');
     } finally {
       setIsLoading(false);

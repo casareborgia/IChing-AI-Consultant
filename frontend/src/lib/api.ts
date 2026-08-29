@@ -133,6 +133,7 @@ export async function startConsultationApi(
   isDuplicate: boolean;
   castResult?: CastResult;
   firstMessage?: ChatMessage;
+  remainingCredits?: number;
 }> {
   try {
     const { data: { session } } = await supabase.auth.getSession();
@@ -157,6 +158,10 @@ export async function startConsultationApi(
       if (res.status === 401) {
         throw new Error('로그인 세션이 만료되었습니다. 다시 로그인해 주세요.');
       }
+      if (res.status === 402) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.detail || '크레딧이 부족합니다. 충전 후 이용해 주세요.');
+      }
       throw new Error(`서버 응답 오류: ${res.status}`);
     }
 
@@ -168,6 +173,7 @@ export async function startConsultationApi(
         isCrisis: true,
         crisisResources: data.crisis_resources || [],
         isDuplicate: false,
+        remainingCredits: data.remaining_credits,
       };
     }
 
@@ -192,7 +198,9 @@ export async function startConsultationApi(
       isDuplicate: data.is_duplicate,
       castResult,
       firstMessage,
+      remainingCredits: data.remaining_credits,
     };
+
   } catch (error) {
     console.error('백엔드 API 호출 실패:', error);
     throw error;

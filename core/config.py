@@ -61,9 +61,11 @@ class Settings(BaseSettings):
     JOURNAL_MODEL: str = ""
 
     # --- Authentication (Supabase JWT) ---
-    # Supabase 프로젝트의 JWT Secret (HS256). 절대 리포지토리에 기본값을 하드코딩하지 않는다.
-    # Cloud Run에서는 Secret Manager / 환경변수로 주입받는다.
+    # Supabase 프로젝트 URL (JWKS 공개키 조회용)
+    SUPABASE_URL: str = "https://ovkrhkfhscsyxixsxenk.supabase.co"
+    # Supabase 프로젝트의 Legacy JWT Secret (HS256 서명용). Cloud Run에서는 Secret Manager로 주입받는다.
     SUPABASE_JWT_SECRET: str = ""
+
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 

@@ -2,8 +2,9 @@
 
 > 주역 64괘와 송대 주석(이천역전·주역본의)에 기반하여, 단순한 점괘가 아닌 **삶의 변화를 읽고 성찰하는 심층 멀티턴 대화형 의사결정 상담 AI**
 
-[![Live Demo](https://img.shields.io/badge/Live_Service-Vercel-black?style=flat&logo=vercel)](https://i-ching-ai-consultant.vercel.app)
-[![API Status](https://img.shields.io/badge/Cloud_Run-FastAPI_v1.0-blue?style=flat&logo=googlecloud)](https://iching-counsel-api-517419857386.asia-northeast3.run.app/health)
+[![Architecture](https://img.shields.io/badge/Architecture-3--Tier_Serverless-blue?style=flat&logo=googlecloud)](https://github.com/casareborgia/IChing-AI-Consultant)
+[![Framework](https://img.shields.io/badge/Frontend-Next.js_16-black?style=flat&logo=nextdotjs)](https://github.com/casareborgia/IChing-AI-Consultant)
+[![Backend](https://img.shields.io/badge/Backend-FastAPI_v1.0-009688?style=flat&logo=fastapi)](https://github.com/casareborgia/IChing-AI-Consultant)
 [![Tests](https://img.shields.io/badge/Tests-120%2F120_Passed-brightgreen?style=flat&logo=pytest)](https://github.com/casareborgia/IChing-AI-Consultant)
 [![Security](https://img.shields.io/badge/Security-Zero_Trust_JWT-emerald?style=flat&logo=auth0)](https://github.com/casareborgia/IChing-AI-Consultant)
 [![License](https://img.shields.io/badge/License-CC_BY--SA_4.0-lightgrey)](https://creativecommons.org/licenses/by-sa/4.0/)

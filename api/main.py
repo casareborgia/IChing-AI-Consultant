@@ -20,7 +20,10 @@ from api.deps import require_user
 from core.config import settings
 from core.crisis_resources import get_all_crisis_resources, get_crisis_resources_by_context
 from core.db import AsyncSessionLocal
-from core.models.counsel import CounselSession
+from core.models.counsel import CounselSession, CreditLedger, UserProfile
+
+CONSULTATION_CREDIT_COST = 10
+
 
 logger = logging.getLogger("iching_api")
 
@@ -156,9 +159,39 @@ async def start_consultation_endpoint(
     req: StartConsultationRequest,
     user_id: str = Depends(require_user),
 ):
-    """최초 질문으로 상담 세션을 시작하고 괘 도출 및 1턴 결과를 반환합니다 (JWT 인증 필수)."""
+    """최초 질문으로 상담 세션을 시작하고 괘 도출 및 1턴 결과를 반환합니다 (JWT 인증 필수, 10 크레딧 차감)."""
     async with AsyncSessionLocal() as db_session:
         try:
+            # 1. 크레딧 잔액 확인 및 차감 가드
+            stmt = select(UserProfile).where(UserProfile.id == user_id)
+            profile = (await db_session.execute(stmt)).scalar_one_or_none()
+
+            if not profile:
+                # 프로필이 없으면 웰컴 50 크레딧 부여 후 자동 생성
+                profile = UserProfile(id=user_id, credit_balance=50)
+                db_session.add(profile)
+                await db_session.flush()
+                db_session.add(CreditLedger(user_id=user_id, amount=50, reason="신규 가입 웰컴 크레딧"))
+                await db_session.flush()
+
+
+            if profile.credit_balance < CONSULTATION_CREDIT_COST:
+                raise HTTPException(
+                    status_code=402,
+                    detail=f"크레딧이 부족합니다. (상담 1회: {CONSULTATION_CREDIT_COST} 크레딧 필요, 현재 잔액: {profile.credit_balance}C)",
+                )
+
+            # 2. 크레딧 차감 (10C) 및 장부 기록
+            profile.credit_balance -= CONSULTATION_CREDIT_COST
+            db_session.add(
+                CreditLedger(
+                    user_id=user_id,
+                    amount=-CONSULTATION_CREDIT_COST,
+                    reason="주역 성찰 상담 세션 시작",
+                )
+            )
+
+            # 3. 턴 실행 및 트랜잭션 커밋
             result = await run_turn(
                 session=db_session,
                 counsel_session_id=None,
@@ -185,6 +218,7 @@ async def start_consultation_endpoint(
                 "journal_summary": result.journal_summary,
                 "focus_rule": result.focus_rule,
                 "evidences": result.evidences,
+                "remaining_credits": profile.credit_balance,
             }
         except HTTPException:
             await db_session.rollback()
@@ -196,6 +230,7 @@ async def start_consultation_endpoint(
                 status_code=500,
                 detail="일시적인 서비스 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.",
             )
+
 
 
 @app.post("/api/counsel/turn", dependencies=[Depends(check_rate_limit)])

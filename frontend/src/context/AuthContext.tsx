@@ -22,7 +22,9 @@ interface AuthContextType {
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
+  updateCredit: (newBalance: number) => void;
 }
+
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -132,6 +134,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const updateCredit = (newBalance: number) => {
+    setProfile(prev => (prev ? { ...prev, credit_balance: newBalance, credit: newBalance } : prev));
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -142,11 +148,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signInWithGoogle,
         signOut,
         refreshProfile,
+        updateCredit,
       }}
     >
       {children}
     </AuthContext.Provider>
   );
+
 }
 
 export function useAuth() {

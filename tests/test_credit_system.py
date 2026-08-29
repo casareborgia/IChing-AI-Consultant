@@ -4,7 +4,8 @@ import uuid
 from unittest.mock import AsyncMock, patch
 import pytest
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy import delete, select
+from sqlalchemy import cast, delete, select, String
+
 
 from api.main import app
 from core.config import settings
@@ -23,7 +24,8 @@ async def setup_db():
 @pytest.mark.asyncio
 async def test_start_consultation_deducts_credit(monkeypatch):
     """최초 상담 시작 시 10 크레딧이 차감되고 장부에 이력이 기록되는지 검증."""
-    test_user_id = f"test-user-deduct-{uuid.uuid4().hex[:8]}"
+    test_user_id = str(uuid.uuid4())
+
 
     # JWT 인증 require_user 모킹
     async def mock_require_user():
@@ -64,7 +66,7 @@ async def test_start_consultation_deducts_credit(monkeypatch):
         # DB 검증: 50 -> 40 차감
         async with AsyncSessionLocal() as session:
             profile = (
-                await session.execute(select(UserProfile).where(UserProfile.id == test_user_id))
+                await session.execute(select(UserProfile).where(cast(UserProfile.id, String) == test_user_id))
             ).scalar_one_or_none()
             assert profile is not None
             assert profile.credit_balance == 40
@@ -72,7 +74,7 @@ async def test_start_consultation_deducts_credit(monkeypatch):
             ledger_entries = (
                 (
                     await session.execute(
-                        select(CreditLedger).where(CreditLedger.user_id == test_user_id)
+                        select(CreditLedger).where(cast(CreditLedger.user_id, String) == test_user_id)
                     )
                 )
                 .scalars()
@@ -80,13 +82,15 @@ async def test_start_consultation_deducts_credit(monkeypatch):
             )
             assert len(ledger_entries) == 2  # 웰컴 +50, 차감 -10
 
+
     app.dependency_overrides.clear()
 
 
 @pytest.mark.asyncio
 async def test_insufficient_credit_returns_402(monkeypatch):
     """크레딧이 10 미만일 경우 402 Payment Required 반환 검증."""
-    test_user_id = f"test-user-low-{uuid.uuid4().hex[:8]}"
+    test_user_id = str(uuid.uuid4())
+
 
     # 사전 DB 준비: 크레딧 5 설정
     async with AsyncSessionLocal() as session:

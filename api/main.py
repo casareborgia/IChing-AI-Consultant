@@ -13,7 +13,9 @@ from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
-from sqlalchemy import select
+from sqlalchemy import String, cast, select
+
+
 
 from agents.pipeline import run_turn
 from api.deps import require_user
@@ -163,16 +165,23 @@ async def start_consultation_endpoint(
     async with AsyncSessionLocal() as db_session:
         try:
             # 1. 크레딧 잔액 확인 및 차감 가드
-            stmt = select(UserProfile).where(UserProfile.id == user_id)
-            profile = (await db_session.execute(stmt)).scalar_one_or_none()
+            clean_user_id = str(user_id)
+            try:
+                stmt = select(UserProfile).where(UserProfile.id == clean_user_id)
+                profile = (await db_session.execute(stmt)).scalar_one_or_none()
+            except Exception:
+                stmt = select(UserProfile).where(cast(UserProfile.id, String) == clean_user_id)
+                profile = (await db_session.execute(stmt)).scalar_one_or_none()
 
             if not profile:
                 # 프로필이 없으면 웰컴 50 크레딧 부여 후 자동 생성
-                profile = UserProfile(id=user_id, credit_balance=50)
+                profile = UserProfile(id=clean_user_id, credit_balance=50)
                 db_session.add(profile)
                 await db_session.flush()
-                db_session.add(CreditLedger(user_id=user_id, amount=50, reason="신규 가입 웰컴 크레딧"))
+                db_session.add(CreditLedger(user_id=clean_user_id, amount=50, reason="신규 가입 웰컴 크레딧"))
                 await db_session.flush()
+
+
 
 
             if profile.credit_balance < CONSULTATION_CREDIT_COST:
@@ -185,11 +194,12 @@ async def start_consultation_endpoint(
             profile.credit_balance -= CONSULTATION_CREDIT_COST
             db_session.add(
                 CreditLedger(
-                    user_id=user_id,
+                    user_id=clean_user_id,
                     amount=-CONSULTATION_CREDIT_COST,
                     reason="주역 성찰 상담 세션 시작",
                 )
             )
+
 
             # 3. 턴 실행 및 트랜잭션 커밋
             result = await run_turn(

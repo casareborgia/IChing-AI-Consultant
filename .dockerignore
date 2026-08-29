@@ -1,5 +1,11 @@
 .git
 .gitignore
+
+# Dockerfile 이 `COPY . .` 이므로 여기 없으면 로컬 .env 가
+# 이미지 레이어에 그대로 구워진다 (실 API 키 + DB 비밀번호).
+.env*
+env.production.yaml
+
 .venv
 venv
 __pycache__

@@ -31,12 +31,24 @@ app = FastAPI(
 )
 
 # 1. CORS 설정 (제로 트러스트 도메인 명시적 제어)
+#
+# 와일드카드 정규식(`^https://.*\.vercel\.app$`)을 쓰지 않는다. vercel.app 하위
+# 도메인은 누구나 무료로 받을 수 있어, allow_credentials=True 와 만나면 임의의
+# 제3자 페이지가 자격증명을 실은 교차출처 요청을 보낼 수 있다. 프리뷰 배포가
+# 필요하면 CORS_ORIGIN_REGEX 로 프로젝트 이름까지 좁혀 명시적으로 켠다.
 default_dev_origins = ["http://localhost:3000", "http://localhost:3005", "http://127.0.0.1:3000", "http://127.0.0.1:3005"]
 allowed_origins = [o.strip() for o in settings.CORS_ORIGINS.split(",") if o.strip()]
-if not allowed_origins:
-    allowed_origins = default_dev_origins
-else:
-    allowed_origins = list(set(allowed_origins + default_dev_origins))
+
+# 개발 기본 오리진을 프로덕션에 자동으로 얹지 않는다. 필요하면 CORS_ORIGINS 에
+# 직접 적을 것 — 코드가 몰래 넣어주면 설정 목록만 보고는 무엇이 허용됐는지 모른다.
+#
+# 이 가드는 859631b 에서 넣었다가 1840196 의 api/main.py 재작성 때 사라졌고,
+# 그 사이 프로덕션이 localhost 를 계속 허용하고 있었다. 지우지 말 것.
+if settings.ENVIRONMENT != "production":
+    allowed_origins = sorted(set(allowed_origins + default_dev_origins))
+elif not allowed_origins:
+    # 프로덕션인데 목록이 비었다면 개발 기본값으로 열지 않는다. 아무것도 허용하지 않는다.
+    allowed_origins = []
 
 cors_kwargs = {
     "allow_origins": allowed_origins,

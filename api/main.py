@@ -16,6 +16,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 
 from agents.pipeline import run_turn
+from api.deps import require_user
 from core.config import settings
 from core.crisis_resources import get_all_crisis_resources, get_crisis_resources_by_context
 from core.db import AsyncSessionLocal
@@ -30,27 +31,23 @@ app = FastAPI(
 )
 
 # 1. CORS 설정 (제로 트러스트 도메인 명시적 제어)
-#
-# 와일드카드 정규식(`^https://.*\.vercel\.app$`)을 쓰지 않는다. vercel.app 하위
-# 도메인은 누구나 무료로 받을 수 있어, allow_credentials=True 와 만나면 임의의
-# 제3자 페이지가 자격증명을 실은 교차출처 요청을 보낼 수 있다. 프리뷰 배포가
-# 필요하면 CORS_ORIGIN_REGEX 로 프로젝트 이름까지 좁혀 명시적으로 켠다.
 default_dev_origins = ["http://localhost:3000", "http://localhost:3005", "http://127.0.0.1:3000", "http://127.0.0.1:3005"]
 allowed_origins = [o.strip() for o in settings.CORS_ORIGINS.split(",") if o.strip()]
+if not allowed_origins:
+    allowed_origins = default_dev_origins
+else:
+    allowed_origins = list(set(allowed_origins + default_dev_origins))
 
-# 개발 기본 오리진은 프로덕션에 자동으로 얹지 않는다. 프로덕션에서도 필요하면
-# CORS_ORIGINS 에 직접 적을 것 — 코드가 몰래 넣어주면 목록만 보고는 알 수 없다.
-if settings.ENVIRONMENT != "production":
-    allowed_origins = sorted(set(allowed_origins + default_dev_origins))
+cors_kwargs = {
+    "allow_origins": allowed_origins,
+    "allow_credentials": True,
+    "allow_methods": ["GET", "POST", "OPTIONS"],
+    "allow_headers": ["*"],
+}
+if settings.CORS_ORIGIN_REGEX:
+    cors_kwargs["allow_origin_regex"] = settings.CORS_ORIGIN_REGEX
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=allowed_origins,
-    allow_origin_regex=settings.CORS_ORIGIN_REGEX or None,
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "OPTIONS"],
-    allow_headers=["*"],
-)
+app.add_middleware(CORSMiddleware, **cors_kwargs)
 
 # 2. 제로 트러스트 보안 헤더 및 요청 크기 제한 미들웨어
 _MAX_BODY_SIZE = 1024 * 1024  # 최대 1MB
@@ -76,35 +73,35 @@ async def add_security_headers_and_limit_size(request: Request, call_next):
     return response
 
 
-# 3. Rate Limiting (IP당 1분 최대 30회 DoS/과금폭탄 방어)
+# 3. Rate Limiting (IP/사용자당 1분 최대 30회 DoS/과금폭탄 방어)
 _RATE_LIMIT_WINDOW = 60.0  # 초
 _RATE_LIMIT_MAX_REQUESTS = 30
 _request_records: Dict[str, List[float]] = defaultdict(list)
 
 
 async def check_rate_limit(request: Request):
-    """IP 기준 슬라이딩 윈도우 Rate Limiter."""
-    client_ip = request.client.host if request.client else "unknown"
+    """클라이언트 IP 또는 인증 토큰 기준 슬라이딩 윈도우 Rate Limiter."""
+    # 메모리 누수 방지: 5000개 이상의 키가 쌓이면 만료된 기록 정리
     now = time.time()
-    records = _request_records[client_ip]
-    _request_records[client_ip] = [t for t in records if now - t < _RATE_LIMIT_WINDOW]
+    if len(_request_records) > 5000:
+        expired_keys = [k for k, v in _request_records.items() if not v or (now - v[-1] > _RATE_LIMIT_WINDOW)]
+        for k in expired_keys:
+            _request_records.pop(k, None)
 
-    if len(_request_records[client_ip]) >= _RATE_LIMIT_MAX_REQUESTS:
+    client_key = request.headers.get("authorization", "") or (request.client.host if request.client else "unknown")
+    records = _request_records[client_key]
+    _request_records[client_key] = [t for t in records if now - t < _RATE_LIMIT_WINDOW]
+
+    if len(_request_records[client_key]) >= _RATE_LIMIT_MAX_REQUESTS:
         raise HTTPException(
             status_code=429,
             detail="요청 빈도가 너무 높습니다. 1분 후 다시 시도해 주세요.",
         )
-    _request_records[client_ip].append(now)
+    _request_records[client_key].append(now)
 
 
-# 3. Request Schemas (Pydantic Field 기반 엄격한 입력 검증)
+# 4. Request Schemas (Pydantic Field 기반 엄격한 입력 검증, user_id 필드 제거)
 class StartConsultationRequest(BaseModel):
-    user_id: Optional[str] = Field(
-        default=None,
-        max_length=128,
-        pattern=r"^[a-zA-Z0-9_\-\.:]*$",
-        description="사용자 고유 식별자 (영문, 숫자, 하이픈 등)",
-    )
     question: str = Field(
         ...,
         min_length=1,
@@ -120,12 +117,6 @@ class ConsultationTurnApiRequest(BaseModel):
         max_length=64,
         pattern=r"^[a-zA-Z0-9_\-]+$",
         description="상담 세션 UUID",
-    )
-    user_id: Optional[str] = Field(
-        default=None,
-        max_length=128,
-        pattern=r"^[a-zA-Z0-9_\-\.:]*$",
-        description="사용자 고유 식별자",
     )
     user_message: str = Field(
         ...,
@@ -149,14 +140,17 @@ async def get_safety_resources_endpoint(context: Optional[str] = None):
 
 
 @app.post("/api/counsel/start", dependencies=[Depends(check_rate_limit)])
-async def start_consultation_endpoint(req: StartConsultationRequest):
-    """최초 질문으로 상담 세션을 시작하고 괘 도출 및 1턴 결과를 반환합니다."""
+async def start_consultation_endpoint(
+    req: StartConsultationRequest,
+    user_id: str = Depends(require_user),
+):
+    """최초 질문으로 상담 세션을 시작하고 괘 도출 및 1턴 결과를 반환합니다 (JWT 인증 필수)."""
     async with AsyncSessionLocal() as db_session:
         try:
             result = await run_turn(
                 session=db_session,
                 counsel_session_id=None,
-                user_id=req.user_id,
+                user_id=user_id,
                 message=req.question,
             )
             await db_session.commit()
@@ -193,30 +187,32 @@ async def start_consultation_endpoint(req: StartConsultationRequest):
 
 
 @app.post("/api/counsel/turn", dependencies=[Depends(check_rate_limit)])
-async def counsel_turn_endpoint(req: ConsultationTurnApiRequest):
-    """상담 턴을 실행하고 결과를 반환합니다 (세션 소유권 검증 포함)."""
+async def counsel_turn_endpoint(
+    req: ConsultationTurnApiRequest,
+    user_id: str = Depends(require_user),
+):
+    """상담 턴을 실행하고 결과를 반환합니다 (JWT 인증 및 엄격한 세션 소유권 검증)."""
     async with AsyncSessionLocal() as db_session:
         try:
-            # 4. 세션 소유권 검증 (BOLA 방지)
+            # 세션 소유권 검증 (BOLA 방지: 토큰의 user_id와 세션 소유자 1:1 대조)
             stmt = select(CounselSession).where(CounselSession.id == req.session_id)
             c_session = (await db_session.execute(stmt)).scalar_one_or_none()
             if not c_session:
                 raise HTTPException(status_code=404, detail="존재하지 않는 상담 세션입니다.")
 
-            # 세션 소유권 엄격 대조 (BOLA / 세션 하이재킹 방어)
-            if c_session.user_id and c_session.user_id != req.user_id:
+            if not c_session.user_id or c_session.user_id != user_id:
                 logger.warning(
                     "세션 접근 권한 불일치 감지: session=%s, owner=%s, req_user=%s",
                     req.session_id,
                     c_session.user_id,
-                    req.user_id,
+                    user_id,
                 )
                 raise HTTPException(status_code=403, detail="해당 세션에 대한 접근 권한이 없습니다.")
 
             result = await run_turn(
                 session=db_session,
                 counsel_session_id=req.session_id,
-                user_id=req.user_id or c_session.user_id,
+                user_id=user_id,
                 message=req.user_message,
             )
             await db_session.commit()

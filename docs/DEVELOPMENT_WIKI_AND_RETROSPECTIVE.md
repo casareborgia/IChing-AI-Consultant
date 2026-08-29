@@ -116,7 +116,8 @@
 
 ## 7. 배포 및 향후 로드맵 (Next Steps)
 
-상세 설계는 [통합 배포 및 수익화 블루프린트 문서](file:///Users/leeseungjun/coding/주역기반상담앱/docs/DEPLOYMENT_AND_MONETIZATION_BLUEPRINT.md)를 참조합니다.
+상세 설계는 [통합 배포 및 수익화 블루프린트 문서](DEPLOYMENT_AND_MONETIZATION_BLUEPRINT.md)를 참조합니다.
+
 
 1. **상용 추론 엔진 & 토큰 다이어트 완료 (2026-08-26)**:
    - Gemini 2.5 Flash API / Vertex AI 직결 연동 및 지연시간 3초대 단축

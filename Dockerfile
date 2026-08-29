@@ -16,11 +16,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# 애플리케이션 코드 복사
-COPY . .
+# 비루트 사용자 생성 및 소유권 설정
+RUN useradd -u 1000 -m appuser
+
+# 애플리케이션 코드 복사 및 소유권 변경
+COPY --chown=appuser:appuser . .
+
+USER appuser
 
 # Cloud Run 기본 포트 8080 노출
 EXPOSE 8080
 
 # ASGI 서버 실행 (api/main.py 진입점)
 CMD ["python", "-m", "uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8080"]
+

@@ -118,7 +118,7 @@ export default function Home() {
 
     try {
       const turnCount = Math.floor(messages.length / 2) + 1;
-      const apiRes = await sendConsultationTurnApi(sessionId, text, turnCount, castResult, user?.id);
+      const apiRes = await sendConsultationTurnApi(sessionId, text, turnCount, castResult);
 
       setMessages((prev) => [...prev, apiRes.replyMessage]);
 

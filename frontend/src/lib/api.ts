@@ -117,12 +117,15 @@ export async function fetchCrisisResourcesApi(context?: string): Promise<CrisisR
   }
 }
 
+import { supabase } from './supabaseClient';
+
 /**
  * 실제 백엔드 API 호출: 상담 시작 (안전 스크리닝 -> 접수 -> 괘 도출 -> 1턴 응답)
+ * Supabase JWT(Bearer token)를 필수 첨부합니다.
  */
 export async function startConsultationApi(
   question: string,
-  userId?: string
+  _userId?: string
 ): Promise<{
   sessionId: string;
   isCrisis: boolean;
@@ -132,18 +135,28 @@ export async function startConsultationApi(
   firstMessage?: ChatMessage;
 }> {
   try {
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
+
+    if (!token) {
+      throw new Error('로그인이 필요한 서비스입니다. 먼저 로그인해 주세요.');
+    }
+
     const res = await fetch(`${BACKEND_API_BASE}/api/counsel/start`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
       },
       body: JSON.stringify({
         question,
-        user_id: userId || undefined,
       }),
     });
 
     if (!res.ok) {
+      if (res.status === 401) {
+        throw new Error('로그인 세션이 만료되었습니다. 다시 로그인해 주세요.');
+      }
       throw new Error(`서버 응답 오류: ${res.status}`);
     }
 
@@ -188,32 +201,46 @@ export async function startConsultationApi(
 
 /**
  * 실제 백엔드 API 호출: 상담 턴 진행
+ * Supabase JWT(Bearer token)를 필수 첨부합니다.
  */
 export async function sendConsultationTurnApi(
   sessionId: string,
   userMessage: string,
   turnCount: number,
   castResult: CastResult,
-  userId?: string
+  _userId?: string
 ): Promise<{
   replyMessage: ChatMessage;
   isFinal: boolean;
   journal?: JournalSummary;
 }> {
   try {
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
+
+    if (!token) {
+      throw new Error('로그인이 필요한 서비스입니다. 먼저 로그인해 주세요.');
+    }
+
     const res = await fetch(`${BACKEND_API_BASE}/api/counsel/turn`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
       },
       body: JSON.stringify({
         session_id: sessionId,
         user_message: userMessage,
-        user_id: userId || undefined,
       }),
     });
 
     if (!res.ok) {
+      if (res.status === 401) {
+        throw new Error('로그인 세션이 만료되었습니다. 다시 로그인해 주세요.');
+      }
+      if (res.status === 403) {
+        throw new Error('세션 접근 권한이 없습니다.');
+      }
       throw new Error(`상담 턴 응답 오류: ${res.status}`);
     }
 

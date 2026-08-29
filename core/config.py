@@ -60,7 +60,13 @@ class Settings(BaseSettings):
     COUNSEL_MODEL: str = ""
     JOURNAL_MODEL: str = ""
 
+    # --- Authentication (Supabase JWT) ---
+    # Supabase 프로젝트의 JWT Secret (HS256). 절대 리포지토리에 기본값을 하드코딩하지 않는다.
+    # Cloud Run에서는 Secret Manager / 환경변수로 주입받는다.
+    SUPABASE_JWT_SECRET: str = ""
+
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+
 
 
 settings = Settings()

@@ -8,7 +8,10 @@ venv/
 ENV/
 
 # Environment variables
-.env
+# `.env` 한 줄만 두면 .env.local / .env.production 이 추적된다.
+# 퍼블릭 리포이므로 .env* 를 통째로 막고 예시 파일만 되살린다.
+.env*
+!.env.example
 
 # IDE / OS
 .DS_Store

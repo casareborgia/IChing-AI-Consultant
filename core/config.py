@@ -10,6 +10,12 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "postgresql+asyncpg://iching:changeme@localhost:5432/iching"
     ENVIRONMENT: str = "development"  # "development" | "production"
     CORS_ORIGINS: str = "http://localhost:3000,http://localhost:5173,http://localhost:8765"
+    # Vercel 프리뷰 배포처럼 오리진이 매번 바뀌는 경우에만 쓴다. 기본값은 비어 있다 —
+    # `^https://.*\.vercel\.app$` 같은 넓은 식은 넣지 말 것. vercel.app 하위 도메인은
+    # 누구나 무료로 받으므로 allow_credentials=True 와 만나면 사실상 개방이 된다.
+    # 꼭 필요하면 프로젝트 이름까지 박아 좁힌다:
+    #   ^https://iching-ai-consultant-[a-z0-9-]+\.vercel\.app$
+    CORS_ORIGIN_REGEX: str = ""
 
     # --- LLM Providers & Models ---
     # 시험은 로컬, 서비스는 상용 API다(CLAUDE.md 모델 운영 절).

@@ -7,8 +7,10 @@ import { supabase } from '@/lib/supabaseClient';
 interface Profile {
   id: string;
   email: string | null;
+  nickname?: string | null;
+  credit_balance: number;
   credit: number;
-  tier: string;
+  tier?: string;
   avatar_url: string | null;
 }
 
@@ -35,17 +37,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, email, credit, tier, avatar_url')
+        .select('id, email, nickname, avatar_url, credit_balance')
         .eq('id', userId)
         .single();
 
       if (data && !error) {
-        setProfile(data as Profile);
+        const balance = typeof data.credit_balance === 'number' ? data.credit_balance : 50;
+        setProfile({
+          id: data.id,
+          email: data.email,
+          nickname: data.nickname,
+          credit_balance: balance,
+          credit: balance,
+          tier: 'free',
+          avatar_url: data.avatar_url,
+        });
       } else {
         // 프로필이 없는 경우 기본값 (신규 게스트 등)
         setProfile({
           id: userId,
           email: null,
+          credit_balance: 50,
           credit: 50,
           tier: 'free',
           avatar_url: null,
@@ -56,6 +68,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setProfile({
         id: userId,
         email: null,
+        credit_balance: 50,
         credit: 50,
         tier: 'free',
         avatar_url: null,

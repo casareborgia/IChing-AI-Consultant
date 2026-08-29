@@ -116,7 +116,7 @@
 
 ## 7. 배포 및 향후 로드맵 (Next Steps)
 
-상세 설계는 [통합 배포 및 수익화 블루프린트 문서](DEPLOYMENT_AND_MONETIZATION_BLUEPRINT.md)를 참조합니다.
+DB 스키마와 RLS 설계는 [Supabase DB 스키마 & RLS 설계](DB_SCHEMA_AND_RLS.md)를 참조합니다.
 
 
 1. **상용 추론 엔진 & 토큰 다이어트 완료 (2026-08-26)**:

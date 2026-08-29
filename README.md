@@ -7,7 +7,8 @@
 [![Backend](https://img.shields.io/badge/Backend-FastAPI_v1.0-009688?style=flat&logo=fastapi)](https://github.com/casareborgia/IChing-AI-Consultant)
 [![Tests](https://img.shields.io/badge/Tests-120%2F120_Passed-brightgreen?style=flat&logo=pytest)](https://github.com/casareborgia/IChing-AI-Consultant)
 [![Security](https://img.shields.io/badge/Security-Zero_Trust_JWT-emerald?style=flat&logo=auth0)](https://github.com/casareborgia/IChing-AI-Consultant)
-[![License](https://img.shields.io/badge/License-CC_BY--SA_4.0-lightgrey)](https://creativecommons.org/licenses/by-sa/4.0/)
+[![License: Code](https://img.shields.io/badge/Code-All_Rights_Reserved-red?style=flat)](LICENSE)
+[![License: Data](https://img.shields.io/badge/Data-CC_BY--SA_4.0-lightgrey?style=flat)](data/LICENSE)
 
 ---
 
@@ -204,8 +205,17 @@ npm run dev
 - 본 서비스는 의료기기(SaMD) 또는 전문 심리치료를 대체하지 않으며, 자기 성찰과 의사결정을 돕는 웰니스 AI 도구입니다.
 - 위기 상황 발생 시 24시간 자살예방 상담전화(`109`) 또는 정신건강 위기상담전화(`1577-0199`)의 도움을 받으실 수 있습니다.
 
-### 원전 출처 및 라이선스
-주역 원문, 정전(程傳) 및 본의(本義) 주석 텍스트는 **Kanseki Repository (漢籍リポジトリ), 교토대학 인문과학연구소**의 표점본을 저본으로 하며 **CC BY-SA 4.0**으로 제공됩니다.
+### 라이선스 (코드와 데이터가 다릅니다)
+
+| 대상 | 라이선스 | 파일 |
+|---|---|---|
+| 소스 코드 | **전권 유보 (All rights reserved).** 열람용으로 공개되어 있을 뿐 오픈소스가 아닙니다 | [`LICENSE`](LICENSE) |
+| `data/` 텍스트 및 파생물 | **CC BY-SA 4.0** (계승 조건 포함) | [`data/LICENSE`](data/LICENSE) |
+
+코드의 복제·2차 저작물 작성·서비스 운영에는 저작권자의 사전 서면 허락이 필요합니다.
+
+### 원전 출처
+주역 원문, 정전(程傳) 및 본의(本義) 주석 텍스트는 **Kanseki Repository (漢籍リポジトリ), 교토대학 인문과학연구소**의 표점본을 저본으로 합니다.
 - 경문 `KR1a0001` · 정전 `KR1a0016` 『伊川易傳』 · 본의 `KR1a0031` 『原本周易本義』
 - 저본 저작(정이 1033–1107, 주희 1130–1200)은 보호기간이 만료된 퍼블릭 도메인(공유 영역) 자료입니다.
 - 괘사·효사 450건의 현대 한글 번역 데이터는 본 프로젝트에서 자체 감수·구축하였습니다.

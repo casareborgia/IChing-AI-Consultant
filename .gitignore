@@ -58,3 +58,6 @@ scripts/supabase_batches/
 scripts/production_seed_dump.sql
 
 .vercel
+
+# 대외 공개 대상이 아닌 내부 문서 (가격·원가·마진). 스키마는 docs/DB_SCHEMA_AND_RLS.md 로 분리했다.
+docs/DEPLOYMENT_AND_MONETIZATION_BLUEPRINT.md

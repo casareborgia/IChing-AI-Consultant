@@ -326,6 +326,34 @@ async def counsel_turn_endpoint(
                 )
                 raise HTTPException(status_code=403, detail="해당 세션에 대한 접근 권한이 없습니다.")
 
+            # 크레딧 잔액 확인 및 차감 가드 (대화 턴당 10 크레딧 차감)
+            clean_user_id = str(user_id)
+            profile_stmt = select(UserProfile).where(UserProfile.id == clean_user_id)
+            profile = (await db_session.execute(profile_stmt)).scalar_one_or_none()
+
+            if not profile:
+                profile = UserProfile(id=clean_user_id, credit_balance=50)
+                db_session.add(profile)
+                await db_session.flush()
+                db_session.add(CreditLedger(user_id=clean_user_id, amount=50, reason="신규 가입 웰컴 크레딧"))
+                await db_session.flush()
+
+            if profile.credit_balance < CONSULTATION_CREDIT_COST:
+                raise HTTPException(
+                    status_code=402,
+                    detail=f"크레딧이 부족합니다. (대화 1회: {CONSULTATION_CREDIT_COST} 크레딧 필요, 현재 잔액: {profile.credit_balance}C)",
+                )
+
+            profile.credit_balance -= CONSULTATION_CREDIT_COST
+            db_session.add(
+                CreditLedger(
+                    user_id=clean_user_id,
+                    amount=-CONSULTATION_CREDIT_COST,
+                    reason="주역 성찰 대화 턴 진행",
+                )
+            )
+            new_balance = profile.credit_balance
+
             result = await run_turn(
                 session=db_session,
                 counsel_session_id=req.session_id,
@@ -352,6 +380,7 @@ async def counsel_turn_endpoint(
                 "journal_summary": result.journal_summary,
                 "focus_rule": result.focus_rule,
                 "evidences": result.evidences,
+                "remaining_credits": new_balance,
             }
         except HTTPException:
             await db_session.rollback()

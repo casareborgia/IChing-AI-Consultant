@@ -221,6 +221,7 @@ export async function sendConsultationTurnApi(
   replyMessage: ChatMessage;
   isFinal: boolean;
   journal?: JournalSummary;
+  remainingCredits?: number;
 }> {
   try {
     const { data: { session } } = await supabase.auth.getSession();
@@ -245,6 +246,10 @@ export async function sendConsultationTurnApi(
     if (!res.ok) {
       if (res.status === 401) {
         throw new Error('로그인 세션이 만료되었습니다. 다시 로그인해 주세요.');
+      }
+      if (res.status === 402) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.detail || '크레딧이 부족합니다. 충전 후 이용해 주세요.');
       }
       if (res.status === 403) {
         throw new Error('세션 접근 권한이 없습니다.');
@@ -277,6 +282,7 @@ export async function sendConsultationTurnApi(
       },
       isFinal: data.is_final,
       journal,
+      remainingCredits: data.remaining_credits,
     };
   } catch (error) {
     console.error('상담 턴 처리 실패:', error);

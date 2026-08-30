@@ -3,9 +3,33 @@ from datetime import datetime
 from typing import List, Optional
 from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint, func
 from sqlalchemy.dialects import postgresql
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.types import CHAR, TypeDecorator
 
 from core.db import Base
+
+
+class GUID(TypeDecorator):
+    """Platform-independent GUID type for PostgreSQL UUID and SQLite CHAR(36)."""
+    impl = CHAR
+    cache_ok = True
+
+    def load_dialect_impl(self, dialect):
+        if dialect.name == "postgresql":
+            return dialect.type_descriptor(PG_UUID(as_uuid=False))
+        else:
+            return dialect.type_descriptor(CHAR(36))
+
+    def process_bind_param(self, value, dialect):
+        if value is None:
+            return value
+        return str(value)
+
+    def process_result_value(self, value, dialect):
+        if value is None:
+            return value
+        return str(value)
 
 
 class CounselSession(Base):
@@ -24,7 +48,7 @@ class CounselSession(Base):
         String(36), ForeignKey("counsel_sessions.id", ondelete="SET NULL"), nullable=True
     )
     
-    status: Mapped[str] = mapped_column(String(20), default="active", server_default="active", nullable=False)  # active, completed, safety_redirect
+    status: Mapped[str] = mapped_column(String(20), default="active", server_default="active", nullable=False)
     
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
@@ -48,7 +72,7 @@ class CounselTurn(Base):
     transformed_hexagram_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("hexagrams.id"), nullable=True)
     changing_lines: Mapped[Optional[list]] = mapped_column(
         JSON().with_variant(postgresql.JSONB, "postgresql"), nullable=True
-    )  # e.g., [1, 3]
+    )
     
     user_message: Mapped[str] = mapped_column(Text, nullable=False)
     agent_response: Mapped[str] = mapped_column(Text, nullable=False)
@@ -105,5 +129,4 @@ class CreditLedger(Base):
     amount: Mapped[int] = mapped_column(Integer, nullable=False)
     reason: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-
 

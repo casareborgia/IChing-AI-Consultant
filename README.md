@@ -5,7 +5,7 @@
 [![Architecture](https://img.shields.io/badge/Architecture-3--Tier_Serverless-blue?style=flat&logo=googlecloud)](https://github.com/casareborgia/IChing-AI-Consultant)
 [![Framework](https://img.shields.io/badge/Frontend-Next.js_16-black?style=flat&logo=nextdotjs)](https://github.com/casareborgia/IChing-AI-Consultant)
 [![Backend](https://img.shields.io/badge/Backend-FastAPI_v1.0-009688?style=flat&logo=fastapi)](https://github.com/casareborgia/IChing-AI-Consultant)
-[![Tests](https://img.shields.io/badge/Tests-120%2F120_Passed-brightgreen?style=flat&logo=pytest)](https://github.com/casareborgia/IChing-AI-Consultant)
+[![Tests](https://img.shields.io/badge/Tests-128_Passed-brightgreen?style=flat&logo=pytest)](https://github.com/casareborgia/IChing-AI-Consultant)
 [![Security](https://img.shields.io/badge/Security-Zero_Trust_JWT-emerald?style=flat&logo=auth0)](https://github.com/casareborgia/IChing-AI-Consultant)
 [![License: Code](https://img.shields.io/badge/Code-All_Rights_Reserved-red?style=flat)](LICENSE)
 [![License: Data](https://img.shields.io/badge/Data-CC_BY--SA_4.0-lightgrey?style=flat)](data/LICENSE)

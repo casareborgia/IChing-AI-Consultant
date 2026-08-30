@@ -61,3 +61,11 @@ scripts/production_seed_dump.sql
 
 # 대외 공개 대상이 아닌 내부 문서 (가격·원가·마진). 스키마는 docs/DB_SCHEMA_AND_RLS.md 로 분리했다.
 docs/DEPLOYMENT_AND_MONETIZATION_BLUEPRINT.md
+
+# 공개 대상이 아닌 것 (2026-08-30). 로컬에는 그대로 두고 추적만 하지 않는다.
+#   prompts/*.md  튜닝된 에이전트 프롬프트 — 이 프로젝트의 실질적인 산출물
+#   CLAUDE.md     측정 방법론·모델 선정 실측·비용 수치·현재 약점 목록
+#   ANTIGRAVITY_* 내부 작업 지시서 (조치 완료된 취약점을 공격 관점으로 서술)
+prompts/*.md
+CLAUDE.md
+docs/ANTIGRAVITY_*.md

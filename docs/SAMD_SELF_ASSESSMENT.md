@@ -128,7 +128,7 @@
 
 ## 참고
 
-- 판단 배경과 논의: `CLAUDE.md` 「SaMD를 확인해야 하는 이유」
+- 판단 배경과 논의: 개발 방법론 문서 「SaMD를 확인해야 하는 이유」 (저장소 미포함)
 - 안전 스크리너 구현: `agents/safety.py` · `prompts/safety_screening.md`
 - 위기 안내 문구: `prompts/safety_response.md` · `core/crisis_resources.py`
 - 안전 채점 실측: `scripts/score_safety.py -p gemini` (2026-08-27 기준 110/115,

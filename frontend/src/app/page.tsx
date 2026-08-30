@@ -278,7 +278,7 @@ export default function Home() {
                     </span>
                   ) : (
                     <span className="text-[11px] text-stone-400">
-                      보유 잔액: <strong className="text-amber-300">{profile?.credit ?? 50} 크레딧</strong> (상담 1회: 10C)
+                      보유 잔액: <strong className="text-amber-300">{profile?.credit ?? 50} 크레딧</strong> (대화 1회: 10C)
                     </span>
                   )}
 

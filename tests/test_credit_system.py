@@ -237,3 +237,185 @@ async def test_counsel_turn_deducts_credit_and_handles_402():
     app.dependency_overrides.clear()
 
 
+
+
+# --- 회귀 고정 ---------------------------------------------------------------
+# 아래 셋은 각각 실제로 프로덕션에 나갔던 결함을 잡는다. 지우지 말 것.
+#   · 위기 판정에도 크레딧을 받던 것 (가입 화면이 미차감을 약속한다)
+#   · 동시 요청이 서로의 차감을 덮어써 잔액을 넘겨 쓰던 것
+#   · 재삼독을 환불 대상에 넣었던 것 (받는 것이 맞다)
+# 순차 차감 테스트로는 두 번째가 잡히지 않는다 — 반드시 동시에 던져야 드러난다.
+
+from core.models.counsel import CounselSession  # noqa: E402
+
+
+def _mock_turn(safety_category: str = "NORMAL", is_duplicate: bool = False, session_id: str = "sess-x"):
+    r = AsyncMock()
+    r.session_id = session_id
+    r.turn_number = 1
+    r.user_facing_message = "테스트 메시지입니다."
+    r.needs_followup = True
+    r.is_final = False
+    r.hexagram_id = 1
+    r.transformed_hexagram_id = 1
+    r.changing_lines = []
+    r.safety_category = safety_category
+    r.is_duplicate = is_duplicate
+    r.journal_summary = None
+    r.focus_rule = None
+    r.evidences = []
+    return r
+
+
+def _override_auth(user_id: str):
+    from api.deps import require_user
+
+    async def mock_require_user():
+        return user_id
+
+    app.dependency_overrides = {require_user: mock_require_user}
+
+
+async def _post_start():
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        return await client.post(
+            "/api/counsel/start",
+            headers={"Authorization": "Bearer fake-token"},
+            json={"question": "취업에 관한 고민이 있습니다."},
+        )
+
+
+async def _post_turn(session_id: str):
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        return await client.post(
+            "/api/counsel/turn",
+            headers={"Authorization": "Bearer fake-token"},
+            json={"session_id": session_id, "user_message": "이어지는 이야기입니다."},
+        )
+
+
+async def _start(user_id: str, turn_result):
+    _override_auth(user_id)
+    try:
+        with patch("api.main.run_turn", return_value=turn_result):
+            return await _post_start()
+    finally:
+        app.dependency_overrides.clear()
+
+
+async def _balance(user_id: str):
+    async with AsyncSessionLocal() as session:
+        return (
+            await session.execute(
+                select(UserProfile.credit_balance).where(UserProfile.id == user_id)
+            )
+        ).scalar_one_or_none()
+
+
+async def _seed_session(user_id: str, session_id: str, balance: int):
+    async with AsyncSessionLocal() as session:
+        session.add(UserProfile(id=user_id, credit_balance=balance))
+        session.add(CounselSession(id=session_id, user_id=user_id, raw_question="회귀 테스트"))
+        await session.commit()
+
+
+@pytest.mark.asyncio
+async def test_crisis_turn_is_refunded_on_start():
+    """위기 판정이면 첫 턴 크레딧을 받지 않는다."""
+    user_id = str(uuid.uuid4())
+    res = await _start(user_id, _mock_turn(safety_category="BLOCK_CRISIS"))
+
+    assert res.status_code == 200
+    assert res.json()["remaining_credits"] == 50
+    assert await _balance(user_id) == 50
+
+    async with AsyncSessionLocal() as session:
+        entries = (
+            (await session.execute(select(CreditLedger).where(CreditLedger.user_id == user_id)))
+            .scalars()
+            .all()
+        )
+    # 웰컴 +50, 차감 -10, 환불 +10 — 무엇이 왜 되돌아갔는지 장부에 남는다
+    assert sorted(e.amount for e in entries) == [-10, 10, 50]
+
+
+@pytest.mark.asyncio
+async def test_crisis_turn_is_refunded_on_followup():
+    """대화 도중 위기 판정이 나와도 크레딧을 받지 않는다.
+
+    위기 신호는 첫 질문보다 대화가 풀린 뒤에 나올 여지가 크다. start 에만 환불을
+    붙여두면 정작 필요한 자리가 비게 된다.
+    """
+    user_id = str(uuid.uuid4())
+    session_id = f"sess-{uuid.uuid4().hex[:12]}"
+    await _seed_session(user_id, session_id, balance=30)
+
+    _override_auth(user_id)
+    try:
+        with patch("api.main.run_turn", return_value=_mock_turn("BLOCK_CRISIS", session_id=session_id)):
+            res = await _post_turn(session_id)
+    finally:
+        app.dependency_overrides.clear()
+
+    assert res.status_code == 200
+    assert res.json()["remaining_credits"] == 30
+    assert await _balance(user_id) == 30
+
+
+@pytest.mark.asyncio
+async def test_duplicate_question_is_still_charged():
+    """재삼독 턴도 크레딧을 받는다.
+
+    괘를 새로 뽑지 않을 뿐 파이프라인이 그대로 돌아 비용이 나가고, 이전 상담을
+    되짚어 주는 것 자체가 제공하는 값이다. 환불은 위기 판정 하나뿐이다.
+    """
+    user_id = str(uuid.uuid4())
+    res = await _start(user_id, _mock_turn(is_duplicate=True))
+
+    assert res.status_code == 200
+    assert res.json()["remaining_credits"] == 40
+    assert await _balance(user_id) == 40
+
+
+@pytest.mark.asyncio
+async def test_concurrent_starts_cannot_overspend():
+    """동시 요청이 잔액을 넘겨 쓸 수 없다 (start)."""
+    import asyncio
+
+    user_id = str(uuid.uuid4())
+    assert (await _start(user_id, _mock_turn())).status_code == 200
+    assert await _balance(user_id) == 40
+
+    # patch 를 호출마다 걸면 먼저 끝난 요청이 남의 패치를 풀어 진짜 run_turn 이
+    # 새어 나간다. gather 전체를 한 번만 감싼다.
+    _override_auth(user_id)
+    try:
+        with patch("api.main.run_turn", return_value=_mock_turn()):
+            results = await asyncio.gather(*[_post_start() for _ in range(8)])
+    finally:
+        app.dependency_overrides.clear()
+    codes = [r.status_code for r in results]
+
+    assert codes.count(200) == 4, f"과다/과소 차감: {codes}"
+    assert await _balance(user_id) == 0
+
+
+@pytest.mark.asyncio
+async def test_concurrent_turns_cannot_overspend():
+    """동시 요청이 잔액을 넘겨 쓸 수 없다 (turn)."""
+    import asyncio
+
+    user_id = str(uuid.uuid4())
+    session_id = f"sess-{uuid.uuid4().hex[:12]}"
+    await _seed_session(user_id, session_id, balance=30)
+
+    _override_auth(user_id)
+    try:
+        with patch("api.main.run_turn", return_value=_mock_turn(session_id=session_id)):
+            results = await asyncio.gather(*[_post_turn(session_id) for _ in range(6)])
+    finally:
+        app.dependency_overrides.clear()
+    codes = [r.status_code for r in results]
+
+    assert codes.count(200) == 3, f"과다/과소 차감: {codes}"
+    assert await _balance(user_id) == 0

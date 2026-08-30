@@ -135,7 +135,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateCredit = (newBalance: number) => {
-    setProfile(prev => (prev ? { ...prev, credit_balance: newBalance, credit: newBalance } : prev));
+    setProfile(prev => {
+      if (prev) {
+        return { ...prev, credit_balance: newBalance, credit: newBalance };
+      }
+      return {
+        id: user?.id || '',
+        email: user?.email || null,
+        credit_balance: newBalance,
+        credit: newBalance,
+        tier: 'free',
+        avatar_url: null,
+      };
+    });
   };
 
   return (

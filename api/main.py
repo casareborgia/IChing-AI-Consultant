@@ -331,33 +331,25 @@ async def counsel_turn_endpoint(
                 )
                 raise HTTPException(status_code=403, detail="해당 세션에 대한 접근 권한이 없습니다.")
 
-            # 크레딧 잔액 확인 및 차감 가드 (대화 턴당 10 크레딧 차감)
-            clean_user_id = str(user_id)
-            profile_stmt = select(UserProfile).where(UserProfile.id == clean_user_id)
-            profile = (await db_session.execute(profile_stmt)).scalar_one_or_none()
-
-            if not profile:
-                profile = UserProfile(id=clean_user_id, credit_balance=50)
-                db_session.add(profile)
-                await db_session.flush()
-                db_session.add(CreditLedger(user_id=clean_user_id, amount=50, reason="신규 가입 웰컴 크레딧"))
-                await db_session.flush()
-
-            if profile.credit_balance < CONSULTATION_CREDIT_COST:
+            # 크레딧 차감 (대화 턴당 10C). start 와 같은 자를 쓴다 —
+            # ORM 객체의 잔액을 파이썬에서 빼면 동시 요청이 서로의 차감을 덮어쓴다.
+            await _ensure_profile(db_session, user_id)
+            balance_after_charge = await _charge(
+                db_session, user_id, CONSULTATION_CREDIT_COST, "주역 성찰 대화 턴 진행"
+            )
+            if balance_after_charge is None:
+                current = (
+                    await db_session.execute(
+                        select(UserProfile.credit_balance).where(UserProfile.id == user_id)
+                    )
+                ).scalar_one_or_none()
                 raise HTTPException(
                     status_code=402,
-                    detail=f"크레딧이 부족합니다. (대화 1회: {CONSULTATION_CREDIT_COST} 크레딧 필요, 현재 잔액: {profile.credit_balance}C)",
+                    detail=(
+                        f"크레딧이 부족합니다. (대화 1회: {CONSULTATION_CREDIT_COST} 크레딧 필요, "
+                        f"현재 잔액: {current if current is not None else 0}C)"
+                    ),
                 )
-
-            profile.credit_balance -= CONSULTATION_CREDIT_COST
-            db_session.add(
-                CreditLedger(
-                    user_id=clean_user_id,
-                    amount=-CONSULTATION_CREDIT_COST,
-                    reason="주역 성찰 대화 턴 진행",
-                )
-            )
-            new_balance = profile.credit_balance
 
             result = await run_turn(
                 session=db_session,
@@ -369,6 +361,18 @@ async def counsel_turn_endpoint(
 
             is_crisis = result.safety_category == "BLOCK_CRISIS"
             crisis_resources = get_crisis_resources_by_context() if is_crisis else []
+
+            # 위기 판정이면 되돌린다. 위기 신호는 첫 질문보다 대화 도중에 나올 여지가
+            # 크므로, start 에만 붙여두면 정작 필요한 자리가 비게 된다.
+            remaining_credits = balance_after_charge
+            if not _is_chargeable(result):
+                refunded = await _refund(
+                    db_session, user_id, CONSULTATION_CREDIT_COST, "위기 감지 안심 환불"
+                )
+                await db_session.commit()
+                if refunded is not None:
+                    remaining_credits = refunded
+                logger.info("위기 감지 크레딧 환불: user=%s turn=%s", user_id, result.turn_number)
 
             return {
                 "session_id": result.session_id,
@@ -385,7 +389,7 @@ async def counsel_turn_endpoint(
                 "journal_summary": result.journal_summary,
                 "focus_rule": result.focus_rule,
                 "evidences": result.evidences,
-                "remaining_credits": new_balance,
+                "remaining_credits": remaining_credits,
             }
         except HTTPException:
             await db_session.rollback()

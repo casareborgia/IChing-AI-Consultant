@@ -66,7 +66,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           <div className="mt-6 space-y-2.5 rounded-2xl border border-stone-800/90 bg-stone-950/60 p-4 text-xs text-stone-300">
             <div className="flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-amber-400 shrink-0" />
-              <span>가입 즉시 <strong>50 웰컴 크레딧</strong> 자동 지급 (상담 5회분)</span>
+              <span>가입 즉시 <strong>50 웰컴 크레딧</strong> 자동 지급 (대화 5회분 · 1회 10C)</span>
             </div>
             <div className="flex items-center gap-2">
               <ShieldCheck className="h-4 w-4 text-emerald-400 shrink-0" />

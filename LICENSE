@@ -1,42 +1,29 @@
-Copyright (c) 2026 casareborgia. All rights reserved.
+MIT License
 
-주역 심층 AI 상담 (I-Ching AI Consultant)
+Copyright (c) 2026 I-Ching AI Consultant Project
 
-이 저장소의 소스 코드는 열람을 위해 공개되어 있을 뿐이며, 오픈소스가 아닙니다.
-(source-available, not open source)
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-저작권자의 사전 서면 허락 없이 다음을 할 수 없습니다.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
-  - 복제, 배포, 공중송신
-  - 2차적 저작물 작성 (수정, 번안, 포팅)
-  - 상업적·비상업적 이용을 불문한 서비스 운영
-  - 재라이선스 또는 서브라이선스
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 
-허용되는 것:
+---
 
-  - 저장소 열람 및 학습 목적의 참조
-  - GitHub 기능을 통한 포크 및 이슈·풀리퀘스트 제출
-    (제출된 기여물은 이 라이선스 아래 저작권자에게 귀속됩니다)
+### Additional Dataset & Attribution Notice
 
---------------------------------------------------------------------------
-데이터는 별도 라이선스입니다
---------------------------------------------------------------------------
-
-`data/` 디렉터리의 주역 원문·주석 텍스트 및 그 파생물(한글 번역, RAG 청크)은
-Kanseki Repository(漢籍リポジトリ, 교토대학 인문과학연구소) 표점본에서 유래하며
-CC BY-SA 4.0으로 제공됩니다. 계승(ShareAlike) 조건이 붙으므로 위 조항이 아니라
-`data/LICENSE`가 적용됩니다.
-
-두 라이선스가 한 저장소에 함께 있습니다. 어느 파일에 무엇이 적용되는지는
-`data/LICENSE`의 「적용 범위」 절을 보십시오.
-
---------------------------------------------------------------------------
-면책
---------------------------------------------------------------------------
-
-본 소프트웨어는 "있는 그대로" 제공되며, 상품성이나 특정 목적 적합성을 포함한
-어떠한 명시적·묵시적 보증도 하지 않습니다.
-
-본 서비스는 의료기기(SaMD) 또는 전문 심리치료를 대체하지 않습니다.
-자기 성찰과 의사결정을 돕는 웰니스 도구입니다. 판단 근거는
-`docs/SAMD_SELF_ASSESSMENT.md`에 있습니다.
+- **I-Ching Text & Annotations**:
+  The classical I-Ching text, Jeong-jeon (程傳) and Ben-ui (本義) annotations sourced from Kanseki Repository (漢籍リポジトリ, KR1a0001, KR1a0016, KR1a0031) are licensed under Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0).
+  Attribution: Kanseki Repository (漢籍リポジトリ), Kyoto University Institute for Research in Humanities.

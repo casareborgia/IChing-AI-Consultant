@@ -5,10 +5,10 @@
 [![Architecture](https://img.shields.io/badge/Architecture-3--Tier_Serverless-blue?style=flat&logo=googlecloud)](https://github.com/casareborgia/IChing-AI-Consultant)
 [![Framework](https://img.shields.io/badge/Frontend-Next.js_16-black?style=flat&logo=nextdotjs)](https://github.com/casareborgia/IChing-AI-Consultant)
 [![Backend](https://img.shields.io/badge/Backend-FastAPI_v1.0-009688?style=flat&logo=fastapi)](https://github.com/casareborgia/IChing-AI-Consultant)
-[![Tests](https://img.shields.io/badge/Tests-128_Passed-brightgreen?style=flat&logo=pytest)](https://github.com/casareborgia/IChing-AI-Consultant)
+[![Tests](https://img.shields.io/badge/Tests-123_Passed-brightgreen?style=flat&logo=pytest)](https://github.com/casareborgia/IChing-AI-Consultant)
 [![Security](https://img.shields.io/badge/Security-Zero_Trust_JWT-emerald?style=flat&logo=auth0)](https://github.com/casareborgia/IChing-AI-Consultant)
-[![License: Code](https://img.shields.io/badge/Code-All_Rights_Reserved-red?style=flat)](LICENSE)
-[![License: Data](https://img.shields.io/badge/Data-CC_BY--SA_4.0-lightgrey?style=flat)](data/LICENSE)
+[![License: Code](https://img.shields.io/badge/Code-MIT_License-blue?style=flat)](LICENSE)
+[![License: Data](https://img.shields.io/badge/Data-CC_BY--SA_4.0-lightgrey?style=flat)](data/PROVENANCE.md)
 
 ---
 
@@ -123,7 +123,7 @@ flowchart TD
 - **Next.js 16 (App Router, Turbopack)**: Vercel 서울 리전(`icn1`) 배포
 - **React 19 / TypeScript**
 - **Tailwind CSS / Framer Motion / Lucide React**
-- **Modern Zen UI**: 주역 6효 애니메이션, 동효(노양/노음) 변화 시각화, 실시간 근거 패널, 50 웰컴 크레딧 배지
+- **Modern Zen UI**: 주역 6효 애니메이션, 동효(노양/노음) 변화 시각화, 실시간 근거 패널, 턴 단위 10 크레딧 차감 & 실시간 잔액 동기화 배지
 
 ---
 
@@ -182,19 +182,22 @@ npm run dev
 ## 🧪 테스트 및 벤치마크
 
 ```bash
-# 1. 전체 단위 및 보안 통합 테스트 실행 (120개 케이스 전수 검증)
+# 1. 전체 단위 및 보안 통합 테스트 실행 (123개 케이스 전수 검증)
 .venv/bin/pytest -q
 
 # 2. JWT 인증 및 소유권 차단 전용 테스트
 .venv/bin/pytest tests/test_jwt_auth.py -v
 
-# 3. 안전 스크리닝 채점 벤치마크 (115건)
+# 3. 크레딧 과금 및 대화 턴 차감 전용 테스트
+.venv/bin/pytest tests/test_credit_system.py -v
+
+# 4. 안전 스크리닝 채점 벤치마크 (115건)
 .venv/bin/python scripts/score_safety.py -p gemini
 
-# 4. 에이전트 형식 및 제약 벤치마크 (24/24 전수 통과)
+# 5. 에이전트 형식 및 제약 벤치마크 (24/24 전수 통과)
 .venv/bin/python scripts/score_agents.py -p gemini
 
-# 5. 본의 주석 톤 영향 및 예언 단정성 검증 (단정적 표현 0건)
+# 6. 본의 주석 톤 영향 및 예언 단정성 검증 (단정적 표현 0건)
 .venv/bin/python scripts/compare_benui_tone.py -p gemini
 ```
 
@@ -223,10 +226,10 @@ RAG 검색, 안전 스크리닝의 배선은 모두 코드에서 확인하실 �
 
 | 대상 | 라이선스 | 파일 |
 |---|---|---|
-| 소스 코드 | **전권 유보 (All rights reserved).** 열람용으로 공개되어 있을 뿐 오픈소스가 아닙니다 | [`LICENSE`](LICENSE) |
-| `data/` 텍스트 및 파생물 | **CC BY-SA 4.0** (계승 조건 포함) | [`data/LICENSE`](data/LICENSE) |
+| 소스 코드 | **MIT License** (자유로운 사용, 수정 및 2차 배포 가능) | [`LICENSE`](LICENSE) |
+| `data/` 텍스트 및 파생물 | **CC BY-SA 4.0** (출처 표기 및 동일 조건 변경 허락 계승) | [`data/PROVENANCE.md`](data/PROVENANCE.md) |
 
-코드의 복제·2차 저작물 작성·서비스 운영에는 저작권자의 사전 서면 허락이 필요합니다.
+소스 코드는 MIT License 조건 하에 자유롭게 활용 가능하며, 데이터셋 및 원전 자료는 CC BY-SA 4.0 저작권 표시 조건을 따릅니다.
 
 ### 원전 출처
 주역 원문, 정전(程傳) 및 본의(本義) 주석 텍스트는 **Kanseki Repository (漢籍リポジトリ), 교토대학 인문과학연구소**의 표점본을 저본으로 합니다.

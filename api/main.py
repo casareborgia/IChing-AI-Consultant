@@ -170,56 +170,34 @@ async def start_consultation_endpoint(
         try:
             # 1. 크레딧 잔액 확인 및 차감 가드
             clean_user_id = str(user_id)
-            stmt = select(UserProfile).where(cast(UserProfile.id, String) == clean_user_id)
+            stmt = select(UserProfile).where(UserProfile.id == clean_user_id)
             profile = (await db_session.execute(stmt)).scalar_one_or_none()
 
             if not profile:
                 # 프로필이 없으면 웰컴 50 크레딧 부여 후 자동 생성
-                try:
-                    await db_session.execute(
-                        text("INSERT INTO profiles (id, credit_balance) VALUES (cast(:uid as uuid), 50) ON CONFLICT DO NOTHING"),
-                        {"uid": clean_user_id}
-                    )
-                    await db_session.execute(
-                        text("INSERT INTO credit_ledger (id, user_id, amount, reason) VALUES (gen_random_uuid(), cast(:uid as uuid), 50, '신규 가입 웰컴 크레딧')"),
-                        {"uid": clean_user_id}
-                    )
-                except Exception:
-                    await db_session.execute(
-                        text("INSERT INTO profiles (id, credit_balance) VALUES (:uid, 50) ON CONFLICT DO NOTHING"),
-                        {"uid": clean_user_id}
-                    )
-                    await db_session.execute(
-                        text("INSERT INTO credit_ledger (user_id, amount, reason) VALUES (:uid, 50, '신규 가입 웰컴 크레딧')"),
-                        {"uid": clean_user_id}
-                    )
+                profile = UserProfile(id=clean_user_id, credit_balance=50)
+                db_session.add(profile)
                 await db_session.flush()
-                profile = (await db_session.execute(stmt)).scalar_one_or_none()
+                db_session.add(CreditLedger(user_id=clean_user_id, amount=50, reason="신규 가입 웰컴 크레딧"))
+                await db_session.flush()
 
-            current_balance = profile.credit_balance if profile else 50
-
-            if current_balance < CONSULTATION_CREDIT_COST:
+            if profile.credit_balance < CONSULTATION_CREDIT_COST:
                 raise HTTPException(
                     status_code=402,
-                    detail=f"크레딧이 부족합니다. (상담 1회: {CONSULTATION_CREDIT_COST} 크레딧 필요, 현재 잔액: {current_balance}C)",
+                    detail=f"크레딧이 부족합니다. (상담 1회: {CONSULTATION_CREDIT_COST} 크레딧 필요, 현재 잔액: {profile.credit_balance}C)",
                 )
 
             # 2. 크레딧 차감 (10C) 및 장부 기록
-            new_balance = current_balance - CONSULTATION_CREDIT_COST
-            await db_session.execute(
-                text("UPDATE profiles SET credit_balance = :bal WHERE cast(id as varchar) = :uid"),
-                {"bal": new_balance, "uid": clean_user_id}
+            profile.credit_balance -= CONSULTATION_CREDIT_COST
+            db_session.add(
+                CreditLedger(
+                    user_id=clean_user_id,
+                    amount=-CONSULTATION_CREDIT_COST,
+                    reason="주역 성찰 상담 세션 시작",
+                )
             )
-            try:
-                await db_session.execute(
-                    text("INSERT INTO credit_ledger (id, user_id, amount, reason) VALUES (gen_random_uuid(), cast(:uid as uuid), -10, '주역 성찰 상담 세션 시작')"),
-                    {"uid": clean_user_id}
-                )
-            except Exception:
-                await db_session.execute(
-                    text("INSERT INTO credit_ledger (user_id, amount, reason) VALUES (:uid, -10, '주역 성찰 상담 세션 시작')"),
-                    {"uid": clean_user_id}
-                )
+            new_balance = profile.credit_balance
+
 
 
 

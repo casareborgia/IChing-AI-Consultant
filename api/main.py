@@ -273,22 +273,6 @@ async def start_consultation_endpoint(
             is_crisis = result.safety_category == "BLOCK_CRISIS"
             crisis_resources = get_crisis_resources_by_context() if is_crisis else []
 
-            # 3. 받을 상담이 아니었으면 되돌린다.
-            #
-            # run_turn 이 내부에서 커밋하므로 차감은 이미 확정돼 있다. 여기서는 취소가
-            # 아니라 환불이고, 장부에 -10 과 +10 이 나란히 남는다 — 무엇이 왜 되돌아갔는지
-            # 보이는 편이 낫다.
-            remaining_credits = balance_after_charge
-            if not _is_chargeable(result):
-                reason = "위기 감지 안심 환불" if is_crisis else "재삼독 안내 환불"
-                refunded = await _refund(
-                    db_session, user_id, CONSULTATION_CREDIT_COST, reason
-                )
-                await db_session.commit()
-                if refunded is not None:
-                    remaining_credits = refunded
-                logger.info("크레딧 환불: user=%s reason=%s", user_id, reason)
-
             return {
                 "session_id": result.session_id,
                 "turn_number": result.turn_number,
@@ -304,8 +288,9 @@ async def start_consultation_endpoint(
                 "journal_summary": result.journal_summary,
                 "focus_rule": result.focus_rule,
                 "evidences": result.evidences,
-                "remaining_credits": remaining_credits,
+                "remaining_credits": new_balance,
             }
+
         except HTTPException:
             await db_session.rollback()
             raise

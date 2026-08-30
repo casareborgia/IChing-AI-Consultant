@@ -8,12 +8,15 @@
 from collections import defaultdict
 import logging
 import time
+import uuid
+
 from typing import Dict, List, Optional
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
-from sqlalchemy import String, cast, select
+from sqlalchemy import String, cast, func, select
+
 
 
 
@@ -166,12 +169,9 @@ async def start_consultation_endpoint(
         try:
             # 1. 크레딧 잔액 확인 및 차감 가드
             clean_user_id = str(user_id)
-            try:
-                stmt = select(UserProfile).where(UserProfile.id == clean_user_id)
-                profile = (await db_session.execute(stmt)).scalar_one_or_none()
-            except Exception:
-                stmt = select(UserProfile).where(cast(UserProfile.id, String) == clean_user_id)
-                profile = (await db_session.execute(stmt)).scalar_one_or_none()
+            stmt = select(UserProfile).where(func.cast(UserProfile.id, String) == clean_user_id)
+            profile = (await db_session.execute(stmt)).scalar_one_or_none()
+
 
             if not profile:
                 # 프로필이 없으면 웰컴 50 크레딧 부여 후 자동 생성
@@ -180,6 +180,7 @@ async def start_consultation_endpoint(
                 await db_session.flush()
                 db_session.add(CreditLedger(user_id=clean_user_id, amount=50, reason="신규 가입 웰컴 크레딧"))
                 await db_session.flush()
+
 
 
 

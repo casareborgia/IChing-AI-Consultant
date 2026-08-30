@@ -123,6 +123,10 @@ export default function Home() {
       const turnCount = Math.floor(messages.length / 2) + 1;
       const apiRes = await sendConsultationTurnApi(sessionId, text, turnCount, castResult);
 
+      if (typeof apiRes.remainingCredits === 'number') {
+        updateCredit(apiRes.remainingCredits);
+      }
+
       setMessages((prev) => [...prev, apiRes.replyMessage]);
 
       if (apiRes.isFinal) {

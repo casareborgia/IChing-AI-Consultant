@@ -10,14 +10,17 @@ from sqlalchemy import cast, delete, select, String
 from api.main import app
 from core.config import settings
 from core.db import AsyncSessionLocal, Base, engine
-from core.models.counsel import CreditLedger, UserProfile
+from core.models.counsel import CounselSession, CreditLedger, UserProfile
 
 
 @pytest.fixture(autouse=True)
 async def setup_db():
-    """테스트 전 DB 테이블 자동 생성."""
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+    """테스트 전 테이블 레코드 정돈."""
+    async with AsyncSessionLocal() as session:
+        await session.execute(delete(CreditLedger))
+        await session.execute(delete(CounselSession))
+        await session.execute(delete(UserProfile))
+        await session.commit()
     yield
 
 
@@ -174,4 +177,63 @@ async def test_multiple_consecutive_consultations_deduct_credits_correctly():
             assert res6.status_code == 402
 
     app.dependency_overrides.clear()
+
+
+@pytest.mark.asyncio
+async def test_counsel_turn_deducts_credit_and_handles_402():
+    """상담 대화 턴 (/api/counsel/turn) 호출 시에도 10 크레딧이 차감되고 잔액 부족 시 402 반환됨을 검증."""
+    test_user_id = str(uuid.uuid4())
+    session_id = "test-turn-session-001"
+
+    # 사전 DB 준비: 유저 잔액 15C 및 상담 세션 생성
+    async with AsyncSessionLocal() as session:
+        session.add(UserProfile(id=test_user_id, credit_balance=15))
+        session.add(
+            __import__("core.models.counsel", fromlist=["CounselSession"]).CounselSession(
+                id=session_id, user_id=test_user_id, raw_question="턴 테스트"
+            )
+        )
+        await session.commit()
+
+    async def mock_require_user():
+        return test_user_id
+
+    from api.deps import require_user
+    app.dependency_overrides[require_user] = mock_require_user
+
+    mock_turn_result = AsyncMock()
+    mock_turn_result.session_id = session_id
+    mock_turn_result.turn_number = 2
+    mock_turn_result.user_facing_message = "턴 대화 응답"
+    mock_turn_result.needs_followup = True
+    mock_turn_result.is_final = False
+    mock_turn_result.hexagram_id = 1
+    mock_turn_result.transformed_hexagram_id = 1
+    mock_turn_result.changing_lines = []
+    mock_turn_result.safety_category = "NORMAL"
+    mock_turn_result.is_duplicate = False
+    mock_turn_result.journal_summary = None
+    mock_turn_result.focus_rule = None
+    mock_turn_result.evidences = []
+
+    with patch("api.main.run_turn", return_value=mock_turn_result):
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+            # 1번째 턴: 15 -> 5
+            res1 = await client.post(
+                "/api/counsel/turn",
+                json={"session_id": session_id, "user_message": "턴 메세지 1"},
+            )
+            assert res1.status_code == 200
+            assert res1.json()["remaining_credits"] == 5
+
+            # 2번째 턴: 5 < 10 -> 402 Payment Required
+            res2 = await client.post(
+                "/api/counsel/turn",
+                json={"session_id": session_id, "user_message": "턴 메세지 2"},
+            )
+            assert res2.status_code == 402
+            assert "크레딧이 부족합니다" in res2.json()["detail"]
+
+    app.dependency_overrides.clear()
+
 

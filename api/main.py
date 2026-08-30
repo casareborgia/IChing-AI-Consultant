@@ -26,12 +26,15 @@ from core.models.counsel import CounselSession, CreditLedger, UserProfile
 CONSULTATION_CREDIT_COST = 10
 WELCOME_CREDITS = 50
 
-# 크레딧을 받지 않는 결과. 둘 다 상담다운 상담이 나가지 않은 경우다.
-#   BLOCK_CRISIS — 괘 없이 핫라인 안내만 나간다. 가입 화면이 "위기 감지 시 크레딧
-#                  미차감"을 약속하고, 블루프린트는 이를 SaMD 윤리 기준으로 든다.
-#   재삼독        — 같은 질문이라 괘를 다시 뽑지 않는다(설계 원칙 2).
+# 크레딧을 받지 않는 유일한 경우는 위기 판정이다. 괘 없이 핫라인 안내만 나가고,
+# 가입 화면이 "위기 감지 시 크레딧 미차감"을 약속하며 블루프린트는 이를 SaMD 윤리
+# 기준으로 든다.
+#
+# 재삼독(같은 질문을 다시 물어 괘를 새로 뽑지 않는 경우)은 받는다. 괘가 안 나올 뿐
+# 정리·중복 판정·상담 응답까지 파이프라인이 그대로 돌아 비용이 발생하고, 이전 상담을
+# 다시 보여주거나 "무엇이 달라졌는지" 되묻는 것 자체가 제공하는 값이다(설계 원칙 2).
 def _is_chargeable(result) -> bool:
-    return result.safety_category != "BLOCK_CRISIS" and not result.is_duplicate
+    return result.safety_category != "BLOCK_CRISIS"
 
 
 async def _ensure_profile(db_session, user_id: str) -> None:
@@ -225,43 +228,31 @@ async def start_consultation_endpoint(
     """최초 질문으로 상담 세션을 시작하고 괘 도출 및 1턴 결과를 반환합니다 (JWT 인증 필수, 10 크레딧 차감)."""
     async with AsyncSessionLocal() as db_session:
         try:
-            # 1. 크레딧 잔액 확인 및 차감 가드
-            clean_user_id = str(user_id)
-            stmt = select(UserProfile).where(UserProfile.id == clean_user_id)
-            profile = (await db_session.execute(stmt)).scalar_one_or_none()
-
-            if not profile:
-                # 프로필이 없으면 웰컴 50 크레딧 부여 후 자동 생성
-                profile = UserProfile(id=clean_user_id, credit_balance=50)
-                db_session.add(profile)
-                await db_session.flush()
-                db_session.add(CreditLedger(user_id=clean_user_id, amount=50, reason="신규 가입 웰컴 크레딧"))
-                await db_session.flush()
-
-            if profile.credit_balance < CONSULTATION_CREDIT_COST:
+            # 1. 크레딧 차감 — 턴을 돌리기 전에 원자적으로 잡아둔다.
+            #
+            # ORM 객체의 credit_balance 를 파이썬에서 빼는 방식은 읽고-계산하고-쓰기라,
+            # 동시 요청 둘이 같은 잔액을 읽고 서로의 차감을 덮어쓴다. 40 크레딧에 8건을
+            # 동시에 던지면 8건이 전부 통과했다(tests/test_credit_system.py). _charge 는
+            # 조건과 갱신을 한 문장에 두어 그 창을 없앤다.
+            await _ensure_profile(db_session, user_id)
+            balance_after_charge = await _charge(
+                db_session, user_id, CONSULTATION_CREDIT_COST, "주역 성찰 상담 세션 시작"
+            )
+            if balance_after_charge is None:
+                current = (
+                    await db_session.execute(
+                        select(UserProfile.credit_balance).where(UserProfile.id == user_id)
+                    )
+                ).scalar_one_or_none()
                 raise HTTPException(
                     status_code=402,
-                    detail=f"크레딧이 부족합니다. (상담 1회: {CONSULTATION_CREDIT_COST} 크레딧 필요, 현재 잔액: {profile.credit_balance}C)",
+                    detail=(
+                        f"크레딧이 부족합니다. (상담 1회: {CONSULTATION_CREDIT_COST} 크레딧 필요, "
+                        f"현재 잔액: {current if current is not None else 0}C)"
+                    ),
                 )
 
-            # 2. 크레딧 차감 (10C) 및 장부 기록
-            profile.credit_balance -= CONSULTATION_CREDIT_COST
-            db_session.add(
-                CreditLedger(
-                    user_id=clean_user_id,
-                    amount=-CONSULTATION_CREDIT_COST,
-                    reason="주역 성찰 상담 세션 시작",
-                )
-            )
-            new_balance = profile.credit_balance
-
-
-
-
-
-
-
-            # 3. 턴 실행 및 트랜잭션 커밋
+            # 2. 턴 실행
             result = await run_turn(
                 session=db_session,
                 counsel_session_id=None,
@@ -272,6 +263,20 @@ async def start_consultation_endpoint(
 
             is_crisis = result.safety_category == "BLOCK_CRISIS"
             crisis_resources = get_crisis_resources_by_context() if is_crisis else []
+
+            # 3. 위기 판정이면 되돌린다.
+            #
+            # run_turn 이 내부에서 커밋하므로 차감은 이미 확정돼 있다. 취소가 아니라
+            # 환불이고, 장부에 -10 과 +10 이 사유와 함께 나란히 남는다.
+            remaining_credits = balance_after_charge
+            if not _is_chargeable(result):
+                refunded = await _refund(
+                    db_session, user_id, CONSULTATION_CREDIT_COST, "위기 감지 안심 환불"
+                )
+                await db_session.commit()
+                if refunded is not None:
+                    remaining_credits = refunded
+                logger.info("위기 감지 크레딧 환불: user=%s", user_id)
 
             return {
                 "session_id": result.session_id,
@@ -288,7 +293,7 @@ async def start_consultation_endpoint(
                 "journal_summary": result.journal_summary,
                 "focus_rule": result.focus_rule,
                 "evidences": result.evidences,
-                "remaining_credits": new_balance,
+                "remaining_credits": remaining_credits,
             }
 
         except HTTPException:

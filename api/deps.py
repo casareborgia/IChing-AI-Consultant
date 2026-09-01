@@ -35,6 +35,13 @@ async def require_user(request: Request) -> str:
     - 만료 시간(exp) 및 필수 클레임(sub) 검증
     """
     auth_header = request.headers.get("authorization", "").strip()
+    token = auth_header[7:].strip() if auth_header.lower().startswith("bearer ") else ""
+
+    # 로컬 개발 환경(ENVIRONMENT != "production") 예외: dev-token 또는 미인증 시 개발용 유저 반환
+    if settings.ENVIRONMENT != "production":
+        if token == "dev-token" or not token:
+            return "00000000-0000-0000-0000-000000000000"
+
     if not auth_header or not auth_header.lower().startswith("bearer "):
         raise HTTPException(
             status_code=401,

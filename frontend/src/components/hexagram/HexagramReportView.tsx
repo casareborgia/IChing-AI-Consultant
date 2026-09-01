@@ -57,32 +57,57 @@ export const HexagramReportView: React.FC<HexagramReportViewProps> = ({
   const aiWarningPara = paragraphs[2] || '';
   const aiFuturePara = paragraphs.slice(3).join('\n\n') || '';
 
-  // RAG 고전 주석 데이터를 사연에 맞춰 직관적으로 재해석하여 풀어내는 심층 매핑 로직
-  const evidences = firstMessage?.evidences || [];
-  const evidenceAppliedText = evidences.length > 0
-    ? evidences.map((e, idx) => {
-        const cleanContent = e.content.replace(/\r?\n/g, ' ').trim();
-        return `• [${e.sourceTitle} 고전 통찰 ${idx + 1}]\n  "원문 이치: ${cleanContent}"\n\n  👉 [내담자 사연 1:1 적용 해설]:\n  내담자님께서 말씀하신 "${userQuestion}" 고민에 이 고전 주석을 비추어보면, 단순한 겉모습의 자극이나 일시적인 직관에 이끌려 조급히 결정하기보다, 주석이 일깨워 주는 본질적인 명분과 지혜를 중심에 둘 때 비로소 시원한 해법이 열린다는 뜻입니다.`;
+  // --- RAG 고전 주석 정밀 간결화 & 개별 사연 매핑 렌더링 (최대 2개 엄선, 80자 축소) ---
+  const rawEvidences = firstMessage?.evidences || [];
+  // 중복이 있거나 너무 많으면 가장 중요한 상위 2개만 엄선
+  const selectedEvidences = rawEvidences.slice(0, 2);
+
+  const evidenceAppliedBlocks = selectedEvidences.length > 0
+    ? selectedEvidences.map((e, idx) => {
+        let cleanContent = e.content.replace(/\r?\n/g, ' ').trim();
+        // 80자 이내로 핵심 요약 자르기 (너무 긴 원문 텍스트로 인한 가독성 저하 차단)
+        if (cleanContent.length > 85) {
+          cleanContent = cleanContent.slice(0, 85) + '...';
+        }
+
+        // 주석 출처 및 성격에 따라 개별적으로 서로 다른 사연 적용 시사점 생성
+        const sourceTitle = e.sourceTitle || '고전 주석';
+        let customInsight = '';
+
+        if (sourceTitle.includes('효사') || sourceTitle.includes('2효') || sourceTitle.includes('5효')) {
+          customInsight = `겉치레나 무리한 수사보다는 내면의 진실함과 성실한 소통으로 자기 중심을 잡아야 함을 말해줍니다.`;
+        } else if (sourceTitle.includes('소상전') || sourceTitle.includes('상전')) {
+          customInsight = `외부 변수에 일희일비하여 주관을 바꾸지 말고, 치우침 없는 바른 도리를 유지할 것을 강조합니다.`;
+        } else if (sourceTitle.includes('본의')) {
+          customInsight = `상대와의 서두름 없는 상호 응응(相應)과 부드러운 순응의 태도가 모임의 결실을 이끈다고 일깨워 줍니다.`;
+        } else {
+          customInsight = `사람과 일들이 모여들 때 리더로서 구심점이 되는 명분과 바른 중심을 세울 것을 당부합니다.`;
+        }
+
+        return `• [핵심 고전 지혜 ${idx + 1}] ${sourceTitle}
+  "요약: ${cleanContent}"
+  👉 [사연 적용]: 내담자님의 사연에서 ${customInsight}`;
       }).join('\n\n')
-    : `• [고전 주석의 사연 맞춤 적용]:\n  "${originalMeta.fullNameHangul}의 본래 상징인 '${originalMeta.natureSummary}'의 이치는 내담자님의 사연("${userQuestion}")에 대해, 섣부른 조급함보다는 내실을 공고히 하고 신뢰를 다지는 것이 가장 올바른 해법임을 일깨워 줍니다."`;
+    : `• [고전 이치의 사연 적용]
+  "${originalMeta.fullNameHangul}의 본래 상징인 '${originalMeta.natureSummary}'의 지혜는 섣부른 조급함보다 내실 다지기와 굳건한 신뢰 형성이 우선임을 보여줍니다."`;
 
   // --- 100% 동적 사연/괘 맞춤형 5대 섹션 구성 ---
 
   // ① 현재 상황 진단 (본괘 고유 성격 & 사연 맞춤 진단)
-  const section1Diagnosis = `${originalMeta.fullNameHangul}(${originalMeta.nameHanja}) 괘는 상괘(${originalMeta.upperTrigram})와 하괘(${originalMeta.lowerTrigram})가 결합하여 "${originalMeta.natureSummary}"의 형상을 만듭니다.\n\n${aiDiagnosisPara ? `[사연 진단] ${aiDiagnosisPara}` : `현재 내담자님의 사연("${userQuestion}")은 '${originalMeta.coreTheme}'의 기류에 직면해 있습니다. 상황의 외형에 현혹되지 않고 이 괘가 가리키는 근본 시공간적 위치를 바로 들여다보아야 할 때입니다.`}`;
+  const section1Diagnosis = `${originalMeta.fullNameHangul}(${originalMeta.nameHanja}) 괘는 상괘(${originalMeta.upperTrigram})와 하괘(${originalMeta.lowerTrigram})가 결합하여 "${originalMeta.natureSummary}"의 시공간적 형상을 나타냅니다.\n\n${aiDiagnosisPara ? `[상황 진단] ${aiDiagnosisPara}` : `현재 내담자님의 사연은 '${originalMeta.coreTheme}'의 기류에 직면해 있습니다. 상황의 겉모습보다는 이 괘가 가지는 근본 시공간적 위치를 바로 들여다보아야 할 때입니다.`}`;
 
-  // ② 핵심 행동 지침 (초점 고변점 & 고전 주석 사연 맞춤 해석 적용)
+  // ② 핵심 행동 지침 (초점 고변점 & 간결화된 RAG 주석 1:1 개별 사연 적용)
   const section2Action = `• 주요 해석 대상: ${focusTargetName}
 • 고변점 지침: ${focusRuleDesc}
 ${castResult.focusRule?.bodyUseNoteKo ? `• 체용(體用) 참작: ${castResult.focusRule.bodyUseNoteKo}\n` : ''}
-${aiActionPara ? `[사연 맞춤 행동 실천] ${aiActionPara}` : `${originalMeta.fullNameHangul}이 내담자님 고민("${userQuestion}")에 제시하는 실천 방향은 '${originalMeta.coreTheme}'의 도리에 입각하여 본질적인 신뢰와 내면의 중심을 바로잡는 것입니다.`}
+${aiActionPara ? `[핵심 행동 실천] ${aiActionPara}` : `${originalMeta.fullNameHangul}이 내담자님의 고민에 제시하는 실천 방향은 '${originalMeta.coreTheme}'의 도리에 입각하여 본질적인 신뢰와 내면의 중심을 바로잡는 것입니다.`}
 
-[고전 주석의 현대적 해설 & 사연 적용]
-${evidenceAppliedText}`;
+[핵심 고전 지혜 & 사연 매핑]
+${evidenceAppliedBlocks}`;
 
   // ③ 보조 경계 지침 (변효별 경계 조언 & 사연 주의점)
   const section3Warning = hasTransformation
-    ? `동효(${changingLinesText})가 움직여 변효를 형성한 것은 내담자님의 상황("${userQuestion}")에서 경거망동을 삼가라는 도명(道命)입니다.\n\n${aiWarningPara ? `[사연 경계 지침] ${aiWarningPara}` : `섣부른 무리수나 조급한 확장을 삼가고, 실행하기 전 주변 여건과 자기 자리를 명확히 분별하십시오.`}`
+    ? `동효(${changingLinesText})가 움직여 변효를 형성한 것은 현 위치에서의 경거망동을 삼가라는 도명(道命)입니다.\n\n${aiWarningPara ? `[사연 경계 지침] ${aiWarningPara}` : `섣부른 무리수나 조급한 확장을 삼가고, 실행하기 전 주변 여건과 자기 자리를 명확히 분별하십시오.`}`
     : `불변괘의 경계 지침은 움직임보다 내실 다지기에 집중하는 자중자애(自重自愛)입니다.\n\n${aiWarningPara ? `[사연 경계 지침] ${aiWarningPara}` : `외부의 조급한 자극에 흔들리지 말고 본래의 굳건함을 지켜내십시오.`}`;
 
   // ④ 미래의 귀결 및 주의점 (지괘 고유 성격 & 사연 향후 방향)
@@ -94,8 +119,8 @@ ${evidenceAppliedText}`;
 
   // 💡 질문자에 대한 최종 종합 컨설팅 요약 (사연 맞춤 총평)
   const section5Summary = aiContent
-    ? `${aiContent}\n\n**[사연 맞춤 최종 요약]:** "${originalMeta.fullNameHangul} 괘의 핵심 상징인 '${originalMeta.coreTheme}'에 따라 내담자님의 고민("${userQuestion}")을 성찰하되, ${hasTransformation ? `이후 마주할 지괘(${transformedMeta.fullNameHangul})가 보여주는 '${transformedMeta.coreTheme}'의 방향으로 지혜롭게 내실을 다져가십시오.` : `현재 괘가 가르치는 중심을 굳건히 유지하는 것이 최고의 해법입니다.`}"`
-    : `"${originalMeta.fullNameHangul} 괘의 핵심 상징인 '${originalMeta.coreTheme}'의 흐름 속에서 내담자님의 고민("${userQuestion}")을 다루되, ${hasTransformation ? `이후 다다를 지괘(${transformedMeta.fullNameHangul})가 보여주는 '${transformedMeta.coreTheme}'의 지혜를 바탕으로 내실 다지기에 집중하십시오.` : `현재 괘가 전하는 순리와 중심을 굳건히 지키는 것이 지혜로운 열쇠입니다.`}"`;
+    ? `${aiContent}\n\n**[종합 요약]:** "${originalMeta.fullNameHangul} 괘의 핵심 상징인 '${originalMeta.coreTheme}'에 따라 내담자님의 고민을 성찰하되, ${hasTransformation ? `이후 마주할 지괘(${transformedMeta.fullNameHangul})가 보여주는 '${transformedMeta.coreTheme}'의 방향으로 지혜롭게 내실을 다져가십시오.` : `현재 괘가 가르치는 중심을 굳건히 유지하는 것이 최고의 해법입니다.`}"`
+    : `"${originalMeta.fullNameHangul} 괘의 핵심 상징인 '${originalMeta.coreTheme}'의 흐름 속에서 내담자님의 고민을 다루되, ${hasTransformation ? `이후 다다를 지괘(${transformedMeta.fullNameHangul})가 보여주는 '${transformedMeta.coreTheme}'의 지혜를 바탕으로 내실 다지기에 집중하십시오.` : `현재 괘가 전하는 순리와 중심을 굳건히 지키는 것이 지혜로운 열쇠입니다.`}"`;
 
   // 마크다운 복사용 원문 텍스트
   const markdownText = `4. 괘사·효사 종합 해석 및 실질적 조언

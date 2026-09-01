@@ -207,6 +207,7 @@ async def run_interpret(
         original_hexagram_id=cast_result.original_hexagram_id,
         transformed_hexagram_id=cast_result.transformed_hexagram_id,
         changing_lines=cast_result.changing_lines,
+        lines_val=[l.value for l in cast_result.lines],
         raw_text=evidence.summary_korean,
         focus_image=bridge["focus_image"],
         image_position=bridge["image_position"],

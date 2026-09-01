@@ -129,6 +129,8 @@ import { supabase } from './supabaseClient';
  * 실제 백엔드 API 호출: 상담 시작 (안전 스크리닝 -> 접수 -> 괘 도출 -> 1턴 응답)
  * Supabase JWT(Bearer token)를 필수 첨부합니다.
  */
+import { HexagramReportData } from '../types/iching';
+
 export async function startConsultationApi(
   question: string,
   _userId?: string
@@ -140,6 +142,7 @@ export async function startConsultationApi(
   castResult?: CastResult;
   firstMessage?: ChatMessage;
   remainingCredits?: number;
+  reportData?: HexagramReportData;
 }> {
   try {
     const { data: { session } } = await supabase.auth.getSession();
@@ -208,6 +211,7 @@ export async function startConsultationApi(
       castResult,
       firstMessage,
       remainingCredits: data.remaining_credits,
+      reportData: data.report_data,
     };
 
   } catch (error) {

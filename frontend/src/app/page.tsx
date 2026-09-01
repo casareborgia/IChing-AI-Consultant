@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Compass, Sparkles, Feather, HelpCircle, ArrowRight, RotateCcw, Check, LogIn, LogOut, User } from 'lucide-react';
 
-import { CastResult, ChatMessage as ChatMessageType, ConsultationStep, JournalSummary } from '../types/iching';
+import { CastResult, ChatMessage as ChatMessageType, ConsultationStep, HexagramReportData, JournalSummary } from '../types/iching';
 import { HexagramSymbol } from '../components/hexagram/HexagramSymbol';
 import { HexagramStickyHeader } from '../components/hexagram/HexagramStickyHeader';
 import { HexagramReportView } from '../components/hexagram/HexagramReportView';
@@ -47,6 +47,8 @@ export default function Home() {
     }
   }, [messages, isLoading, step]);
 
+  const [reportData, setReportData] = useState<HexagramReportData | undefined>(undefined);
+
   // 1. 상담 시작 및 괘 도출 (로그인 필수 게이트)
   const handleStartConsultation = async (submittedQuestion?: string) => {
     const q = submittedQuestion || question;
@@ -83,6 +85,7 @@ export default function Home() {
         setSessionId(apiRes.sessionId);
         setCastResult(apiRes.castResult);
         setFirstAiMessage(apiRes.firstMessage);
+        setReportData(apiRes.reportData);
 
         // 사용자가 처음 입력한 고민을 1번째 메시지로 등록하고, 그 뒤에 AI의 괘 분석 첫 답변 배치
         const initialUserMsg: ChatMessageType = {
@@ -366,6 +369,7 @@ export default function Home() {
                 castResult={castResult}
                 userQuestion={question}
                 firstMessage={firstAiMessage || messages[1]}
+                reportData={reportData}
                 onProceedToCounsel={handleProceedToCounsel}
               />
             </motion.div>

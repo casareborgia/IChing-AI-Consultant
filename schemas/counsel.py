@@ -58,6 +58,7 @@ class HexagramInterpretationSchema(BaseModel):
     original_hexagram_id: int = Field(..., description="본괘 ID (1~64)")
     transformed_hexagram_id: Optional[int] = Field(None, description="지괘 ID (1~64)")
     changing_lines: List[int] = Field(default_factory=list, description="변효 위치 리스트 (예: [1, 4])")
+    lines_val: Optional[List[int]] = Field(default_factory=list, description="6효 수리 배열 (예: [7, 8, 9, 8, 9, 7])")
     raw_text: str = Field(..., description="DB 조회로 확정된 괘사/효사 원문 및 해석 가이드")
 
     # 매핑을 쓰기 전에 거쳐야 하는 칸들.

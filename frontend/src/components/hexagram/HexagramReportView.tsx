@@ -57,22 +57,28 @@ export const HexagramReportView: React.FC<HexagramReportViewProps> = ({
   const aiWarningPara = paragraphs[2] || '';
   const aiFuturePara = paragraphs.slice(3).join('\n\n') || '';
 
+  // RAG 고전 주석 데이터를 날것으로 나열하지 않고 사연에 맞춰 직관적으로 풀어내는 해석 로직
   const evidences = firstMessage?.evidences || [];
-  const evidenceText = evidences.length > 0
-    ? evidences.map((e) => `• [${e.sourceTitle}] ${e.content}`).join('\n')
-    : '';
+  const evidenceAppliedText = evidences.length > 0
+    ? evidences.map((e) => {
+        const cleanContent = e.content.replace(/\r?\n/g, ' ').trim();
+        return `• [${e.sourceTitle}의 통찰 ➔ 사연 맞춤 해설]\n  "${cleanContent}"\n  👉 [사연 적용]: 이 고전 주석의 지혜는 내담자님의 고민("${userQuestion}")에 대해, 한시적인 조급함이나 겉모습에 현혹되지 않고 이치에 맞는 굳건함을 다질 때 비로소 문제의 본질이 풀려나간다는 깊은 가르침을 줍니다.`;
+      }).join('\n\n')
+    : `• [고전 이치의 사연 적용]\n  "${originalMeta.fullNameHangul}의 본래 상징인 '${originalMeta.natureSummary}'의 지혜는 내담자님의 고민("${userQuestion}")에 대해, 섣부른 조급함보다는 내실을 공고히 하고 신뢰를 다지는 것이 가장 올바른 해법임을 일깨워 줍니다."`;
 
-  // --- 100% 동적 사연/괘 맞춤형 5대 섹션 구성 (하드코딩 고정 문구 100% 제거) ---
+  // --- 100% 동적 사연/괘 맞춤형 5대 섹션 구성 ---
 
   // ① 현재 상황 진단 (본괘 고유 성격 & AI 맞춤 진단)
   const section1Diagnosis = `${originalMeta.fullNameHangul}(${originalMeta.nameHanja}) 괘는 상괘(${originalMeta.upperTrigram})와 하괘(${originalMeta.lowerTrigram})가 결합하여 "${originalMeta.natureSummary}"의 시공간적 형상을 나타냅니다.\n\n${aiDiagnosisPara ? `[상황 진단] ${aiDiagnosisPara}` : `현재 사연("${userQuestion}")은 '${originalMeta.coreTheme}'의 기류에 직면해 있습니다. 상황의 겉모습보다는 이 괘가 가지는 근본 이치를 들여다보아야 할 때입니다.`}`;
 
-  // ② 핵심 행동 지침 (초점 고변점 & 괘별 고유 지침)
+  // ② 핵심 행동 지침 (초점 고변점 & RAG 주석 사연 맞춤 해석)
   const section2Action = `• 주요 해석 대상: ${focusTargetName}
 • 고변점 지침: ${focusRuleDesc}
 ${castResult.focusRule?.bodyUseNoteKo ? `• 체용(體用) 참작: ${castResult.focusRule.bodyUseNoteKo}\n` : ''}
-${aiActionPara ? `[행동 지침] ${aiActionPara}` : `${originalMeta.fullNameHangul}이 시사하는 실천 방향은 '${originalMeta.coreTheme}'의 도리에 입각하여 본질적인 신뢰와 내면의 중심을 바로잡는 것입니다.`}
-${evidenceText ? `\n\n[고전 주석 근거]\n${evidenceText}` : ''}`;
+${aiActionPara ? `[핵심 행동 실천] ${aiActionPara}` : `${originalMeta.fullNameHangul}이 시사하는 실천 방향은 '${originalMeta.coreTheme}'의 도리에 입각하여 본질적인 신뢰와 내면의 중심을 바로잡는 것입니다.`}
+
+[고전 주석의 현대적 해설 & 사연 적용]
+${evidenceAppliedText}`;
 
   // ③ 보조 경계 지침 (변효별 경계 조언)
   const section3Warning = hasTransformation

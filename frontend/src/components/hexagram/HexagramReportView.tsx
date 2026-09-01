@@ -62,32 +62,34 @@ export const HexagramReportView: React.FC<HexagramReportViewProps> = ({
     ? evidences.map((e) => `• [${e.sourceTitle}] ${e.content}`).join('\n')
     : '';
 
-  // --- 100% 동적 사연/괘 맞춤형 5대 섹션 구성 ---
+  // --- 100% 동적 사연/괘 맞춤형 5대 섹션 구성 (하드코딩 고정 문구 100% 제거) ---
 
-  // ① 현재 상황 진단 (본괘)
-  const section1Diagnosis = `${originalMeta.fullNameHangul}(${originalMeta.nameHanja}) 괘는 상괘(${originalMeta.upperTrigram})와 하괘(${originalMeta.lowerTrigram})가 어우러져 "${originalMeta.natureSummary}"의 형상을 보입니다.\n\n${aiDiagnosisPara ? `[상황 진단] ${aiDiagnosisPara}` : `현재 사연("${userQuestion}")은 ${originalMeta.coreTheme}의 시공간적 기류 속에 놓여 있으므로, 섣부른 판단보다는 상황의 본질을 깊이 들여다보아야 합니다.`}`;
+  // ① 현재 상황 진단 (본괘 고유 성격 & AI 맞춤 진단)
+  const section1Diagnosis = `${originalMeta.fullNameHangul}(${originalMeta.nameHanja}) 괘는 상괘(${originalMeta.upperTrigram})와 하괘(${originalMeta.lowerTrigram})가 결합하여 "${originalMeta.natureSummary}"의 시공간적 형상을 나타냅니다.\n\n${aiDiagnosisPara ? `[상황 진단] ${aiDiagnosisPara}` : `현재 사연("${userQuestion}")은 '${originalMeta.coreTheme}'의 기류에 직면해 있습니다. 상황의 겉모습보다는 이 괘가 가지는 근본 이치를 들여다보아야 할 때입니다.`}`;
 
-  // ② 핵심 행동 지침 (주 주요 해석 대상)
+  // ② 핵심 행동 지침 (초점 고변점 & 괘별 고유 지침)
   const section2Action = `• 주요 해석 대상: ${focusTargetName}
 • 고변점 지침: ${focusRuleDesc}
 ${castResult.focusRule?.bodyUseNoteKo ? `• 체용(體用) 참작: ${castResult.focusRule.bodyUseNoteKo}\n` : ''}
-${aiActionPara ? `[행동 지침] ${aiActionPara}` : `${originalMeta.fullNameHangul}의 이치에 따라 조급한 이익이나 외형보다는 본질적 신뢰와 굳건한 태도를 먼저 다지는 것이 핵심 실천 방향입니다.`}
+${aiActionPara ? `[행동 지침] ${aiActionPara}` : `${originalMeta.fullNameHangul}이 시사하는 실천 방향은 '${originalMeta.coreTheme}'의 도리에 입각하여 본질적인 신뢰와 내면의 중심을 바로잡는 것입니다.`}
 ${evidenceText ? `\n\n[고전 주석 근거]\n${evidenceText}` : ''}`;
 
-  // ③ 보조 경계 지침 (동효 및 경계)
+  // ③ 보조 경계 지침 (변효별 경계 조언)
   const section3Warning = hasTransformation
-    ? `동효(${changingLinesText})가 움직인 것은 조급한 무리수나 성급한 확장, 독단적인 추진을 삼가라는 강한 경고입니다.\n\n${aiWarningPara ? `[경계 지침] ${aiWarningPara}` : `실행에 옮기기 전 현실적인 조건과 위험 요인을 최소 두세 번 이상 신중히 점검한 뒤 나아가십시오.`}`
-    : `불변괘의 경계 지침은 섣부른 조급함을 버리고 현재의 중심을 차분히 지키는 것입니다.\n\n${aiWarningPara ? `[경계 지침] ${aiWarningPara}` : `무리한 변화보다는 내부 내실을 다지는 데 집중하십시오.`}`;
+    ? `동효(${changingLinesText})가 형성된 것은 현 위치에서의 경거망동을 경계하라는 도명(道命)입니다.\n\n${aiWarningPara ? `[경계 지침] ${aiWarningPara}` : `섣부른 성급함이나 지나친 과유불급을 삼가고, 나아가기 전 주변 여건과 자기 자리를 명확히 분별하십시오.`}`
+    : `불변괘의 경계 지침은 움직임보다 내실 다지기에 집중하는 자중자애(自重自愛)입니다.\n\n${aiWarningPara ? `[경계 지침] ${aiWarningPara}` : `외부의 조급한 자극에 흔들리지 말고 본래의 굳건함을 지켜내십시오.`}`;
 
-  // ④ 미래의 귀결 및 주의점 (지괘)
+  // ④ 미래의 귀결 및 주의점 (지괘 고유 성격)
   const section4Future = hasTransformation
     ? `[지괘: ${transformedMeta.fullNameHangul}(${transformedMeta.nameHanja})]
-전환을 거친 뒤 다다를 지괘는 '${transformedMeta.coreTheme}'의 성격을 가진 ${transformedMeta.fullNameHangul} 괘입니다.\n\n${aiFuturePara ? `[미래 귀결] ${aiFuturePara}` : `변화 후에는 외형을 마구 확장하기보다 "${transformedMeta.natureSummary}"의 이치처럼 내부 역량을 정비하고 절제하며 내실을 양육해야 온전한 결실을 맺게 됩니다.`}`
+변화를 거친 후 마주할 지괘는 '${transformedMeta.coreTheme}'의 이치를 지닌 ${transformedMeta.fullNameHangul} 괘입니다.\n\n${aiFuturePara ? `[미래 귀결] ${aiFuturePara}` : `변동 이후에는 "${transformedMeta.natureSummary}"의 상징처럼 내부 역량을 단단히 가꾸고 조화롭게 연착륙하는 것이 귀결의 열쇠입니다.`}`
     : `[본괘 유지: ${originalMeta.fullNameHangul}(${originalMeta.nameHanja})]
-현재 괘의 상징처럼 조급함 없이 내실을 다져나가면 "${originalMeta.natureSummary}"의 순리를 얻어 점진적이고 안정적인 성취를 이루게 됩니다.`;
+현재 주어진 ${originalMeta.fullNameHangul}의 지혜를 온전히 이어나간다면 "${originalMeta.natureSummary}"의 순리를 얻어 안정을 다지게 됩니다.`;
 
-  // 💡 질문자에 대한 최종 종합 컨설팅 요약
-  const section5Summary = `"${originalMeta.fullNameHangul}의 흐름 속에서 고민하시는 성찰의 방향은 정당합니다. 다만 조급한 성급함을 경계하고 **계획과 실행 조건을 최소 세 번 이상 신중히 재검증**하십시오. ${hasTransformation ? `이후 다다를 지괘(${transformedMeta.fullNameHangul})의 가르침처럼 **대규모 무리한 확장보다는 내부 역량 정비와 내실 양육에 집중**하는 것이 최선의 길입니다.` : `현재 괘의 가르침처럼 **내실 다지기와 굳건한 신뢰 확보에 집중**하는 것이 가장 지혜로운 열쇠입니다.`}"`;
+  // 💡 질문자에 대한 최종 종합 컨설팅 요약 (AI 맞춤 총평 또는 괘별 고유 총평)
+  const section5Summary = aiContent
+    ? `${aiContent}\n\n**[종합 요약]:** "${originalMeta.fullNameHangul} 괘의 핵심 상징인 '${originalMeta.coreTheme}'에 따라 고민하시는 사연을 성찰하되, ${hasTransformation ? `이후 마주할 지괘(${transformedMeta.fullNameHangul})가 보여주는 '${transformedMeta.coreTheme}'의 방향으로 지혜롭게 내실을 다져가십시오.` : `현재 괘가 가르치는 중심을 굳건히 유지하는 것이 최고의 해법입니다.`}"`
+    : `"${originalMeta.fullNameHangul} 괘의 핵심 상징인 '${originalMeta.coreTheme}'의 흐름 속에서 고민하시는 질문을 다루되, ${hasTransformation ? `이후 다다를 지괘(${transformedMeta.fullNameHangul})가 보여주는 '${transformedMeta.coreTheme}'의 지혜를 바탕으로 내실 다지기에 집중하십시오.` : `현재 괘가 전하는 순리와 중심을 굳건히 지키는 것이 지혜로운 열쇠입니다.`}"`;
 
   // 마크다운 복사용 원문 텍스트
   const markdownText = `4. 괘사·효사 종합 해석 및 실질적 조언

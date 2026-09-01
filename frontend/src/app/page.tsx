@@ -8,6 +8,7 @@ import { CastResult, ChatMessage as ChatMessageType, ConsultationStep, JournalSu
 import { HexagramCard } from '../components/hexagram/HexagramCard';
 import { HexagramSymbol } from '../components/hexagram/HexagramSymbol';
 import { HexagramStickyHeader } from '../components/hexagram/HexagramStickyHeader';
+import { HexagramReportView } from '../components/hexagram/HexagramReportView';
 import { ChatMessage } from '../components/chat/ChatMessage';
 import { ChatInput } from '../components/chat/ChatInput';
 import { TypingIndicator } from '../components/chat/TypingIndicator';
@@ -51,8 +52,9 @@ export default function Home() {
     const q = submittedQuestion || question;
     if (!q.trim() || isLoading) return;
 
-    // 로그인 필수 검증 (미로그인 시 모달 오픈)
-    if (!user) {
+    // 로그인 필수 검증 (로컬 개발 환경에서는 예외 허용)
+    const isDev = process.env.NODE_ENV !== 'production';
+    if (!user && !isDev) {
       setIsAuthModalOpen(true);
       return;
     }
@@ -63,7 +65,7 @@ export default function Home() {
     try {
       // 1.2초간 명상적 드로잉 연출
       const [apiRes] = await Promise.all([
-        startConsultationApi(q, user.id),
+        startConsultationApi(q, user?.id || '00000000-0000-0000-0000-000000000000'),
         new Promise((resolve) => setTimeout(resolve, 1400)),
       ]);
 
@@ -90,7 +92,7 @@ export default function Home() {
         };
 
         setMessages([initialUserMsg, apiRes.firstMessage]);
-        setStep('revealed'); // 괘 결과 확인 단계
+        setStep('report'); // 괘 도출 후 바로 괘해석리포트 단계로 진입
       }
     } catch (err: any) {
       alert(err.message || '상담을 시작하는 중 오류가 발생했습니다.');
@@ -100,7 +102,12 @@ export default function Home() {
     }
   };
 
-  // 2. 괘 확인 후 본격적인 대화 진입
+  // 2. 괘 도출 확인 후 괘 해석 리포트 단계 진입
+  const handleProceedToReport = () => {
+    setStep('report');
+  };
+
+  // 3. 괘 해석 리포트 확인 후 본격적인 상담 대화 진입
   const handleProceedToCounsel = () => {
     setStep('counseling');
   };
@@ -287,7 +294,7 @@ export default function Home() {
                     disabled={!question.trim() || isLoading}
                     className="w-full sm:w-auto px-6 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:bg-stone-800 text-stone-950 disabled:text-stone-600 font-medium text-sm transition-all flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed shadow-lg shadow-amber-950/30 active:scale-[0.98]"
                   >
-                    <span>{user ? '마음을 모아 괘 도출하기' : '✨ 로그인하고 괘 도출하기'}</span>
+                    <span>{user ? '마음을 모아 괘 도출하기' : (process.env.NODE_ENV !== 'production' ? '✨ 괘 도출하기 (로컬 테스트)' : '✨ 로그인하고 괘 도출하기')}</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
@@ -355,6 +362,24 @@ export default function Home() {
             >
               <HexagramCard
                 castResult={castResult}
+                onProceedToCounsel={handleProceedToReport}
+              />
+            </motion.div>
+          )}
+
+          {/* 3.5. 괘 해석 리포트 단계 (Report) */}
+          {step === 'report' && castResult && (
+            <motion.div
+              key="report"
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="my-auto py-4"
+            >
+              <HexagramReportView
+                castResult={castResult}
+                userQuestion={question}
+                firstMessage={messages[1]}
                 onProceedToCounsel={handleProceedToCounsel}
               />
             </motion.div>

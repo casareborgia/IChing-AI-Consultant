@@ -137,7 +137,10 @@ export async function startConsultationApi(
 }> {
   try {
     const { data: { session } } = await supabase.auth.getSession();
-    const token = session?.access_token;
+    let token = session?.access_token;
+    if (!token && process.env.NODE_ENV !== 'production') {
+      token = 'dev-token';
+    }
 
     if (!token) {
       throw new Error('로그인이 필요한 서비스입니다. 먼저 로그인해 주세요.');
@@ -225,7 +228,10 @@ export async function sendConsultationTurnApi(
 }> {
   try {
     const { data: { session } } = await supabase.auth.getSession();
-    const token = session?.access_token;
+    let token = session?.access_token;
+    if (!token && process.env.NODE_ENV !== 'production') {
+      token = 'dev-token';
+    }
 
     if (!token) {
       throw new Error('로그인이 필요한 서비스입니다. 먼저 로그인해 주세요.');

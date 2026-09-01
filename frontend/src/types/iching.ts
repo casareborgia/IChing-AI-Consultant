@@ -42,7 +42,8 @@ export interface CastResult {
 export type ConsultationStep =
   | 'intake'          // 고민 입력
   | 'casting'         // 괘 도출 애니메이션
-  | 'revealed'        // 괘 결과 확인 및 해석 안내
+  | 'revealed'        // 괘 결과 확인 및 안내
+  | 'report'          // 괘 해석 리포트 (표준 마크다운 UI 템플릿)
   | 'counseling'      // 심층 질의응답 (멀티턴)
   | 'safety_redirect' // 위기 핫라인 안내
   | 'completed';      // 상담 종료 및 저널 요약

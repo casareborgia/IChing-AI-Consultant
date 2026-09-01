@@ -188,14 +188,14 @@ export const HexagramCard: React.FC<HexagramCardProps> = ({
         </div>
       </div>
 
-      {/* 상담 시작 버튼 (옵션) */}
+      {/* 괘 해석 리포트 확인 버튼 (옵션) */}
       {onProceedToCounsel && (
         <div className="mt-6 flex justify-end">
           <button
             onClick={onProceedToCounsel}
-            className="w-full sm:w-auto px-6 py-3 rounded-xl bg-amber-600 hover:bg-amber-500 text-stone-950 font-medium text-sm transition-all shadow-lg shadow-amber-950/40 hover:shadow-amber-500/20 flex items-center justify-center gap-2 cursor-pointer"
+            className="w-full sm:w-auto px-6 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-medium text-sm transition-all shadow-lg shadow-amber-950/40 hover:shadow-amber-500/20 flex items-center justify-center gap-2 cursor-pointer"
           >
-            <span>이 괘를 바탕으로 상담 나누기</span>
+            <span>괘 해석 리포트 확인하기</span>
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>

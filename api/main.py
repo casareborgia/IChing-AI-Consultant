@@ -61,6 +61,17 @@ async def _charge(db_session, user_id: str, amount: int, reason: str) -> Optiona
     읽고-계산하고-쓰는 방식으로는 동시 요청 둘이 같은 잔액을 읽어 각각 차감분을 덮어써,
     한 번 값으로 두 번 상담할 수 있다. 조건과 갱신을 한 문장에 두어 그 창을 없앤다.
     """
+    # 로컬 개발 환경(ENVIRONMENT != "production") 예외: 무제한 크레딧(99,999C) 유지
+    if settings.ENVIRONMENT != "production":
+        stmt = (
+            update(UserProfile)
+            .where(UserProfile.id == user_id)
+            .values(credit_balance=99999)
+            .returning(UserProfile.credit_balance)
+        )
+        balance = (await db_session.execute(stmt)).scalar_one_or_none()
+        return balance if balance is not None else 99999
+
     stmt = (
         update(UserProfile)
         .where(UserProfile.id == user_id, UserProfile.credit_balance >= amount)
@@ -105,7 +116,10 @@ app = FastAPI(
 # 도메인은 누구나 무료로 받을 수 있어, allow_credentials=True 와 만나면 임의의
 # 제3자 페이지가 자격증명을 실은 교차출처 요청을 보낼 수 있다. 프리뷰 배포가
 # 필요하면 CORS_ORIGIN_REGEX 로 프로젝트 이름까지 좁혀 명시적으로 켠다.
-default_dev_origins = ["http://localhost:3000", "http://localhost:3005", "http://127.0.0.1:3000", "http://127.0.0.1:3005"]
+default_dev_origins = [
+    "http://localhost:3000", "http://localhost:3001", "http://localhost:3005",
+    "http://127.0.0.1:3000", "http://127.0.0.1:3001", "http://127.0.0.1:3005"
+]
 allowed_origins = [o.strip() for o in settings.CORS_ORIGINS.split(",") if o.strip()]
 
 # 개발 기본 오리진을 프로덕션에 자동으로 얹지 않는다. 필요하면 CORS_ORIGINS 에

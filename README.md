@@ -6,7 +6,7 @@
 [![Frontend](https://img.shields.io/badge/Frontend-Next.js_16-black?style=flat&logo=nextdotjs)](https://github.com/casareborgia/IChing-AI-Consultant)
 [![Backend](https://img.shields.io/badge/Backend-FastAPI_v1.0-009688?style=flat&logo=fastapi)](https://github.com/casareborgia/IChing-AI-Consultant)
 [![Tests](https://img.shields.io/badge/Tests-128_Passed-brightgreen?style=flat&logo=pytest)](https://github.com/casareborgia/IChing-AI-Consultant)
-[![Report Agent](https://img.shields.io/badge/Report_Agent-v0.3.0_TCREI-gold?style=flat&logo=openai)](https://github.com/casareborgia/IChing-AI-Consultant)
+[![Report Agent](https://img.shields.io/badge/Report_Grounded_Counsel-v0.4.0_TCREI-gold?style=flat&logo=openai)](https://github.com/casareborgia/IChing-AI-Consultant)
 [![Security](https://img.shields.io/badge/Security-Zero_Trust_JWT-emerald?style=flat&logo=auth0)](https://github.com/casareborgia/IChing-AI-Consultant)
 [![License: Code](https://img.shields.io/badge/Code-MIT_License-blue?style=flat)](LICENSE)
 [![License: Data](https://img.shields.io/badge/Data-CC_BY--SA_4.0-lightgrey?style=flat)](data/PROVENANCE.md)
@@ -18,7 +18,7 @@
 **I-Ching AI Consultant**는 사용자의 고민을 경청하고, 주자 변효 규칙 엔진을 통해 괘를 도출한 뒤, 전통 원문(괘사·효사)과 송대 주석(정전·본의 2,536건)을 현대적 심리 상담 언어로 풀어내는 AI 상담 시스템입니다.
 
 - **포지셔닝**: 미래를 단정 짓는 '예언자'가 아닌, 스스로 내면의 답을 찾도록 돕는 **'의사결정 지원 동반자이자 거울'**
-- **수석 주역 AI 1:1 맞춤 컨설팅 리포트 (v0.3.0 신설)**: TCREI 프레임워크 기반 전용 `Report Agent`가 6효 수리 산출, 주자 고변점 룰, DB 효사 한문 원문(`大人虎變 未占有孚`, `革言三就`, `愼言語 節飮食` 등), RAG 고전 주석을 종합 융합하여 **4단계 고품격 1:1 맞춤 리포트**를 직접 집필
+- **수석 주역 AI 1:1 맞춤 컨설팅 리포트 & 결합 상담 (v0.4.0)**: TCREI 프레임워크 기반 전용 `Report Agent`가 6효 수리 산출, 주자 고변점 룰, DB 효사 한문 원문(`大人虎變 未占有孚`, `革言三就`, `愼言語 節飮食` 등), RAG 고전 주석을 종합 융합하여 **4단계 고품격 1:1 맞춤 리포트**를 집필하며, 확정된 리포트 핵심 결론을 `Counsel Agent` 상담 대화 맥락에 1:1 주입하여 깊이 있는 성찰 대화를 선순환 연결합니다.
 - **근거 투명성 (Provenance)**: AI 환각(Hallucination) 없이 DB 1:1 확정 원문과 pgvector RAG 주석을 프론트엔드 근거 패널에 투명하게 공개
 - **다계층 안전망 & SaMD 웰니스**: 위기 신호(자살/자해, 폭력) 감지 시 괘 도출을 차단하고 24시간 자살예방 상담전화(`109`)로 즉시 안전 이관 (24시간 위기 래치 적용)
 - **제로 트러스트 보안 (Zero-Trust)**: 요청 본문 `user_id`를 불허하고, Supabase JWT 서명 검증(`HS256`, `audience="authenticated"`)을 통해 신원을 강제 확정하여 위기 래치 및 세션 소유권(BOLA) 변조를 원천 차단

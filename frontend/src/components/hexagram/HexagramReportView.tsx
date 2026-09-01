@@ -57,52 +57,50 @@ export const HexagramReportView: React.FC<HexagramReportViewProps> = ({
   const aiWarningPara = paragraphs[2] || '';
   const aiFuturePara = paragraphs.slice(3).join('\n\n') || '';
 
-  // --- RAG 고전 주석 정밀 간결화 & 개별 사연 매핑 렌더링 (최대 2개 엄선, 80자 축소) ---
+  // --- RAG 고전 주석 정밀 간결화 & 64개 괘/사연 100% 동적 매핑 렌더링 ---
   const rawEvidences = firstMessage?.evidences || [];
-  // 중복이 있거나 너무 많으면 가장 중요한 상위 2개만 엄선
   const selectedEvidences = rawEvidences.slice(0, 2);
 
   const evidenceAppliedBlocks = selectedEvidences.length > 0
     ? selectedEvidences.map((e, idx) => {
         let cleanContent = e.content.replace(/\r?\n/g, ' ').trim();
-        // 80자 이내로 핵심 요약 자르기 (너무 긴 원문 텍스트로 인한 가독성 저하 차단)
         if (cleanContent.length > 85) {
           cleanContent = cleanContent.slice(0, 85) + '...';
         }
 
-        // 주석 출처 및 성격에 따라 개별적으로 서로 다른 사연 적용 시사점 생성
         const sourceTitle = e.sourceTitle || '고전 주석';
         let customInsight = '';
 
+        // 도출된 괘상(originalMeta)과 사연(userQuestion)을 결합한 100% 가변형 적용 메시지 생성
         if (sourceTitle.includes('효사') || sourceTitle.includes('2효') || sourceTitle.includes('5효')) {
-          customInsight = `겉치레나 무리한 수사보다는 내면의 진실함과 성실한 소통으로 자기 중심을 잡아야 함을 말해줍니다.`;
+          customInsight = `'${originalMeta.fullNameHangul}'의 핵심 이치인 [${originalMeta.coreTheme}]에 비추어, "${userQuestion}" 사연에 대해 겉치레보다는 내면의 진실함과 성실한 소통으로 중심을 다져야 함을 일깨워 줍니다.`;
         } else if (sourceTitle.includes('소상전') || sourceTitle.includes('상전')) {
-          customInsight = `외부 변수에 일희일비하여 주관을 바꾸지 말고, 치우침 없는 바른 도리를 유지할 것을 강조합니다.`;
+          customInsight = `'${originalMeta.fullNameHangul}'이 보여주는 "${originalMeta.natureSummary}"의 상징처럼, 외부 자극에 흔들리지 말고 본래의 바른 도리를 유지할 것을 당부합니다.`;
         } else if (sourceTitle.includes('본의')) {
-          customInsight = `상대와의 서두름 없는 상호 응응(相應)과 부드러운 순응의 태도가 모임의 결실을 이끈다고 일깨워 줍니다.`;
+          customInsight = `'${originalMeta.fullNameHangul}'의 음양 조화 이치에 따라, 무리한 추진보다는 상호 간의 유순함과 합당한 응응(相應)을 이룰 때 비로소 고민하시는 결과에 도달함을 보여줍니다.`;
         } else {
-          customInsight = `사람과 일들이 모여들 때 리더로서 구심점이 되는 명분과 바른 중심을 세울 것을 당부합니다.`;
+          customInsight = `'${originalMeta.fullNameHangul}'이 가리키는 구심점의 이치처럼, 내담자님의 사연("${userQuestion}")에 대해 올바른 명분과 중심을 세우는 것이 우선임을 보여줍니다.`;
         }
 
         return `• [핵심 고전 지혜 ${idx + 1}] ${sourceTitle}
   "요약: ${cleanContent}"
-  👉 [사연 적용]: 내담자님의 사연에서 ${customInsight}`;
+  👉 [사연 & 괘 적용]: ${customInsight}`;
       }).join('\n\n')
     : `• [고전 이치의 사연 적용]
-  "${originalMeta.fullNameHangul}의 본래 상징인 '${originalMeta.natureSummary}'의 지혜는 섣부른 조급함보다 내실 다지기와 굳건한 신뢰 형성이 우선임을 보여줍니다."`;
+  "${originalMeta.fullNameHangul}의 본래 상징인 '${originalMeta.natureSummary}'의 지혜는 내담자님의 사연("${userQuestion}")에 대해 섣부른 조급함보다 '${originalMeta.coreTheme}'의 도리로 내실을 다지는 것이 최선임을 보여줍니다."`;
 
   // --- 100% 동적 사연/괘 맞춤형 5대 섹션 구성 ---
 
   // ① 현재 상황 진단 (본괘 고유 성격 & 사연 맞춤 진단)
   const section1Diagnosis = `${originalMeta.fullNameHangul}(${originalMeta.nameHanja}) 괘는 상괘(${originalMeta.upperTrigram})와 하괘(${originalMeta.lowerTrigram})가 결합하여 "${originalMeta.natureSummary}"의 시공간적 형상을 나타냅니다.\n\n${aiDiagnosisPara ? `[상황 진단] ${aiDiagnosisPara}` : `현재 내담자님의 사연은 '${originalMeta.coreTheme}'의 기류에 직면해 있습니다. 상황의 겉모습보다는 이 괘가 가지는 근본 시공간적 위치를 바로 들여다보아야 할 때입니다.`}`;
 
-  // ② 핵심 행동 지침 (초점 고변점 & 간결화된 RAG 주석 1:1 개별 사연 적용)
+  // ② 핵심 행동 지침 (초점 고변점 & 64개 괘/사연 동적 매핑)
   const section2Action = `• 주요 해석 대상: ${focusTargetName}
 • 고변점 지침: ${focusRuleDesc}
 ${castResult.focusRule?.bodyUseNoteKo ? `• 체용(體用) 참작: ${castResult.focusRule.bodyUseNoteKo}\n` : ''}
 ${aiActionPara ? `[핵심 행동 실천] ${aiActionPara}` : `${originalMeta.fullNameHangul}이 내담자님의 고민에 제시하는 실천 방향은 '${originalMeta.coreTheme}'의 도리에 입각하여 본질적인 신뢰와 내면의 중심을 바로잡는 것입니다.`}
 
-[핵심 고전 지혜 & 사연 매핑]
+[핵심 고전 지혜 & 사연·괘 동적 매핑]
 ${evidenceAppliedBlocks}`;
 
   // ③ 보조 경계 지침 (변효별 경계 조언 & 사연 주의점)

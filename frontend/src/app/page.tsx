@@ -35,6 +35,7 @@ export default function Home() {
   const [sessionId, setSessionId] = useState<string>('');
   const [castResult, setCastResult] = useState<CastResult | null>(null);
   const [messages, setMessages] = useState<ChatMessageType[]>([]);
+  const [firstAiMessage, setFirstAiMessage] = useState<ChatMessageType | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [journal, setJournal] = useState<JournalSummary | null>(null);
 
@@ -82,6 +83,7 @@ export default function Home() {
       if (apiRes.castResult && apiRes.firstMessage) {
         setSessionId(apiRes.sessionId);
         setCastResult(apiRes.castResult);
+        setFirstAiMessage(apiRes.firstMessage);
 
         // 사용자가 처음 입력한 고민을 1번째 메시지로 등록하고, 그 뒤에 AI의 괘 분석 첫 답변 배치
         const initialUserMsg: ChatMessageType = {
@@ -164,6 +166,7 @@ export default function Home() {
     setQuestion('');
     setCastResult(null);
     setMessages([]);
+    setFirstAiMessage(null);
     setJournal(null);
     setSessionId('');
   };
@@ -351,24 +354,8 @@ export default function Home() {
             </motion.div>
           )}
 
-          {/* 3. 괘 도출 결과 확인 단계 (Revealed) */}
-          {step === 'revealed' && castResult && (
-            <motion.div
-              key="revealed"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="my-auto py-6"
-            >
-              <HexagramCard
-                castResult={castResult}
-                onProceedToCounsel={handleProceedToReport}
-              />
-            </motion.div>
-          )}
-
-          {/* 3.5. 괘 해석 리포트 단계 (Report) */}
-          {step === 'report' && castResult && (
+          {/* 3. 괘 도출 결과 및 괘 해석 리포트 단계 (Revealed & Report) */}
+          {(step === 'revealed' || step === 'report') && castResult && (
             <motion.div
               key="report"
               initial={{ opacity: 0, scale: 0.98 }}
@@ -379,7 +366,7 @@ export default function Home() {
               <HexagramReportView
                 castResult={castResult}
                 userQuestion={question}
-                firstMessage={messages[1]}
+                firstMessage={firstAiMessage || messages[1]}
                 onProceedToCounsel={handleProceedToCounsel}
               />
             </motion.div>

@@ -193,6 +193,7 @@ async def run_report_agent(
         section4_title = f"④ 미래의 귀결 및 주의점 (지괘: {trans_name})" if has_trans else "④ 미래의 귀결 및 주의점 (본괘 유지)"
         section3_title = f"③ 보조 경계 지침 (함께 동한 {aux_pos}효)" if aux_pos else "③ 보조 경계 지침 (경계 지침)"
 
+        final_trans_str = f"지괘({trans_meta['fullNameHangul']})의 지혜처럼 연착륙하는 것이 승리의 열쇠입니다." if has_trans else "현재의 굳건함을 지키는 것이 해법입니다."
         return HexagramReportSchema(
             question_setting=QuestionSettingSchema(
                 question=question,
@@ -228,19 +229,19 @@ async def run_report_agent(
                 title=f"② 핵심 행동 지침 (주 주요 해석 대상: {focus_target_str})",
                 target_name=focus_target_str,
                 hanja_text=primary_line_hanja,
-                interpretation=f"주 해석 대상의 이치에 따라 겉치레보다는 진실함과 명확한 비전을 세워 신뢰를 먼저 확보하는 것이 핵심 실천 조언입니다."
+                interpretation=f"'{orig_meta['fullNameHangul']}' 괘가 제시하는 이치에 따라 고민하시는 사연('{question}')에 대해 '{orig_meta['coreTheme']}'의 가르침으로 중심을 바로잡는 것이 우선 과제입니다."
             ),
             section3_warning=SectionItemSchema(
                 title=section3_title,
                 target_name=f"{aux_pos}효" if aux_pos else "경계 지침",
                 hanja_text=aux_line_hanja if aux_pos else None,
-                interpretation="조급하게 성급한 확장을 서두르기보다 실행 전 치밀하게 조건과 계획을 검증한 뒤 나아가야 합니다."
+                interpretation=f"현 상황에서 경계할 점은 '{orig_meta['coreTheme']}'의 도리를 잃고 성급히 서두르는 것입니다. 추진 전 사연('{question}')의 현실적 조건을 신중히 판단하십시오."
             ),
             section4_future=SectionItemSchema(
                 title=section4_title,
                 target_name=trans_meta['fullNameHangul'] if has_trans else orig_meta['fullNameHangul'],
                 hanja_text=trans_hex_hanja if has_trans else None,
-                interpretation=f"변화 이후에는 {trans_meta['fullNameHangul']}의 이치처럼 내부 역량을 정비하고 내실 다지기에 집중하는 연착륙 전략이 성패의 열쇠입니다."
+                interpretation=f"변화 이후에는 {trans_meta['fullNameHangul']}의 이치처럼 '{trans_meta['coreTheme']}'의 지혜로 내실을 다지는 것이 성공의 핵심입니다."
             ),
-            final_summary=f"'{orig_meta['fullNameHangul']}'의 흐름 속에서 고민하시는 방향을 추진하되, 조급한 무리수를 삼가고 계획을 신중히 검증하십시오. 지괘({trans_meta['fullNameHangul']})의 가르침처럼 내실 정비와 신뢰 확보에 집중하는 것이 승리의 열쇠입니다."
+            final_summary=f"'{orig_meta['fullNameHangul']}' 괘의 핵심 상징인 '{orig_meta['coreTheme']}'에 비추어 사연('{question}')을 성찰하되, 성급함을 피하고 내실을 바로잡으십시오. {final_trans_str}"
         )

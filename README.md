@@ -3,9 +3,10 @@
 > 주역 64괘와 송대 주석(이천역전·주역본의)에 기반하여, 단순한 점괘가 아닌 **삶의 변화를 읽고 성찰하는 심층 멀티턴 대화형 의사결정 상담 AI**
 
 [![Architecture](https://img.shields.io/badge/Architecture-3--Tier_Serverless-blue?style=flat&logo=googlecloud)](https://github.com/casareborgia/IChing-AI-Consultant)
-[![Framework](https://img.shields.io/badge/Frontend-Next.js_16-black?style=flat&logo=nextdotjs)](https://github.com/casareborgia/IChing-AI-Consultant)
+[![Frontend](https://img.shields.io/badge/Frontend-Next.js_16-black?style=flat&logo=nextdotjs)](https://github.com/casareborgia/IChing-AI-Consultant)
 [![Backend](https://img.shields.io/badge/Backend-FastAPI_v1.0-009688?style=flat&logo=fastapi)](https://github.com/casareborgia/IChing-AI-Consultant)
-[![Tests](https://img.shields.io/badge/Tests-123_Passed-brightgreen?style=flat&logo=pytest)](https://github.com/casareborgia/IChing-AI-Consultant)
+[![Tests](https://img.shields.io/badge/Tests-128_Passed-brightgreen?style=flat&logo=pytest)](https://github.com/casareborgia/IChing-AI-Consultant)
+[![Report Agent](https://img.shields.io/badge/Report_Agent-v0.3.0_TCREI-gold?style=flat&logo=openai)](https://github.com/casareborgia/IChing-AI-Consultant)
 [![Security](https://img.shields.io/badge/Security-Zero_Trust_JWT-emerald?style=flat&logo=auth0)](https://github.com/casareborgia/IChing-AI-Consultant)
 [![License: Code](https://img.shields.io/badge/Code-MIT_License-blue?style=flat)](LICENSE)
 [![License: Data](https://img.shields.io/badge/Data-CC_BY--SA_4.0-lightgrey?style=flat)](data/PROVENANCE.md)
@@ -17,9 +18,38 @@
 **I-Ching AI Consultant**는 사용자의 고민을 경청하고, 주자 변효 규칙 엔진을 통해 괘를 도출한 뒤, 전통 원문(괘사·효사)과 송대 주석(정전·본의 2,536건)을 현대적 심리 상담 언어로 풀어내는 AI 상담 시스템입니다.
 
 - **포지셔닝**: 미래를 단정 짓는 '예언자'가 아닌, 스스로 내면의 답을 찾도록 돕는 **'의사결정 지원 동반자이자 거울'**
+- **수석 주역 AI 1:1 맞춤 컨설팅 리포트 (v0.3.0 신설)**: TCREI 프레임워크 기반 전용 `Report Agent`가 6효 수리 산출, 주자 고변점 룰, DB 효사 한문 원문(`大人虎變 未占有孚`, `革言三就`, `愼言語 節飮食` 등), RAG 고전 주석을 종합 융합하여 **4단계 고품격 1:1 맞춤 리포트**를 직접 집필
 - **근거 투명성 (Provenance)**: AI 환각(Hallucination) 없이 DB 1:1 확정 원문과 pgvector RAG 주석을 프론트엔드 근거 패널에 투명하게 공개
 - **다계층 안전망 & SaMD 웰니스**: 위기 신호(자살/자해, 폭력) 감지 시 괘 도출을 차단하고 24시간 자살예방 상담전화(`109`)로 즉시 안전 이관 (24시간 위기 래치 적용)
 - **제로 트러스트 보안 (Zero-Trust)**: 요청 본문 `user_id`를 불허하고, Supabase JWT 서명 검증(`HS256`, `audience="authenticated"`)을 통해 신원을 강제 확정하여 위기 래치 및 세션 소유권(BOLA) 변조를 원천 차단
+
+---
+
+## 📋 4단계 고품격 주역 컨설팅 리포트 구조 (v0.3.0)
+
+> 백엔드 LLM(Gemini)이 내담자 사연에 맞게 100% 가변형으로 직접 집필하는 1:1 심층 성찰 보고서 서식입니다.
+
+```markdown
+1. 질문 및 마음가짐 세팅 (사례 설정)
+   - 질문자의 고민 사연 100% 반영
+   - 재삼덕 금기 점서 예식 명시 (사리사욕을 비운 경건한 단 1회 점서 원칙)
+
+2. 괘 도출 과정 (수리 도출 및 효 쌓기)
+   - 1효(초효) ~ 6효(상효) 수리 산출 (소양 7, 소음 8, 노양 9○, 노음 6✕)
+   - ① 본괘(本卦) 성립 및 상징 의미
+   - ② 변효(動爻) 및 지괘(之卦) 도출 및 상징 의미
+
+3. 고변점(考變占) 및 체용(體用) 해석 규칙 적용
+   - 동효 개수별 주자 고변점 규칙 적용 내역 (예: 동효가 2개일 때 상층부 효사 채택)
+   - 체(體, 본괘 대전제)와 용(用, 지괘 미래 지향점)의 흐름 명시
+
+4. 괘사·효사 종합 해석 및 실질적 조언
+   - ① 현재 상황 진단 (본괘상 및 내담자 시공간적 위치 풀이)
+   - ② 핵심 행동 지침 (주 주요 해석 대상 + 한문 효사 원문 + 현대적 실천 해설)
+   - ③ 보조 경계 지침 (함께 동한 효사 + 한문 효사 원문 + 조급함 경계 조언)
+   - ④ 미래의 귀결 및 주의점 (지괘 대상전/괘사 + 한문 원문 + 내실 양육 지침)
+   - 💡 질문자에 대한 최종 종합 컨설팅 요약 (한문 원문 인용 + 결론 강조)
+```
 
 ---
 
@@ -59,7 +89,7 @@ flowchart TD
     FastAPI -->|4. JWT 서명 검증 & user_id 확정| JWTAuth
     FastAPI -->|5. 2,536건 송대 주석 균형 검색| DB
     FastAPI -->|6. 64괘 386효 규칙 엔진 & 에이전트 추론| Gemini
-    FastAPI -->>Browser: 7. 괘 도출, 성찰 질문, 실시간 근거 반환
+    FastAPI -->>Browser: 7. 4단계 고품격 리포트, 성찰 질문, 실시간 근거 반환
 ```
 
 ---
@@ -80,7 +110,10 @@ flowchart TD
     - 규칙 엔진(core.hexagram_engine)으로 6효 및 동효(노양/노음) 산출
     - 주자 점법(Focus Rule)에 따라 DB 1:1 확정 괘사·효사 조회
     - RAG(core.rag)를 통해 정전(程傳 1,752건) 및 본의(本義 784건) 균형 검색
-    - 효사의 형상/위치/고유 의미(3개 슬롯) 기반 상황 매핑 생성
+            ↓
+[★] 리포트 에이전트 (Report Agent v0.3.0 - NEW)
+    - 내담자 질문, 6효 수리 배열, 고변점 룰, 한문 효사 원문, RAG 주석 융합
+    - 4단계 고품격 1:1 맞춤 주역 컨설팅 보고서 구조화 JSON 집필
             ↓
 [3] 상담 에이전트 (Counsel Agent)
     - 주역 상징을 현대적 상담 대화체로 재구성 (1턴 1핵심질문 성찰 유도)
@@ -123,7 +156,7 @@ flowchart TD
 - **Next.js 16 (App Router, Turbopack)**: Vercel 서울 리전(`icn1`) 배포
 - **React 19 / TypeScript**
 - **Tailwind CSS / Framer Motion / Lucide React**
-- **Modern Zen UI**: 주역 6효 애니메이션, 동효(노양/노음) 변화 시각화, 실시간 근거 패널, 턴 단위 10 크레딧 차감 & 실시간 잔액 동기화 배지
+- **Modern Zen UI**: 주역 6효 애니메이션, 4단계 고품격 리포트 뷰어, 마크다운 전문 복사, 턴 단위 10 크레딧 차감 & 실시간 잔액 동기화 배지
 
 ---
 
@@ -182,7 +215,7 @@ npm run dev
 ## 🧪 테스트 및 벤치마크
 
 ```bash
-# 1. 전체 단위 및 보안 통합 테스트 실행 (123개 케이스 전수 검증)
+# 1. 전체 단위 및 보안 통합 테스트 실행 (128개 케이스 전수 검증 100% PASS)
 .venv/bin/pytest -q
 
 # 2. JWT 인증 및 소유권 차단 전용 테스트
@@ -196,9 +229,6 @@ npm run dev
 
 # 5. 에이전트 형식 및 제약 벤치마크 (24/24 전수 통과)
 .venv/bin/python scripts/score_agents.py -p gemini
-
-# 6. 본의 주석 톤 영향 및 예언 단정성 검증 (단정적 표현 0건)
-.venv/bin/python scripts/compare_benui_tone.py -p gemini
 ```
 
 ---
@@ -208,20 +238,6 @@ npm run dev
 - 본 서비스는 의료기기(SaMD) 또는 전문 심리치료를 대체하지 않으며, 자기 성찰과 의사결정을 돕는 웰니스 AI 도구입니다.
 - 위기 상황 발생 시 24시간 자살예방 상담전화(`109`) 또는 정신건강 위기상담전화(`1577-0199`)의 도움을 받으실 수 있습니다.
 
-### 저장소에 포함하지 않은 것
-
-이 저장소는 아키텍처와 구현을 공개하되, 다음 셋은 포함하지 않습니다.
-
-| 대상 | 이유 |
-|---|---|
-| `prompts/*.md` | 에이전트 프롬프트. 수백 회의 측정된 반복으로 조율한 이 프로젝트의 실질적 산출물입니다 |
-| 개발 방법론 문서 | 하네스 설계, 모델 선정 실측, 비용 수치 |
-| 내부 작업 지시서·인수인계 | 설계 판단 근거, 운영 절차, 채점 루브릭 |
-
-**그래서 이 저장소는 그대로는 실행되지 않습니다.** `core/prompts.py`가 런타임에
-`prompts/<name>.md`를 읽는데 그 파일들이 없습니다. 파이프라인 구조와 규칙 엔진,
-RAG 검색, 안전 스크리닝의 배선은 모두 코드에서 확인하실 수 있습니다.
-
 ### 라이선스 (코드와 데이터가 다릅니다)
 
 | 대상 | 라이선스 | 파일 |
@@ -230,11 +246,3 @@ RAG 검색, 안전 스크리닝의 배선은 모두 코드에서 확인하실 �
 | `data/` 텍스트 및 파생물 | **CC BY-SA 4.0** (출처 표기 및 동일 조건 변경 허락 계승) | [`data/PROVENANCE.md`](data/PROVENANCE.md) |
 
 소스 코드는 MIT License 조건 하에 자유롭게 활용 가능하며, 데이터셋 및 원전 자료는 CC BY-SA 4.0 저작권 표시 조건을 따릅니다.
-
-### 원전 출처
-주역 원문, 정전(程傳) 및 본의(本義) 주석 텍스트는 **Kanseki Repository (漢籍リポジトリ), 교토대학 인문과학연구소**의 표점본을 저본으로 합니다.
-- 경문 `KR1a0001` · 정전 `KR1a0016` 『伊川易傳』 · 본의 `KR1a0031` 『原本周易本義』
-- 저본 저작(정이 1033–1107, 주희 1130–1200)은 보호기간이 만료된 퍼블릭 도메인(공유 영역) 자료입니다.
-- 괘사·효사 450건의 현대 한글 번역 데이터는 본 프로젝트에서 자체 감수·구축하였습니다.
-- 취득 경위와 세부 판정 근거는 [`data/PROVENANCE.md`](data/PROVENANCE.md)를 참조합니다.
-

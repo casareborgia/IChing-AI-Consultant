@@ -108,6 +108,7 @@ async def run_counsel_turn(
     client: Optional[LLMClient] = None,
     caution_append: bool = False,
     retrieve: Optional[Retriever] = None,
+    report_data: Optional[Dict[str, Any]] = None,
 ) -> CounselTurnSchema:
     """내담자와 상담 대화 1턴을 수행하고 응답 및 후속 질문 여부를 반환합니다."""
     sys_prompt = load_system_prompt("counsel")
@@ -124,6 +125,10 @@ async def run_counsel_turn(
         prompt_lines = [
             f"[도출된 괘 및 해설 요약(한글)]\n{interpretation.raw_text}\n",
         ]
+        if report_data:
+            sec2_text = report_data.get('section2_action', {}).get('interpretation', '')
+            final_sum = report_data.get('final_summary', '')
+            prompt_lines.append(f"[앞서 제시한 1:1 맞춤 리포트 핵심 결론]\n• 행동 지침: {sec2_text}\n• 최종 종합 요약: {final_sum}\n")
         if interpretation.evidences:
             prompt_lines.append(format_evidences(interpretation.evidences))
 

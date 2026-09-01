@@ -505,6 +505,25 @@ async def run_turn(
         # 재검색은 초점이 가리키는 괘로 묶어 넘긴다. 동효가 4~5개면 초점은 지괘에
         # 있고, 그때 본괘로 묶으면 상담사가 이야기하는 괘와 다시 찾아오는 해설이
         # 서로 다른 괘가 된다. `evidence.target_hexagram_id`가 그 자리를 가리킨다.
+        # 3-3. 수석 주역 AI 컨설팅 리포트 에이전트 가동
+        report_data = None
+        try:
+            report_obj = await run_report_agent(
+                session,
+                question=message,
+                original_hex_id=interp_res.original_hexagram_id,
+                transformed_hex_id=interp_res.transformed_hexagram_id,
+                changing_lines=interp_res.changing_lines,
+                lines_val=getattr(interp_res, "lines_val", [7, 8, 9, 8, 9, 7]),
+                focus_rule=evidence.focus_rule.model_dump(),
+                evidences=interp_res.evidences,
+                client=clients.get("report"),
+            )
+            report_data = report_obj.model_dump()
+        except Exception as e:
+            print(f"Report agent execution error: {e}")
+
+        # 3-4. [3] 상담 대화 생성 (리포트 context 결합)
         counsel_turn_res = await run_counsel_turn(
             message,
             interp_res,
@@ -513,6 +532,7 @@ async def run_turn(
             client=clients.get("counsel"),
             caution_append=(safety_res.category == "CAUTION"),
             retrieve=make_retriever(session, hexagram_id=evidence.target_hexagram_id),
+            report_data=report_data,
         )
 
         new_turn = CounselTurn(
@@ -525,7 +545,6 @@ async def run_turn(
             agent_response=counsel_turn_res.message,
             needs_followup=counsel_turn_res.needs_followup,
             is_final=counsel_turn_res.is_final,
-            # 이 턴에서만 검색과 매핑이 돈다. 후속 턴이 이 둘을 되살려 쓴다.
             contextual_mapping=interp_res.contextual_mapping,
             evidence_items=[e.model_dump() for e in interp_res.evidences],
         )
@@ -538,24 +557,6 @@ async def run_turn(
             journal_summary = j.summary
 
         merged_evidences = _merge_evidences(interp_res.evidences, counsel_turn_res.evidences)
-
-        # 수석 주역 AI 컨설팅 리포트 에이전트 가동
-        report_data = None
-        try:
-            report_obj = await run_report_agent(
-                session,
-                question=message,
-                original_hex_id=interp_res.original_hexagram_id,
-                transformed_hex_id=interp_res.transformed_hexagram_id,
-                changing_lines=interp_res.changing_lines,
-                lines_val=getattr(interp_res, "lines_val", [7, 8, 9, 8, 9, 7]),
-                focus_rule=evidence.focus_rule.model_dump(),
-                evidences=merged_evidences,
-                client=clients.get("report"),
-            )
-            report_data = report_obj.model_dump()
-        except Exception as e:
-            print(f"Report agent execution error: {e}")
 
         return TurnResult(
             session_id=sid,

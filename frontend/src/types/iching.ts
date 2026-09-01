@@ -65,6 +65,55 @@ export interface ChatMessage {
   isDuplicateAlert?: boolean;
 }
 
+export interface LineCastingItem {
+  position: number;
+  name: string;
+  value: number;
+  line_type_ko: string;
+  symbol: string;
+  is_changing: boolean;
+  note: string;
+}
+
+export interface SectionItemSchema {
+  title: string;
+  target_name: string;
+  hanja_text?: string | null;
+  interpretation: string;
+}
+
+export interface HexagramReportData {
+  question_setting: {
+    question: string;
+    mindset_rule: string;
+  };
+  hexagram_casting: {
+    lines: LineCastingItem[];
+    original_hex_id: number;
+    original_name_full: string;
+    original_name_hanja: string;
+    original_upper_trigram: string;
+    original_lower_trigram: string;
+    original_summary: string;
+    has_transformation: boolean;
+    transformed_hex_id?: number | null;
+    transformed_name_full?: string | null;
+    transformed_name_hanja?: string | null;
+    transformed_summary?: string | null;
+  };
+  focus_and_body_use: {
+    changing_count: number;
+    rule_description: string;
+    primary_target_name: string;
+    body_use_flow: string;
+  };
+  section1_diagnosis: SectionItemSchema;
+  section2_action: SectionItemSchema;
+  section3_warning: SectionItemSchema;
+  section4_future: SectionItemSchema;
+  final_summary: string;
+}
+
 export interface JournalSummary {
   clarifiedQuestion: string;
   hexagramSummary: string;

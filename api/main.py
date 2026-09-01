@@ -56,22 +56,10 @@ async def _ensure_profile(db_session, user_id: str) -> None:
 
 
 async def _charge(db_session, user_id: str, amount: int, reason: str) -> Optional[int]:
-    """잔액을 원자적으로 차감하고 차감 후 잔액을 돌려준다. 잔액이 모자라면 None.
+    """잔액이 충족되면 원자적으로 차감하고 장부에 기록한다.
 
-    읽고-계산하고-쓰는 방식으로는 동시 요청 둘이 같은 잔액을 읽어 각각 차감분을 덮어써,
-    한 번 값으로 두 번 상담할 수 있다. 조건과 갱신을 한 문장에 두어 그 창을 없앤다.
+    차감에 성공하면 차감 '후' 잔액을, 잔액이 모자라거나 유저가 없으면 None 을 돌려준다.
     """
-    # 로컬 개발 환경(ENVIRONMENT != "production") 예외: 무제한 크레딧(99,999C) 유지
-    if settings.ENVIRONMENT != "production":
-        stmt = (
-            update(UserProfile)
-            .where(UserProfile.id == user_id)
-            .values(credit_balance=99999)
-            .returning(UserProfile.credit_balance)
-        )
-        balance = (await db_session.execute(stmt)).scalar_one_or_none()
-        return balance if balance is not None else 99999
-
     stmt = (
         update(UserProfile)
         .where(UserProfile.id == user_id, UserProfile.credit_balance >= amount)
@@ -308,6 +296,7 @@ async def start_consultation_endpoint(
                 "focus_rule": result.focus_rule,
                 "evidences": result.evidences,
                 "remaining_credits": remaining_credits,
+                "report_data": result.report_data if isinstance(result.report_data, dict) else None,
             }
 
         except HTTPException:

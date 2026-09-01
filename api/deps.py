@@ -37,10 +37,9 @@ async def require_user(request: Request) -> str:
     auth_header = request.headers.get("authorization", "").strip()
     token = auth_header[7:].strip() if auth_header.lower().startswith("bearer ") else ""
 
-    # 로컬 개발 환경(ENVIRONMENT != "production") 예외: dev-token 또는 미인증 시 개발용 유저 반환
-    if settings.ENVIRONMENT != "production":
-        if token == "dev-token" or not token:
-            return "00000000-0000-0000-0000-000000000000"
+    # 로컬 개발 환경에서 dev-token 헤더를 명시적으로 보낸 경우만 테스트용 UUID 반환
+    if settings.ENVIRONMENT != "production" and token == "dev-token":
+        return "00000000-0000-0000-0000-000000000000"
 
     if not auth_header or not auth_header.lower().startswith("bearer "):
         raise HTTPException(

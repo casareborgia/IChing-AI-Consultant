@@ -19,6 +19,7 @@ from agents.counsel import run_counsel_turn
 from core.config import settings
 from agents.intake import run_intake
 from agents.interpret import run_interpret
+from agents.report import run_report_agent
 from agents.journal import write_journal
 from agents.safety import format_safety_response, screen
 from core.hexagram_engine import rebuild_cast
@@ -53,6 +54,7 @@ class TurnResult:
     # 가지고는 초점 효사 자체(가장 짧고 가장 결정적인 어휘)가 빠진 채로 재게 된다.
     # 괘가 없는 턴(주역 문의·위기·되묻기)에는 자연히 None이다.
     raw_text: Optional[str] = None
+    report_data: Optional[Dict[str, Any]] = None
 
 
 def _merge_evidences(*groups: List[EvidenceItem]) -> List[Dict[str, Any]]:
@@ -535,6 +537,26 @@ async def run_turn(
             j = await write_journal(session, sid, client=clients.get("journal"))
             journal_summary = j.summary
 
+        merged_evidences = _merge_evidences(interp_res.evidences, counsel_turn_res.evidences)
+
+        # 수석 주역 AI 컨설팅 리포트 에이전트 가동
+        report_data = None
+        try:
+            report_obj = await run_report_agent(
+                session,
+                question=message,
+                original_hex_id=interp_res.original_hexagram_id,
+                transformed_hex_id=interp_res.transformed_hexagram_id,
+                changing_lines=interp_res.changing_lines,
+                lines_val=getattr(interp_res, "lines_val", [7, 8, 9, 8, 9, 7]),
+                focus_rule=evidence.focus_rule.model_dump(),
+                evidences=merged_evidences,
+                client=clients.get("report"),
+            )
+            report_data = report_obj.model_dump()
+        except Exception as e:
+            print(f"Report agent execution error: {e}")
+
         return TurnResult(
             session_id=sid,
             turn_number=turn_no,
@@ -547,8 +569,9 @@ async def run_turn(
             safety_category=safety_res.category,
             journal_summary=journal_summary,
             focus_rule=evidence.focus_rule.model_dump(),
-            evidences=_merge_evidences(interp_res.evidences, counsel_turn_res.evidences),
+            evidences=merged_evidences,
             raw_text=interp_res.raw_text,
+            report_data=report_data,
         )
 
     # 4. 이미 괘가 있는 세션 -> 그 괘를 되살려 상담을 잇는다

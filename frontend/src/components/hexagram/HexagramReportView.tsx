@@ -2,8 +2,8 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Compass, Sparkles, Copy, Check, ArrowRight, ShieldAlert, Lightbulb, BookOpen } from 'lucide-react';
-import { CastResult, ChatMessage } from '../../types/iching';
+import { Compass, Sparkles, Copy, Check, ArrowRight, ShieldAlert, Lightbulb, BookOpen, Layers } from 'lucide-react';
+import { CastResult, ChatMessage, HexagramReportData } from '../../types/iching';
 import { HEXAGRAMS_META } from '../../data/hexagramsData';
 import { HexagramSymbol } from './HexagramSymbol';
 
@@ -11,6 +11,7 @@ interface HexagramReportViewProps {
   castResult: CastResult;
   userQuestion: string;
   firstMessage?: ChatMessage;
+  reportData?: HexagramReportData;
   onProceedToCounsel: () => void;
 }
 
@@ -18,6 +19,7 @@ export const HexagramReportView: React.FC<HexagramReportViewProps> = ({
   castResult,
   userQuestion,
   firstMessage,
+  reportData,
   onProceedToCounsel,
 }) => {
   const [copied, setCopied] = useState(false);
@@ -33,110 +35,122 @@ export const HexagramReportView: React.FC<HexagramReportViewProps> = ({
     return { ...l, isChanging: false };
   });
 
-  // 동효 위치 텍스트 (예: 3효, 5효)
+  // 동효 위치 텍스트
   const changingLinesText = hasTransformation
     ? castResult.changingPositions.map((pos) => `${pos}효`).join(', ')
     : '불변 (동효 없음)';
 
-  // 초점 효사/괘사 명칭 (예: 수천수 괘 3효 또는 수천수 괘사)
+  // 초점 효사/괘사 명칭
   const focusTargetName = castResult.focusRule?.targetLineNumbers?.length
     ? `${originalMeta.fullNameHangul} 괘 ${castResult.focusRule.targetLineNumbers.map((n) => `${n}효`).join(', ')}`
     : `${originalMeta.fullNameHangul} 괘사`;
 
-  // 주자 고변점 초점 설명 (실제 DB 및 룰 엔진 결과)
   const focusRuleDesc = castResult.focusRule?.descriptionKo
     ? castResult.focusRule.descriptionKo
     : `${originalMeta.fullNameHangul}의 본래 괘상과 상징 흐름에 집중합니다.`;
 
-  // 백엔드 AI 1턴 메시지 및 단락 분할 (사연 맞춤형 AI 문장 추출)
-  const aiContent = (firstMessage?.content || '').trim();
-  const paragraphs = aiContent ? aiContent.split('\n\n').filter((p) => p.trim()) : [];
+  // === 4단계 완벽 리포트 데이터 바인딩 (LLM 전용 reportData 우선) ===
   
-  const aiDiagnosisPara = paragraphs[0] || '';
-  const aiActionPara = paragraphs[1] || '';
-  const aiWarningPara = paragraphs[2] || '';
-  const aiFuturePara = paragraphs.slice(3).join('\n\n') || '';
+  // 1. 질문 및 마음가짐 세팅
+  const part1Question = reportData?.question_setting.question || userQuestion;
+  const part1Mindset = reportData?.question_setting.mindset_rule || 
+    '질문자는 삿된 사리사욕이나 호기심을 비우고, 무념무상의 경건한 마음으로 단 한 번만 점을 치는 원칙(재삼덕 금기)을 준수하며 점을 쳤습니다.';
 
-  // --- RAG 고전 주석 정밀 간결화 & 64개 괘/사연 100% 동적 매핑 렌더링 ---
-  const rawEvidences = firstMessage?.evidences || [];
-  const selectedEvidences = rawEvidences.slice(0, 2);
+  // 2. 괘 도출 과정
+  const linesCastingList = reportData?.hexagram_casting.lines || castResult.lines.map((l, idx) => {
+    const pos = idx + 1;
+    const isChanging = castResult.changingPositions.includes(pos);
+    let typeKo = '소양', sym = '⚊', note = '변하지 않는 양효';
+    if (l.value === 8) { typeKo = '소음'; sym = '⚋'; note = '변하지 않는 음효'; }
+    if (l.value === 9) { typeKo = '노양'; sym = '⚊○'; note = '동효(변효) (양에서 음으로 변함)'; }
+    if (l.value === 6) { typeKo = '노음'; sym = '⚋✕'; note = '동효(변효) (음에서 양으로 변함)'; }
+    return { position: pos, name: `${pos}효`, value: l.value, line_type_ko: typeKo, symbol: sym, is_changing: isChanging, note };
+  });
 
-  const evidenceAppliedBlocks = selectedEvidences.length > 0
-    ? selectedEvidences.map((e, idx) => {
-        let cleanContent = e.content.replace(/\r?\n/g, ' ').trim();
-        if (cleanContent.length > 85) {
-          cleanContent = cleanContent.slice(0, 85) + '...';
-        }
+  const origNameFull = reportData?.hexagram_casting.original_name_full || originalMeta.fullNameHangul;
+  const origNameHanja = reportData?.hexagram_casting.original_name_hanja || originalMeta.nameHanja;
+  const origSummary = reportData?.hexagram_casting.original_summary || originalMeta.natureSummary;
 
-        const sourceTitle = e.sourceTitle || '고전 주석';
-        let customInsight = '';
+  const transNameFull = reportData?.hexagram_casting.transformed_name_full || transformedMeta.fullNameHangul;
+  const transNameHanja = reportData?.hexagram_casting.transformed_name_hanja || transformedMeta.nameHanja;
+  const transSummary = reportData?.hexagram_casting.transformed_summary || transformedMeta.natureSummary;
 
-        // 도출된 괘상(originalMeta)과 사연(userQuestion)을 결합한 100% 가변형 적용 메시지 생성
-        if (sourceTitle.includes('효사') || sourceTitle.includes('2효') || sourceTitle.includes('5효')) {
-          customInsight = `'${originalMeta.fullNameHangul}'의 핵심 이치인 [${originalMeta.coreTheme}]에 비추어, "${userQuestion}" 사연에 대해 겉치레보다는 내면의 진실함과 성실한 소통으로 중심을 다져야 함을 일깨워 줍니다.`;
-        } else if (sourceTitle.includes('소상전') || sourceTitle.includes('상전')) {
-          customInsight = `'${originalMeta.fullNameHangul}'이 보여주는 "${originalMeta.natureSummary}"의 상징처럼, 외부 자극에 흔들리지 말고 본래의 바른 도리를 유지할 것을 당부합니다.`;
-        } else if (sourceTitle.includes('본의')) {
-          customInsight = `'${originalMeta.fullNameHangul}'의 음양 조화 이치에 따라, 무리한 추진보다는 상호 간의 유순함과 합당한 응응(相應)을 이룰 때 비로소 고민하시는 결과에 도달함을 보여줍니다.`;
-        } else {
-          customInsight = `'${originalMeta.fullNameHangul}'이 가리키는 구심점의 이치처럼, 내담자님의 사연("${userQuestion}")에 대해 올바른 명분과 중심을 세우는 것이 우선임을 보여줍니다.`;
-        }
+  // 3. 고변점 및 체용
+  const ruleDesc = reportData?.focus_and_body_use.rule_description || focusRuleDesc;
+  const primaryTargetName = reportData?.focus_and_body_use.primary_target_name || focusTargetName;
+  const bodyUseFlow = reportData?.focus_and_body_use.body_use_flow || 
+    `본괘(${origNameFull}): 현재 처해 있는 대전제(體) ➡ "${originalMeta.coreTheme}"의 상황.\n지괘(${transNameFull}): 변화 이후 다다를 지향점(用) ➡ "${transformedMeta.coreTheme}"의 흐름.`;
 
-        return `• [핵심 고전 지혜 ${idx + 1}] ${sourceTitle}
-  "요약: ${cleanContent}"
-  👉 [사연 & 괘 적용]: ${customInsight}`;
-      }).join('\n\n')
-    : `• [고전 이치의 사연 적용]
-  "${originalMeta.fullNameHangul}의 본래 상징인 '${originalMeta.natureSummary}'의 지혜는 내담자님의 사연("${userQuestion}")에 대해 섣부른 조급함보다 '${originalMeta.coreTheme}'의 도리로 내실을 다지는 것이 최선임을 보여줍니다."`;
+  // 4. 괘사·효사 종합 해석 및 실질적 조언
+  const sec1 = reportData?.section1_diagnosis || {
+    title: `① 현재 상황 진단 (본괘: ${origNameFull})`,
+    target_name: origNameFull,
+    hanja_text: origNameHanja,
+    interpretation: `현재 질문자님의 사연은 '${origNameFull}'의 "${origSummary}" 시공간적 흐름 속에 직면해 있습니다. 겉모습에 연연하기보다 본래의 내실을 다져야 합니다.`
+  };
 
-  // --- 100% 동적 사연/괘 맞춤형 5대 섹션 구성 ---
+  const sec2 = reportData?.section2_action || {
+    title: `② 핵심 행동 지침 (주 주요 해석 대상: ${primaryTargetName})`,
+    target_name: primaryTargetName,
+    hanja_text: null,
+    interpretation: `초점 효사의 지혜에 따라 무리한 겉치레보다는 명확한 비전과 내면의 지극함으로 신뢰를 먼저 구축해야 합니다.`
+  };
 
-  // ① 현재 상황 진단 (본괘 고유 성격 & 사연 맞춤 진단)
-  const section1Diagnosis = `${originalMeta.fullNameHangul}(${originalMeta.nameHanja}) 괘는 상괘(${originalMeta.upperTrigram})와 하괘(${originalMeta.lowerTrigram})가 결합하여 "${originalMeta.natureSummary}"의 시공간적 형상을 나타냅니다.\n\n${aiDiagnosisPara ? `[상황 진단] ${aiDiagnosisPara}` : `현재 내담자님의 사연은 '${originalMeta.coreTheme}'의 기류에 직면해 있습니다. 상황의 겉모습보다는 이 괘가 가지는 근본 시공간적 위치를 바로 들여다보아야 할 때입니다.`}`;
+  const sec3 = reportData?.section3_warning || {
+    title: `③ 보조 경계 지침 (${hasTransformation ? `함께 동한 ${changingLinesText}` : '경계 주의점'})`,
+    target_name: hasTransformation ? changingLinesText : '경계 지침',
+    hanja_text: null,
+    interpretation: `성급한 확장을 서두르기보다 실행 전 계획과 요건을 최소 세 번 이상 치밀하게 검증한 뒤 나아가십시오.`
+  };
 
-  // ② 핵심 행동 지침 (초점 고변점 & 64개 괘/사연 동적 매핑)
-  const section2Action = `• 주요 해석 대상: ${focusTargetName}
-• 고변점 지침: ${focusRuleDesc}
-${castResult.focusRule?.bodyUseNoteKo ? `• 체용(體用) 참작: ${castResult.focusRule.bodyUseNoteKo}\n` : ''}
-${aiActionPara ? `[핵심 행동 실천] ${aiActionPara}` : `${originalMeta.fullNameHangul}이 내담자님의 고민에 제시하는 실천 방향은 '${originalMeta.coreTheme}'의 도리에 입각하여 본질적인 신뢰와 내면의 중심을 바로잡는 것입니다.`}
+  const sec4 = reportData?.section4_future || {
+    title: `④ 미래의 귀결 및 주의점 (${hasTransformation ? `지괘: ${transNameFull}` : '본괘 유지'})`,
+    target_name: hasTransformation ? transNameFull : origNameFull,
+    hanja_text: null,
+    interpretation: `변화 이후 도달할 이치에 따라 외형 확장보다는 내부 역량을 양육하고 내실을 단단히 다지는 연착륙이 성공의 열쇠입니다.`
+  };
 
-[핵심 고전 지혜 & 사연·괘 동적 매핑]
-${evidenceAppliedBlocks}`;
+  const finalSummaryText = reportData?.final_summary || 
+    `"${origNameFull} 괘의 핵심 상징인 '${originalMeta.coreTheme}'에 따라 고민하시는 방향을 다루되, 성급함을 삼가고 신중히 계획을 검증하십시오. ${hasTransformation ? `이후 다다를 지괘(${transNameFull})가 가르치듯 내부 내실 다지기에 집중하는 것이 승리의 열쇠입니다.` : `현재의 중심을 굳건히 지키는 것이 최고의 해법입니다.`}"`;
 
-  // ③ 보조 경계 지침 (변효별 경계 조언 & 사연 주의점)
-  const section3Warning = hasTransformation
-    ? `동효(${changingLinesText})가 움직여 변효를 형성한 것은 현 위치에서의 경거망동을 삼가라는 도명(道命)입니다.\n\n${aiWarningPara ? `[사연 경계 지침] ${aiWarningPara}` : `섣부른 무리수나 조급한 확장을 삼가고, 실행하기 전 주변 여건과 자기 자리를 명확히 분별하십시오.`}`
-    : `불변괘의 경계 지침은 움직임보다 내실 다지기에 집중하는 자중자애(自重自愛)입니다.\n\n${aiWarningPara ? `[사연 경계 지침] ${aiWarningPara}` : `외부의 조급한 자극에 흔들리지 말고 본래의 굳건함을 지켜내십시오.`}`;
+  // === 100% 예시와 동일한 마크다운 원문 구성 ===
+  const markdownText = `1. 질문 및 마음가짐 세팅 (사례 설정)
+질문자의 고민: "${part1Question}"
+점서 예식: ${part1Mindset}
 
-  // ④ 미래의 귀결 및 주의점 (지괘 고유 성격 & 사연 향후 방향)
-  const section4Future = hasTransformation
-    ? `[지괘: ${transformedMeta.fullNameHangul}(${transformedMeta.nameHanja})]
-변화를 거친 후 마주할 지괘는 '${transformedMeta.coreTheme}'의 이치를 지닌 ${transformedMeta.fullNameHangul} 괘입니다.\n\n${aiFuturePara ? `[미래 귀결 & 향후 방향] ${aiFuturePara}` : `변동 이후에는 "${transformedMeta.natureSummary}"의 상징처럼 내부 역량을 단단히 가꾸고 조화롭게 연착륙하는 것이 귀결의 열쇠입니다.`}`
-    : `[본괘 유지: ${originalMeta.fullNameHangul}(${originalMeta.nameHanja})]
-현재 주어진 ${originalMeta.fullNameHangul}의 지혜를 온전히 이어나간다면 "${originalMeta.natureSummary}"의 순리를 얻어 안정을 다지게 됩니다.`;
+2. 괘 도출 과정 (수리 도출 및 효 쌓기)
+${linesCastingList.map((l) => `${l.name}: ${l.value} (${l.line_type_ko}, ${l.symbol}) ➡ ${l.note}`).join('\n')}
 
-  // 💡 질문자에 대한 최종 종합 컨설팅 요약 (사연 맞춤 총평)
-  const section5Summary = aiContent
-    ? `${aiContent}\n\n**[종합 요약]:** "${originalMeta.fullNameHangul} 괘의 핵심 상징인 '${originalMeta.coreTheme}'에 따라 내담자님의 고민을 성찰하되, ${hasTransformation ? `이후 마주할 지괘(${transformedMeta.fullNameHangul})가 보여주는 '${transformedMeta.coreTheme}'의 방향으로 지혜롭게 내실을 다져가십시오.` : `현재 괘가 가르치는 중심을 굳건히 유지하는 것이 최고의 해법입니다.`}"`
-    : `"${originalMeta.fullNameHangul} 괘의 핵심 상징인 '${originalMeta.coreTheme}'의 흐름 속에서 내담자님의 고민을 다루되, ${hasTransformation ? `이후 다다를 지괘(${transformedMeta.fullNameHangul})가 보여주는 '${transformedMeta.coreTheme}'의 지혜를 바탕으로 내실 다지기에 집중하십시오.` : `현재 괘가 전하는 순리와 중심을 굳건히 지키는 것이 지혜로운 열쇠입니다.`}"`;
+① 본괘(本卦)의 성립
+도출된 본괘: ${origNameFull}(${origNameHanja})
+의미: '${origSummary}'을 상징합니다.
 
-  // 마크다운 복사용 원문 텍스트
-  const markdownText = `4. 괘사·효사 종합 해석 및 실질적 조언
+② 변효(動爻) 및 지괘(之卦)의 도출
+${hasTransformation ? `동효 위치: ${changingLinesText}\n도출된 지괘: ${transNameFull}(${transNameHanja})\n의미: '${transSummary}'을 상징합니다.` : '변효가 발생하지 않은 불변괘입니다.'}
 
-① 현재 상황 진단 (본괘: ${originalMeta.fullNameHangul})
-${section1Diagnosis}
+3. 고변점(考變占) 및 체용(體用) 해석 규칙 적용
+변효 개수별 규칙 (${linesCastingList.filter(l => l.is_changing).length}개 변효):
+${ruleDesc}
 
-② 핵심 행동 지침 (주 주요 해석 대상: ${focusTargetName})
-${section2Action}
+체(體)와 용(用)의 흐름:
+${bodyUseFlow}
 
-③ 보조 경계 지침 (${hasTransformation ? `함께 동한 ${changingLinesText}` : '경계 지침'})
-${section3Warning}
+4. 괘사·효사 종합 해석 및 실질적 조언
 
-④ 미래의 귀결 및 주의점 (${hasTransformation ? `지괘: ${transformedMeta.fullNameHangul}` : `본괘: ${originalMeta.fullNameHangul}`})
-${section4Future}
+${sec1.title}
+${sec1.hanja_text ? `원문: ${sec1.hanja_text}\n` : ''}해석: ${sec1.interpretation}
+
+${sec2.title}
+${sec2.hanja_text ? `원문: ${sec2.hanja_text}\n` : ''}해석: ${sec2.interpretation}
+
+${sec3.title}
+${sec3.hanja_text ? `원문: ${sec3.hanja_text}\n` : ''}해석: ${sec3.interpretation}
+
+${sec4.title}
+${sec4.hanja_text ? `원문: ${sec4.hanja_text}\n` : ''}해석: ${sec4.interpretation}
 
 💡 질문자에 대한 최종 종합 컨설팅 요약
-${section5Summary}
+"${finalSummaryText}"
 `;
 
   const handleCopy = () => {
@@ -151,137 +165,203 @@ ${section5Summary}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -15 }}
       transition={{ duration: 0.4 }}
-      className="w-full max-w-3xl mx-auto py-4 space-y-6"
+      className="w-full max-w-4xl mx-auto py-4 space-y-6"
     >
-      {/* 괘해석리포트 메인 카드 컨테이너 */}
-      <div className="bg-stone-900/95 border border-amber-500/40 rounded-2xl p-5 sm:p-8 shadow-2xl backdrop-blur-md text-stone-100 relative overflow-hidden space-y-6">
-        {/* 상단 뱃지 & 마크다운 복사 버튼 */}
+      {/* 4단계 고품격 컨설팅 리포트 메인 컨테이너 */}
+      <div className="bg-stone-900/95 border border-amber-500/40 rounded-2xl p-5 sm:p-8 shadow-2xl backdrop-blur-md text-stone-100 relative overflow-hidden space-y-8">
+        
+        {/* 상단 헤더 & 복사 버튼 */}
         <div className="flex items-center justify-between border-b border-stone-800 pb-4">
           <div className="flex items-center gap-2 text-xs font-serif tracking-wider text-amber-400">
             <Compass className="w-4 h-4 text-amber-400" />
-            <span className="font-semibold uppercase">주역 심층 성찰 리포트</span>
+            <span className="font-semibold uppercase">주역 수석 AI 1:1 심층 성찰 보고서</span>
           </div>
 
           <button
             onClick={handleCopy}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-stone-800 hover:bg-stone-700 text-stone-300 text-xs transition cursor-pointer border border-stone-700"
-            title="마크다운 리포트 원문 복사"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-stone-800 hover:bg-stone-700 text-amber-300 text-xs transition cursor-pointer border border-stone-700 shadow"
+            title="4단계 예시 서식 마크다운 전체 복사"
           >
             {copied ? (
               <>
                 <Check className="w-3.5 h-3.5 text-emerald-400" />
-                <span className="text-emerald-400 font-medium">복사 완료</span>
+                <span className="text-emerald-400 font-medium">리포트 복사 완료</span>
               </>
             ) : (
               <>
-                <Copy className="w-3.5 h-3.5 text-stone-400" />
-                <span>MD 복사</span>
+                <Copy className="w-3.5 h-3.5 text-amber-400" />
+                <span>마크다운 전문 복사</span>
               </>
             )}
           </button>
         </div>
 
-        {/* 메인 타이틀 헤더 */}
-        <div className="space-y-2">
-          <div className="flex items-center gap-2 text-xs text-amber-400/90 font-mono">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>고전 주석 및 괘효사 통합 컨설팅</span>
+        {/* 1. 질문 및 마음가짐 세팅 */}
+        <div className="space-y-3 bg-stone-950/70 p-4 sm:p-5 rounded-xl border border-stone-800">
+          <div className="flex items-center gap-2 text-sm font-serif font-bold text-amber-300">
+            <span className="bg-amber-500 text-stone-950 text-xs font-mono px-2 py-0.5 rounded font-bold">1</span>
+            <span>질문 및 마음가짐 세팅</span>
           </div>
-          <h1 className="text-xl sm:text-2xl font-serif font-bold text-amber-200 leading-snug">
-            4. 괘사·효사 종합 해석 및 실질적 조언
-          </h1>
-          <p className="text-xs text-amber-400/90 font-light italic">
-            내담자 고민 사연: &ldquo;{userQuestion}&rdquo;
-          </p>
+          <div className="text-xs sm:text-sm text-stone-200 leading-relaxed space-y-1.5 font-light">
+            <p><strong className="text-amber-400 font-medium">질문자의 고민:</strong> &ldquo;{part1Question}&rdquo;</p>
+            <p><strong className="text-stone-400 font-medium">점서 예식:</strong> {part1Mindset}</p>
+          </div>
         </div>
 
-        {/* 괘상 심볼 바인딩 칩 */}
-        <div className="p-4 rounded-xl bg-stone-950/70 border border-stone-800 flex items-center justify-around">
-          <div className="flex flex-col items-center">
-            <span className="text-xs text-amber-400 font-serif mb-1.5">[본괘] {originalMeta.fullNameHangul} ({originalMeta.nameHanja})</span>
-            <HexagramSymbol lines={castResult.lines} size="sm" />
+        {/* 2. 괘 도출 과정 (수리 도출 및 효 쌓기) */}
+        <div className="space-y-3 bg-stone-950/70 p-4 sm:p-5 rounded-xl border border-stone-800">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-sm font-serif font-bold text-amber-300">
+              <span className="bg-amber-500 text-stone-950 text-xs font-mono px-2 py-0.5 rounded font-bold">2</span>
+              <span>괘 도출 과정 (수리 도출 및 효 쌓기)</span>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-amber-400/80">
+              <Layers className="w-3.5 h-3.5" />
+              <span>초효 ➔ 상효 수리 산출</span>
+            </div>
           </div>
 
-          {hasTransformation && (
-            <>
-              <ArrowRight className="w-5 h-5 text-amber-500" />
-              <div className="flex flex-col items-center">
-                <span className="text-xs text-stone-400 font-serif mb-1.5">[지괘] {transformedMeta.fullNameHangul} ({transformedMeta.nameHanja})</span>
-                <HexagramSymbol lines={transformedLines} size="sm" />
+          {/* 6효 수리 표 현황 */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-mono pt-1">
+            {linesCastingList.map((l) => (
+              <div
+                key={l.position}
+                className={`p-2 rounded flex items-center justify-between border ${
+                  l.is_changing
+                    ? 'bg-amber-950/40 border-amber-500/50 text-amber-200'
+                    : 'bg-stone-900/60 border-stone-800 text-stone-300'
+                }`}
+              >
+                <span>{l.name}: <strong className="text-amber-400">{l.value}</strong> ({l.line_type_ko}, {l.symbol})</span>
+                <span className="text-[11px] opacity-80">{l.note}</span>
               </div>
-            </>
-          )}
-        </div>
+            ))}
+          </div>
 
-        {/* ① 현재 상황 진단 (본괘) */}
-        <div className="space-y-2">
-          <h2 className="text-base sm:text-lg font-serif font-semibold text-amber-300 flex items-center gap-2 border-b border-stone-800 pb-2">
-            <span className="text-amber-500 font-mono text-sm">①</span> 현재 상황 진단 <span className="text-xs text-stone-400 font-normal">(본괘: {originalMeta.fullNameHangul})</span>
-          </h2>
-          <div className="p-4 rounded-xl bg-stone-950/60 border border-stone-800/80 text-xs sm:text-sm text-stone-200 leading-relaxed font-light whitespace-pre-line">
-            {section1Diagnosis}
+          {/* 본괘 / 지괘 도출 칩 현황 */}
+          <div className="pt-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="p-3.5 rounded-lg bg-stone-900/80 border border-amber-500/30 flex items-center gap-3">
+              <HexagramSymbol lines={castResult.lines} size="sm" />
+              <div>
+                <span className="text-xs text-amber-400 font-serif block font-semibold">① 본괘: {origNameFull} ({origNameHanja})</span>
+                <span className="text-xs text-stone-300 font-light leading-tight block mt-0.5">{origSummary}</span>
+              </div>
+            </div>
+
+            {hasTransformation ? (
+              <div className="p-3.5 rounded-lg bg-stone-900/80 border border-stone-700 flex items-center gap-3">
+                <HexagramSymbol lines={transformedLines} size="sm" />
+                <div>
+                  <span className="text-xs text-stone-300 font-serif block font-semibold">② 지괘: {transNameFull} ({transNameHanja})</span>
+                  <span className="text-xs text-stone-400 font-light leading-tight block mt-0.5">{transSummary}</span>
+                </div>
+              </div>
+            ) : (
+              <div className="p-3.5 rounded-lg bg-stone-900/40 border border-stone-800 flex items-center text-xs text-stone-400 italic">
+                변효가 발생하지 않은 굳건한 불변괘(不變卦)입니다.
+              </div>
+            )}
           </div>
         </div>
 
-        {/* ② 핵심 행동 지침 (주 주요 해석 대상) */}
-        <div className="space-y-2">
-          <h2 className="text-base sm:text-lg font-serif font-semibold text-amber-300 flex items-center gap-2 border-b border-stone-800 pb-2">
-            <span className="text-amber-500 font-mono text-sm">②</span> 핵심 행동 지침 <span className="text-xs text-stone-400 font-normal">(주 주요 해석 대상: {focusTargetName})</span>
-          </h2>
-          <div className="p-4 rounded-xl bg-amber-950/20 border border-amber-500/30 text-xs sm:text-sm text-amber-100/90 leading-relaxed space-y-2">
-            <div className="flex items-center gap-1.5 text-xs text-amber-400 font-semibold">
+        {/* 3. 고변점 및 체용 해석 규칙 적용 */}
+        <div className="space-y-3 bg-stone-950/70 p-4 sm:p-5 rounded-xl border border-stone-800">
+          <div className="flex items-center gap-2 text-sm font-serif font-bold text-amber-300">
+            <span className="bg-amber-500 text-stone-950 text-xs font-mono px-2 py-0.5 rounded font-bold">3</span>
+            <span>고변점(考變占) 및 체용(體用) 해석 규칙 적용</span>
+          </div>
+          <div className="text-xs sm:text-sm text-stone-200 leading-relaxed space-y-2 font-light">
+            <p><strong className="text-amber-400 font-medium">변효 개수별 규칙:</strong> {ruleDesc}</p>
+            <div className="p-3 rounded-lg bg-stone-900/70 border border-stone-800 text-stone-300 space-y-1">
+              <strong className="text-amber-300 text-xs font-serif block">체(體)와 용(用)의 흐름:</strong>
+              <p className="whitespace-pre-line text-xs font-light">{bodyUseFlow}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* 4. 괘사·효사 종합 해석 및 실질적 조언 */}
+        <div className="space-y-5">
+          <div className="flex items-center gap-2 text-base sm:text-lg font-serif font-bold text-amber-200 border-b border-stone-800 pb-2">
+            <span className="bg-amber-500 text-stone-950 text-xs font-mono px-2 py-0.5 rounded font-bold">4</span>
+            <span>괘사·효사 종합 해석 및 실질적 조언</span>
+          </div>
+
+          {/* ① 현재 상황 진단 */}
+          <div className="space-y-1.5 p-4 rounded-xl bg-stone-950/60 border border-stone-800">
+            <h3 className="text-sm font-serif font-semibold text-amber-300">{sec1.title}</h3>
+            {sec1.hanja_text && (
+              <div className="text-xs font-mono text-amber-400/90 font-light bg-stone-900 px-2.5 py-1 rounded inline-block">
+                원문: {sec1.hanja_text}
+              </div>
+            )}
+            <p className="text-xs sm:text-sm text-stone-200 leading-relaxed font-light whitespace-pre-line pt-1">
+              {sec1.interpretation}
+            </p>
+          </div>
+
+          {/* ② 핵심 행동 지침 */}
+          <div className="space-y-1.5 p-4 rounded-xl bg-amber-950/20 border border-amber-500/30">
+            <div className="flex items-center gap-1.5 text-xs text-amber-400 font-semibold mb-1">
               <BookOpen className="w-4 h-4" />
-              <span>초점 고변점 및 사연 맞춤 이치 풀이</span>
+              <span>주 주요 해석 대상</span>
             </div>
-            <div className="whitespace-pre-line text-stone-200 font-light">
-              {section2Action}
-            </div>
+            <h3 className="text-sm font-serif font-semibold text-amber-200">{sec2.title}</h3>
+            {sec2.hanja_text && (
+              <div className="text-xs font-mono text-amber-300 font-light bg-stone-900/90 border border-amber-500/40 px-2.5 py-1 rounded inline-block">
+                원문: {sec2.hanja_text}
+              </div>
+            )}
+            <p className="text-xs sm:text-sm text-stone-100 leading-relaxed font-light whitespace-pre-line pt-1">
+              {sec2.interpretation}
+            </p>
           </div>
-        </div>
 
-        {/* ③ 보조 경계 지침 */}
-        <div className="space-y-2">
-          <h2 className="text-base sm:text-lg font-serif font-semibold text-amber-300 flex items-center gap-2 border-b border-stone-800 pb-2">
-            <span className="text-amber-500 font-mono text-sm">③</span> 보조 경계 지침 <span className="text-xs text-stone-400 font-normal">({hasTransformation ? `함께 동한 ${changingLinesText}` : '경계 주의점'})</span>
-          </h2>
-          <div className="p-4 rounded-xl bg-stone-950/60 border border-stone-800/80 text-xs sm:text-sm text-stone-300 leading-relaxed">
-            <div className="flex items-center gap-1.5 text-xs text-amber-400/90 font-medium mb-1.5">
+          {/* ③ 보조 경계 지침 */}
+          <div className="space-y-1.5 p-4 rounded-xl bg-stone-950/60 border border-stone-800">
+            <div className="flex items-center gap-1.5 text-xs text-amber-400 font-semibold mb-1">
               <ShieldAlert className="w-4 h-4 text-amber-500" />
-              <span>삼가고 바로잡을 경계 조언</span>
+              <span>경계 및 삼가기 조언</span>
             </div>
-            <div className="text-stone-300 font-light whitespace-pre-line">
-              {section3Warning}
-            </div>
+            <h3 className="text-sm font-serif font-semibold text-amber-300">{sec3.title}</h3>
+            {sec3.hanja_text && (
+              <div className="text-xs font-mono text-amber-400/90 font-light bg-stone-900 px-2.5 py-1 rounded inline-block">
+                원문: {sec3.hanja_text}
+              </div>
+            )}
+            <p className="text-xs sm:text-sm text-stone-300 leading-relaxed font-light whitespace-pre-line pt-1">
+              {sec3.interpretation}
+            </p>
           </div>
-        </div>
 
-        {/* ④ 미래의 귀결 및 주의점 (지괘) */}
-        <div className="space-y-2">
-          <h2 className="text-base sm:text-lg font-serif font-semibold text-amber-300 flex items-center gap-2 border-b border-stone-800 pb-2">
-            <span className="text-amber-500 font-mono text-sm">④</span> 미래의 귀결 및 주의점 <span className="text-xs text-stone-400 font-normal">({hasTransformation ? `지괘: ${transformedMeta.fullNameHangul}` : `본괘 유지`})</span>
-          </h2>
-          <div className="p-4 rounded-xl bg-stone-950/60 border border-stone-800/80 text-xs sm:text-sm text-stone-300 leading-relaxed">
-            <div className="whitespace-pre-line text-stone-300 font-light">
-              {section4Future}
-            </div>
+          {/* ④ 미래의 귀결 및 주의점 */}
+          <div className="space-y-1.5 p-4 rounded-xl bg-stone-950/60 border border-stone-800">
+            <h3 className="text-sm font-serif font-semibold text-amber-300">{sec4.title}</h3>
+            {sec4.hanja_text && (
+              <div className="text-xs font-mono text-amber-400/90 font-light bg-stone-900 px-2.5 py-1 rounded inline-block">
+                원문: {sec4.hanja_text}
+              </div>
+            )}
+            <p className="text-xs sm:text-sm text-stone-300 leading-relaxed font-light whitespace-pre-line pt-1">
+              {sec4.interpretation}
+            </p>
           </div>
         </div>
 
         {/* 💡 질문자에 대한 최종 종합 컨설팅 요약 */}
-        <div className="p-5 rounded-2xl bg-gradient-to-r from-amber-950/40 via-stone-900 to-amber-950/30 border border-amber-500/50 shadow-xl space-y-2.5">
-          <div className="flex items-center gap-2 text-sm font-bold text-amber-400">
+        <div className="p-5 rounded-2xl bg-gradient-to-r from-amber-950/50 via-stone-900 to-amber-950/40 border border-amber-500/60 shadow-xl space-y-3">
+          <div className="flex items-center gap-2 text-sm sm:text-base font-bold text-amber-300">
             <Lightbulb className="w-5 h-5 text-amber-400 shrink-0" />
             <span>💡 질문자에 대한 최종 종합 컨설팅 요약</span>
           </div>
-          <div className="text-xs sm:text-sm text-stone-100 font-medium leading-relaxed italic border-l-2 border-amber-400 pl-3.5 whitespace-pre-line">
-            {section5Summary}
+          <div className="text-xs sm:text-sm text-stone-100 font-medium leading-relaxed italic border-l-2 border-amber-400 pl-4 whitespace-pre-line">
+            &ldquo;{finalSummaryText}&rdquo;
           </div>
         </div>
 
         {/* 하단 상담 진행 버튼 */}
         <div className="pt-4 border-t border-stone-800 flex flex-col sm:flex-row items-center justify-between gap-4">
           <span className="text-xs text-stone-400 font-light">
-            종합 컨설팅 리포트를 숙고하신 후, 상담사와 심층 질의응답을 이어가세요.
+            종합 컨설팅 리포트를 숙고하신 후, AI 상담사와 1:1 심층 질의응답을 진행하세요.
           </span>
 
           <button
@@ -292,6 +372,7 @@ ${section5Summary}
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>
+
       </div>
     </motion.div>
   );

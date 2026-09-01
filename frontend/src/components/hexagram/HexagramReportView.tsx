@@ -81,7 +81,7 @@ export const HexagramReportView: React.FC<HexagramReportViewProps> = ({
   const bodyUseFlow = reportData?.focus_and_body_use.body_use_flow || 
     `본괘(${origNameFull}): 현재 질문자께서 직면한 대전제(體) ➡ [${originalMeta.coreTheme}]의 기류 속에 있습니다.\n지괘(${transNameFull}): 변화 이후 다다를 지향점(用) ➡ [${transformedMeta.coreTheme}]의 방향으로 내실을 다져가야 합니다.`;
 
-  // 4. 괘사·효사 종합 해석 및 실질적 조언 (상투적 고정 문구 100% 제거)
+  // 4. 괘사·효사 종합 해석 및 실질적 조언 (불변괘 및 변효괘 모두 100% 가변 조립)
   const sec1 = reportData?.section1_diagnosis || {
     title: `① 현재 상황 진단 (본괘: ${origNameFull})`,
     target_name: origNameFull,
@@ -97,21 +97,21 @@ export const HexagramReportView: React.FC<HexagramReportViewProps> = ({
   };
 
   const sec3 = reportData?.section3_warning || {
-    title: `③ 보조 경계 지침 (${hasTransformation ? `함께 동한 ${changingLinesText}` : '경계 주의점'})`,
-    target_name: hasTransformation ? changingLinesText : '경계 지침',
+    title: `③ 보조 경계 지침 (${hasTransformation ? `함께 동한 ${changingLinesText}` : '불변괘 경계 지침'})`,
+    target_name: hasTransformation ? changingLinesText : `${origNameFull} 경계 지침`,
     hanja_text: null,
     interpretation: hasTransformation
-      ? `동효(${changingLinesText})의 변화는 현 시점에서 성급한 주관적 무리수를 삼가라는 경고입니다. 추진하기 전 계획의 타당성을 객관적으로 다각도 검증하십시오.`
-      : `불변괘의 경계 지침은 자중자애(自重自愛)입니다. 주변의 조급한 일희일비에 흔들리지 말고 본래의 굳건한 안정을 지켜내십시오.`
+      ? `'${origNameFull}' 괘에서 동한 ${changingLinesText}의 변화에 따라, 현 시점에서는 성급한 주관적 무리수를 삼가고 추진 전 계획의 타당성을 다각도로 객관 검증해야 합니다.`
+      : `'${origNameFull}' 괘가 경계하는 핵심 바는 '${originalMeta.coreTheme}'의 중심을 잃고 조급해지는 것입니다. 내담자님의 사연("${userQuestion}")에 대해 이 괘가 전하는 본래의 바른 덕목을 흔들림 없이 지켜내십시오.`
   };
 
   const sec4 = reportData?.section4_future || {
-    title: `④ 미래의 귀결 및 주의점 (${hasTransformation ? `지괘: ${transNameFull}` : '본괘 유지'})`,
+    title: `④ 미래의 귀결 및 주의점 (${hasTransformation ? `지괘: ${transNameFull}` : `본괘 유지: ${origNameFull}`})`,
     target_name: hasTransformation ? transNameFull : origNameFull,
     hanja_text: null,
     interpretation: hasTransformation
       ? `변화 이후 다다를 지괘는 '${transNameFull}'의 이치를 지닙니다. "${transSummary}"의 상징처럼 내실을 정비하고 안정적으로 연착륙하는 것이 성공의 핵심입니다.`
-      : `현재 ${origNameFull}의 순리를 온전히 지킨다면 안정을 다져 성공적인 결실로 이어나갈 수 있습니다.`
+      : `'${origNameFull}'의 굳건한 이치를 온전히 지켜나간다면 "${origSummary}"의 순리를 얻어 안정을 다지고 결실을 다지게 됩니다.`
   };
 
   const finalSummaryText = reportData?.final_summary || 

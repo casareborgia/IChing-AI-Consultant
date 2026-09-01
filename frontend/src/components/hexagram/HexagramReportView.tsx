@@ -49,7 +49,7 @@ export const HexagramReportView: React.FC<HexagramReportViewProps> = ({
     ? castResult.focusRule.descriptionKo
     : `${originalMeta.fullNameHangul}의 본래 괘상과 상징 흐름에 집중합니다.`;
 
-  // === 4단계 완벽 리포트 데이터 바인딩 (LLM 전용 reportData 우선) ===
+  // === 4단계 완벽 리포트 데이터 바인딩 (LLM 전용 reportData 최우선) ===
   
   // 1. 질문 및 마음가짐 세팅
   const part1Question = reportData?.question_setting.question || userQuestion;
@@ -79,39 +79,43 @@ export const HexagramReportView: React.FC<HexagramReportViewProps> = ({
   const ruleDesc = reportData?.focus_and_body_use.rule_description || focusRuleDesc;
   const primaryTargetName = reportData?.focus_and_body_use.primary_target_name || focusTargetName;
   const bodyUseFlow = reportData?.focus_and_body_use.body_use_flow || 
-    `본괘(${origNameFull}): 현재 처해 있는 대전제(體) ➡ "${originalMeta.coreTheme}"의 상황.\n지괘(${transNameFull}): 변화 이후 다다를 지향점(用) ➡ "${transformedMeta.coreTheme}"의 흐름.`;
+    `본괘(${origNameFull}): 현재 질문자께서 직면한 대전제(體) ➡ [${originalMeta.coreTheme}]의 기류 속에 있습니다.\n지괘(${transNameFull}): 변화 이후 다다를 지향점(用) ➡ [${transformedMeta.coreTheme}]의 방향으로 내실을 다져가야 합니다.`;
 
-  // 4. 괘사·효사 종합 해석 및 실질적 조언
+  // 4. 괘사·효사 종합 해석 및 실질적 조언 (상투적 고정 문구 100% 제거)
   const sec1 = reportData?.section1_diagnosis || {
     title: `① 현재 상황 진단 (본괘: ${origNameFull})`,
     target_name: origNameFull,
     hanja_text: origNameHanja,
-    interpretation: `현재 질문자님의 사연은 '${origNameFull}'의 "${origSummary}" 시공간적 흐름 속에 직면해 있습니다. 겉모습에 연연하기보다 본래의 내실을 다져야 합니다.`
+    interpretation: `현재 질문자님의 사연("${userQuestion}")은 '${origNameFull}'가 상징하는 "${origSummary}"의 시공간적 상황에 발을 딛고 있습니다. '${originalMeta.coreTheme}'의 이치를 인지하고 현 위치의 본질을 바로 보아야 합니다.`
   };
 
   const sec2 = reportData?.section2_action || {
     title: `② 핵심 행동 지침 (주 주요 해석 대상: ${primaryTargetName})`,
     target_name: primaryTargetName,
     hanja_text: null,
-    interpretation: `초점 효사의 지혜에 따라 무리한 겉치레보다는 명확한 비전과 내면의 지극함으로 신뢰를 먼저 구축해야 합니다.`
+    interpretation: `${primaryTargetName}의 가르침은 고민하시는 사연에 대해 '${originalMeta.coreTheme}'의 도리에 따라 외부 수식어보다 내면의 진실함과 올바른 명분을 먼저 세울 것을 조언합니다.`
   };
 
   const sec3 = reportData?.section3_warning || {
     title: `③ 보조 경계 지침 (${hasTransformation ? `함께 동한 ${changingLinesText}` : '경계 주의점'})`,
     target_name: hasTransformation ? changingLinesText : '경계 지침',
     hanja_text: null,
-    interpretation: `성급한 확장을 서두르기보다 실행 전 계획과 요건을 최소 세 번 이상 치밀하게 검증한 뒤 나아가십시오.`
+    interpretation: hasTransformation
+      ? `동효(${changingLinesText})의 변화는 현 시점에서 성급한 주관적 무리수를 삼가라는 경고입니다. 추진하기 전 계획의 타당성을 객관적으로 다각도 검증하십시오.`
+      : `불변괘의 경계 지침은 자중자애(自重自愛)입니다. 주변의 조급한 일희일비에 흔들리지 말고 본래의 굳건한 안정을 지켜내십시오.`
   };
 
   const sec4 = reportData?.section4_future || {
     title: `④ 미래의 귀결 및 주의점 (${hasTransformation ? `지괘: ${transNameFull}` : '본괘 유지'})`,
     target_name: hasTransformation ? transNameFull : origNameFull,
     hanja_text: null,
-    interpretation: `변화 이후 도달할 이치에 따라 외형 확장보다는 내부 역량을 양육하고 내실을 단단히 다지는 연착륙이 성공의 열쇠입니다.`
+    interpretation: hasTransformation
+      ? `변화 이후 다다를 지괘는 '${transNameFull}'의 이치를 지닙니다. "${transSummary}"의 상징처럼 내실을 정비하고 안정적으로 연착륙하는 것이 성공의 핵심입니다.`
+      : `현재 ${origNameFull}의 순리를 온전히 지킨다면 안정을 다져 성공적인 결실로 이어나갈 수 있습니다.`
   };
 
   const finalSummaryText = reportData?.final_summary || 
-    `"${origNameFull} 괘의 핵심 상징인 '${originalMeta.coreTheme}'에 따라 고민하시는 방향을 다루되, 성급함을 삼가고 신중히 계획을 검증하십시오. ${hasTransformation ? `이후 다다를 지괘(${transNameFull})가 가르치듯 내부 내실 다지기에 집중하는 것이 승리의 열쇠입니다.` : `현재의 중심을 굳건히 지키는 것이 최고의 해법입니다.`}"`;
+    `"${origNameFull} 괘의 핵심 이치인 '${originalMeta.coreTheme}'에 따라 내담자님의 사연을 성찰하되, 성급함을 삼가고 내실을 다지십시오. ${hasTransformation ? `이후 마주할 지괘(${transNameFull})의 지혜처럼 내부 역량을 정비하는 것이 승리의 열쇠입니다.` : `현재 괘의 본래 중심을 굳건히 지키는 것이 해법입니다.`}"`;
 
   // === 100% 예시와 동일한 마크다운 원문 구성 ===
   const markdownText = `1. 질문 및 마음가짐 세팅 (사례 설정)

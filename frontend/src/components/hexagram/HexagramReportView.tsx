@@ -57,45 +57,45 @@ export const HexagramReportView: React.FC<HexagramReportViewProps> = ({
   const aiWarningPara = paragraphs[2] || '';
   const aiFuturePara = paragraphs.slice(3).join('\n\n') || '';
 
-  // RAG 고전 주석 데이터를 날것으로 나열하지 않고 사연에 맞춰 직관적으로 풀어내는 해석 로직
+  // RAG 고전 주석 데이터를 사연에 맞춰 직관적으로 재해석하여 풀어내는 심층 매핑 로직
   const evidences = firstMessage?.evidences || [];
   const evidenceAppliedText = evidences.length > 0
-    ? evidences.map((e) => {
+    ? evidences.map((e, idx) => {
         const cleanContent = e.content.replace(/\r?\n/g, ' ').trim();
-        return `• [${e.sourceTitle}의 통찰 ➔ 사연 맞춤 해설]\n  "${cleanContent}"\n  👉 [사연 적용]: 이 고전 주석의 지혜는 내담자님의 고민("${userQuestion}")에 대해, 한시적인 조급함이나 겉모습에 현혹되지 않고 이치에 맞는 굳건함을 다질 때 비로소 문제의 본질이 풀려나간다는 깊은 가르침을 줍니다.`;
+        return `• [${e.sourceTitle} 고전 통찰 ${idx + 1}]\n  "원문 이치: ${cleanContent}"\n\n  👉 [내담자 사연 1:1 적용 해설]:\n  내담자님께서 말씀하신 "${userQuestion}" 고민에 이 고전 주석을 비추어보면, 단순한 겉모습의 자극이나 일시적인 직관에 이끌려 조급히 결정하기보다, 주석이 일깨워 주는 본질적인 명분과 지혜를 중심에 둘 때 비로소 시원한 해법이 열린다는 뜻입니다.`;
       }).join('\n\n')
-    : `• [고전 이치의 사연 적용]\n  "${originalMeta.fullNameHangul}의 본래 상징인 '${originalMeta.natureSummary}'의 지혜는 내담자님의 고민("${userQuestion}")에 대해, 섣부른 조급함보다는 내실을 공고히 하고 신뢰를 다지는 것이 가장 올바른 해법임을 일깨워 줍니다."`;
+    : `• [고전 주석의 사연 맞춤 적용]:\n  "${originalMeta.fullNameHangul}의 본래 상징인 '${originalMeta.natureSummary}'의 이치는 내담자님의 사연("${userQuestion}")에 대해, 섣부른 조급함보다는 내실을 공고히 하고 신뢰를 다지는 것이 가장 올바른 해법임을 일깨워 줍니다."`;
 
   // --- 100% 동적 사연/괘 맞춤형 5대 섹션 구성 ---
 
-  // ① 현재 상황 진단 (본괘 고유 성격 & AI 맞춤 진단)
-  const section1Diagnosis = `${originalMeta.fullNameHangul}(${originalMeta.nameHanja}) 괘는 상괘(${originalMeta.upperTrigram})와 하괘(${originalMeta.lowerTrigram})가 결합하여 "${originalMeta.natureSummary}"의 시공간적 형상을 나타냅니다.\n\n${aiDiagnosisPara ? `[상황 진단] ${aiDiagnosisPara}` : `현재 사연("${userQuestion}")은 '${originalMeta.coreTheme}'의 기류에 직면해 있습니다. 상황의 겉모습보다는 이 괘가 가지는 근본 이치를 들여다보아야 할 때입니다.`}`;
+  // ① 현재 상황 진단 (본괘 고유 성격 & 사연 맞춤 진단)
+  const section1Diagnosis = `${originalMeta.fullNameHangul}(${originalMeta.nameHanja}) 괘는 상괘(${originalMeta.upperTrigram})와 하괘(${originalMeta.lowerTrigram})가 결합하여 "${originalMeta.natureSummary}"의 형상을 만듭니다.\n\n${aiDiagnosisPara ? `[사연 진단] ${aiDiagnosisPara}` : `현재 내담자님의 사연("${userQuestion}")은 '${originalMeta.coreTheme}'의 기류에 직면해 있습니다. 상황의 외형에 현혹되지 않고 이 괘가 가리키는 근본 시공간적 위치를 바로 들여다보아야 할 때입니다.`}`;
 
-  // ② 핵심 행동 지침 (초점 고변점 & RAG 주석 사연 맞춤 해석)
+  // ② 핵심 행동 지침 (초점 고변점 & 고전 주석 사연 맞춤 해석 적용)
   const section2Action = `• 주요 해석 대상: ${focusTargetName}
 • 고변점 지침: ${focusRuleDesc}
 ${castResult.focusRule?.bodyUseNoteKo ? `• 체용(體用) 참작: ${castResult.focusRule.bodyUseNoteKo}\n` : ''}
-${aiActionPara ? `[핵심 행동 실천] ${aiActionPara}` : `${originalMeta.fullNameHangul}이 시사하는 실천 방향은 '${originalMeta.coreTheme}'의 도리에 입각하여 본질적인 신뢰와 내면의 중심을 바로잡는 것입니다.`}
+${aiActionPara ? `[사연 맞춤 행동 실천] ${aiActionPara}` : `${originalMeta.fullNameHangul}이 내담자님 고민("${userQuestion}")에 제시하는 실천 방향은 '${originalMeta.coreTheme}'의 도리에 입각하여 본질적인 신뢰와 내면의 중심을 바로잡는 것입니다.`}
 
 [고전 주석의 현대적 해설 & 사연 적용]
 ${evidenceAppliedText}`;
 
-  // ③ 보조 경계 지침 (변효별 경계 조언)
+  // ③ 보조 경계 지침 (변효별 경계 조언 & 사연 주의점)
   const section3Warning = hasTransformation
-    ? `동효(${changingLinesText})가 형성된 것은 현 위치에서의 경거망동을 경계하라는 도명(道命)입니다.\n\n${aiWarningPara ? `[경계 지침] ${aiWarningPara}` : `섣부른 성급함이나 지나친 과유불급을 삼가고, 나아가기 전 주변 여건과 자기 자리를 명확히 분별하십시오.`}`
-    : `불변괘의 경계 지침은 움직임보다 내실 다지기에 집중하는 자중자애(自重自愛)입니다.\n\n${aiWarningPara ? `[경계 지침] ${aiWarningPara}` : `외부의 조급한 자극에 흔들리지 말고 본래의 굳건함을 지켜내십시오.`}`;
+    ? `동효(${changingLinesText})가 움직여 변효를 형성한 것은 내담자님의 상황("${userQuestion}")에서 경거망동을 삼가라는 도명(道命)입니다.\n\n${aiWarningPara ? `[사연 경계 지침] ${aiWarningPara}` : `섣부른 무리수나 조급한 확장을 삼가고, 실행하기 전 주변 여건과 자기 자리를 명확히 분별하십시오.`}`
+    : `불변괘의 경계 지침은 움직임보다 내실 다지기에 집중하는 자중자애(自重自愛)입니다.\n\n${aiWarningPara ? `[사연 경계 지침] ${aiWarningPara}` : `외부의 조급한 자극에 흔들리지 말고 본래의 굳건함을 지켜내십시오.`}`;
 
-  // ④ 미래의 귀결 및 주의점 (지괘 고유 성격)
+  // ④ 미래의 귀결 및 주의점 (지괘 고유 성격 & 사연 향후 방향)
   const section4Future = hasTransformation
     ? `[지괘: ${transformedMeta.fullNameHangul}(${transformedMeta.nameHanja})]
-변화를 거친 후 마주할 지괘는 '${transformedMeta.coreTheme}'의 이치를 지닌 ${transformedMeta.fullNameHangul} 괘입니다.\n\n${aiFuturePara ? `[미래 귀결] ${aiFuturePara}` : `변동 이후에는 "${transformedMeta.natureSummary}"의 상징처럼 내부 역량을 단단히 가꾸고 조화롭게 연착륙하는 것이 귀결의 열쇠입니다.`}`
+변화를 거친 후 마주할 지괘는 '${transformedMeta.coreTheme}'의 이치를 지닌 ${transformedMeta.fullNameHangul} 괘입니다.\n\n${aiFuturePara ? `[미래 귀결 & 향후 방향] ${aiFuturePara}` : `변동 이후에는 "${transformedMeta.natureSummary}"의 상징처럼 내부 역량을 단단히 가꾸고 조화롭게 연착륙하는 것이 귀결의 열쇠입니다.`}`
     : `[본괘 유지: ${originalMeta.fullNameHangul}(${originalMeta.nameHanja})]
 현재 주어진 ${originalMeta.fullNameHangul}의 지혜를 온전히 이어나간다면 "${originalMeta.natureSummary}"의 순리를 얻어 안정을 다지게 됩니다.`;
 
-  // 💡 질문자에 대한 최종 종합 컨설팅 요약 (AI 맞춤 총평 또는 괘별 고유 총평)
+  // 💡 질문자에 대한 최종 종합 컨설팅 요약 (사연 맞춤 총평)
   const section5Summary = aiContent
-    ? `${aiContent}\n\n**[종합 요약]:** "${originalMeta.fullNameHangul} 괘의 핵심 상징인 '${originalMeta.coreTheme}'에 따라 고민하시는 사연을 성찰하되, ${hasTransformation ? `이후 마주할 지괘(${transformedMeta.fullNameHangul})가 보여주는 '${transformedMeta.coreTheme}'의 방향으로 지혜롭게 내실을 다져가십시오.` : `현재 괘가 가르치는 중심을 굳건히 유지하는 것이 최고의 해법입니다.`}"`
-    : `"${originalMeta.fullNameHangul} 괘의 핵심 상징인 '${originalMeta.coreTheme}'의 흐름 속에서 고민하시는 질문을 다루되, ${hasTransformation ? `이후 다다를 지괘(${transformedMeta.fullNameHangul})가 보여주는 '${transformedMeta.coreTheme}'의 지혜를 바탕으로 내실 다지기에 집중하십시오.` : `현재 괘가 전하는 순리와 중심을 굳건히 지키는 것이 지혜로운 열쇠입니다.`}"`;
+    ? `${aiContent}\n\n**[사연 맞춤 최종 요약]:** "${originalMeta.fullNameHangul} 괘의 핵심 상징인 '${originalMeta.coreTheme}'에 따라 내담자님의 고민("${userQuestion}")을 성찰하되, ${hasTransformation ? `이후 마주할 지괘(${transformedMeta.fullNameHangul})가 보여주는 '${transformedMeta.coreTheme}'의 방향으로 지혜롭게 내실을 다져가십시오.` : `현재 괘가 가르치는 중심을 굳건히 유지하는 것이 최고의 해법입니다.`}"`
+    : `"${originalMeta.fullNameHangul} 괘의 핵심 상징인 '${originalMeta.coreTheme}'의 흐름 속에서 내담자님의 고민("${userQuestion}")을 다루되, ${hasTransformation ? `이후 다다를 지괘(${transformedMeta.fullNameHangul})가 보여주는 '${transformedMeta.coreTheme}'의 지혜를 바탕으로 내실 다지기에 집중하십시오.` : `현재 괘가 전하는 순리와 중심을 굳건히 지키는 것이 지혜로운 열쇠입니다.`}"`;
 
   // 마크다운 복사용 원문 텍스트
   const markdownText = `4. 괘사·효사 종합 해석 및 실질적 조언
@@ -167,8 +167,8 @@ ${section5Summary}
           <h1 className="text-xl sm:text-2xl font-serif font-bold text-amber-200 leading-snug">
             4. 괘사·효사 종합 해석 및 실질적 조언
           </h1>
-          <p className="text-xs text-stone-400 font-light italic">
-            내담자 사연: &ldquo;{userQuestion}&rdquo;
+          <p className="text-xs text-amber-400/90 font-light italic">
+            내담자 고민 사연: &ldquo;{userQuestion}&rdquo;
           </p>
         </div>
 
@@ -208,7 +208,7 @@ ${section5Summary}
           <div className="p-4 rounded-xl bg-amber-950/20 border border-amber-500/30 text-xs sm:text-sm text-amber-100/90 leading-relaxed space-y-2">
             <div className="flex items-center gap-1.5 text-xs text-amber-400 font-semibold">
               <BookOpen className="w-4 h-4" />
-              <span>초점 고변점 및 이치 풀이</span>
+              <span>초점 고변점 및 사연 맞춤 이치 풀이</span>
             </div>
             <div className="whitespace-pre-line text-stone-200 font-light">
               {section2Action}

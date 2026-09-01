@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Compass, Sparkles, Feather, HelpCircle, ArrowRight, RotateCcw, Check, LogIn, LogOut, User } from 'lucide-react';
 
 import { CastResult, ChatMessage as ChatMessageType, ConsultationStep, JournalSummary } from '../types/iching';
-import { HexagramCard } from '../components/hexagram/HexagramCard';
 import { HexagramSymbol } from '../components/hexagram/HexagramSymbol';
 import { HexagramStickyHeader } from '../components/hexagram/HexagramStickyHeader';
 import { HexagramReportView } from '../components/hexagram/HexagramReportView';

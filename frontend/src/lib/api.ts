@@ -1,7 +1,13 @@
 import { CastResult, ChatMessage, GroundEvidence, JournalSummary, LineInfo, LineValue } from '../types/iching';
 import { HEXAGRAMS_META, HEXAGRAM_ID_TO_BINARY } from '../data/hexagramsData';
 
-const BACKEND_API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8008';
+const BACKEND_API_BASE =
+  process.env.NEXT_PUBLIC_API_URL ||
+  (typeof window !== 'undefined' && window.location.hostname.includes('vercel.app')
+    ? 'https://iching-counsel-api-517419857386.asia-northeast3.run.app'
+    : (process.env.NODE_ENV === 'production'
+        ? 'https://iching-counsel-api-517419857386.asia-northeast3.run.app'
+        : 'http://localhost:8008'));
 
 /**
  * 백엔드 hexagram_id와 changing_lines를 기반으로 프론트엔드 CastResult 구성

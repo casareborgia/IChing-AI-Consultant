@@ -68,6 +68,7 @@ docs/DEPLOYMENT_AND_MONETIZATION_BLUEPRINT.md
 #   ANTIGRAVITY_* 내부 작업 지시서 (조치 완료된 취약점을 공격 관점으로 서술)
 prompts/*.md
 CLAUDE.md
+AGENTS.md
 docs/ANTIGRAVITY_*.md
 docs/STEP5_INSTRUCTIONS.md
 CLAUDE_HANDOFF.md

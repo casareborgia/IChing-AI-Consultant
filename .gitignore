@@ -12,6 +12,8 @@ ENV/
 # 퍼블릭 리포이므로 .env* 를 통째로 막고 예시 파일만 되살린다.
 .env*
 !.env.example
+env.production.yaml
+!env.production.yaml.example
 
 # IDE / OS
 .DS_Store

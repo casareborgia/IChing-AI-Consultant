@@ -277,13 +277,34 @@ export async function sendConsultationTurnApi(
     const hexMeta = HEXAGRAMS_META[castResult.originalHexId];
 
     let journal: JournalSummary | undefined = undefined;
-    if (data.is_final && data.journal_summary) {
+    if (data.is_final && (data.journal_summary || data.journal_data)) {
+      const jData = data.journal_data;
+      const cardPayload = jData?.card_data?.card_payload;
+      const actAction = cardPayload?.client_action_pledge || jData?.action_items || jData?.card_data?.psychological_engine?.act_committed_action;
+      const ahaMoment = cardPayload?.client_aha_moment;
+      const reframing = cardPayload?.counselor_reframing;
+      const universeTransition = cardPayload?.universe_transition || jData?.summary || data.journal_summary;
+
+      const insights: string[] = [];
+      if (ahaMoment) {
+        insights.push(`내려놓은 아집: ${ahaMoment}`);
+      }
+      if (reframing) {
+        insights.push(`마음의 지지와 격려: ${reframing}`);
+      }
+      if (insights.length === 0 && (jData?.key_insights || data.journal_summary)) {
+        insights.push(jData?.key_insights || data.journal_summary);
+      }
+
       journal = {
-        clarifiedQuestion: '주역 괘를 거울삼아 함께 나눈 성찰',
+        clarifiedQuestion: universeTransition || '주역 괘를 거울삼아 함께 나눈 성찰',
         hexagramSummary: `${hexMeta.fullNameHangul} (${hexMeta.nameHanja}) - ${hexMeta.coreTheme}`,
-        keyInsights: [data.journal_summary],
-        suggestedAction: '오늘 나눈 대화의 실마리를 마음에 품고, 조급함 없이 하루를 정돈해 보세요.',
+        keyInsights: insights,
+        suggestedAction: actAction || '오늘 나눈 대화의 실마리를 마음에 품고, 조급함 없이 하루를 정돈해 보세요.',
         createdAt: new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' }),
+        cardMarkdown: jData?.card_markdown,
+        cardData: jData?.card_data,
+        isCrisis: jData?.is_crisis || false,
       };
     }
 
@@ -304,4 +325,25 @@ export async function sendConsultationTurnApi(
     console.error('상담 턴 처리 실패:', error);
     throw error;
   }
+}
+
+/**
+ * 서버 사이드 EXIF 세척 고화질 래스터화 카드 이미지 다운로드 API
+ */
+export async function exportCardImageApi(cardData: any): Promise<Blob> {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') || 'dev-token' : 'dev-token';
+  const res = await fetch(`${BACKEND_API_BASE}/api/counsel/card/export`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ card_data: cardData }),
+  });
+
+  if (!res.ok) {
+    throw new Error('서버에서 카드 이미지를 생성하는 데 실패했습니다.');
+  }
+
+  return await res.blob();
 }

@@ -67,6 +67,10 @@ class Settings(BaseSettings):
     SUPABASE_JWT_SECRET: str = ""
 
 
+    # --- Security & Cryptography ---
+    # ACT 행동 전념 카드 및 민감 상담 데이터 암호화용 32바이트 키 (미지정 시 안전 파생키 사용)
+    ACTION_CARD_ENCRYPTION_KEY: str = ""
+
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
 

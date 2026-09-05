@@ -27,4 +27,7 @@ anthropic[vertex]>=0.122.0
 PyJWT>=2.8.0
 cryptography>=42.0.0
 
+# Image Processing (Server-side Card Rasterization)
+Pillow>=10.2.0
+
 

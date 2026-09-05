@@ -1,18 +1,16 @@
 'use client';
 
 import React from 'react';
-import { motion } from 'framer-motion';
 import { 
   Compass, 
   BookOpen, 
   Sparkles, 
   ShieldCheck, 
-  HelpCircle, 
   Scale, 
-  Eye, 
   MessageSquare,
   Gift,
-  ArrowRight
+  ArrowRight,
+  FileText
 } from 'lucide-react';
 
 interface MicroLandingSectionProps {
@@ -39,7 +37,7 @@ export const MicroLandingSection: React.FC<MicroLandingSectionProps> = ({ onSele
               신규 가입 시 <span className="text-amber-300 font-semibold">50 웰컴 크레딧</span>이 즉시 지급됩니다
             </h4>
             <p className="text-xs text-stone-400 font-light mt-0.5">
-              별도의 결제 정보 입력 없이 주역 심층 성찰 상담(2~3회 분량)을 무료로 경험해 보세요.
+              별도의 결제 정보 없이 <strong className="text-amber-400 font-normal">심층 괘해석 리포트 발급</strong> 및 1:1 AI 성찰 대화를 무료로 경험해 보세요.
             </p>
           </div>
         </div>
@@ -53,7 +51,7 @@ export const MicroLandingSection: React.FC<MicroLandingSectionProps> = ({ onSele
         </button>
       </div>
 
-      {/* 2. 3단계 상담 프로세스 (How it Works) */}
+      {/* 2. 기존 상담 프로세스 순서에 '레포트 생성' 삽입 (4단계 프로세스) */}
       <section className="space-y-6 text-center">
         <div>
           <span className="text-[11px] font-mono tracking-widest text-amber-500/80 uppercase block mb-1">
@@ -63,11 +61,11 @@ export const MicroLandingSection: React.FC<MicroLandingSectionProps> = ({ onSele
             성찰 대화는 어떻게 진행되나요?
           </h3>
           <p className="text-xs sm:text-sm text-stone-400 font-light mt-2 max-w-xl mx-auto">
-            주역의 전통 서법(筮法)과 현대 AI 상담학을 결합하여, 세 단계를 거쳐 마음의 흐름을 짚어냅니다.
+            주역의 전통 서법(筮法)과 현대 AI 상담학을 결합하여, 네 단계를 거쳐 마음의 흐름을 짚어냅니다.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-left">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-left">
           {/* Step 1 */}
           <div className="bg-stone-900/60 border border-stone-800/80 rounded-2xl p-5 backdrop-blur-sm relative overflow-hidden group hover:border-stone-700 transition">
             <div className="text-3xl font-serif text-amber-500/20 absolute top-4 right-4 font-bold">
@@ -92,21 +90,35 @@ export const MicroLandingSection: React.FC<MicroLandingSectionProps> = ({ onSele
             </div>
             <h4 className="text-sm font-semibold text-stone-100 font-serif">2. 주자 변효 괘 도출</h4>
             <p className="text-xs text-stone-400 font-light mt-1.5 leading-relaxed">
-              동전 3개 서법으로 64괘 384효 중 지금 마주한 본괘(현재)와 지괘(변화의 방향), 그리고 핵심 초점 효사를 엄밀히 산출합니다.
+              동전 3개 서법으로 64괘 384효 중 마주한 본괘(현재)와 지괘(변화의 방향), 그리고 핵심 초점 효사를 엄밀히 산출합니다.
             </p>
           </div>
 
-          {/* Step 3 */}
+          {/* Step 3 (기존 순서에 들어가는 레포트 생성 단계) */}
+          <div className="bg-stone-900/60 border border-amber-500/30 rounded-2xl p-5 backdrop-blur-sm relative overflow-hidden group hover:border-amber-500/50 transition">
+            <div className="text-3xl font-serif text-amber-500/30 absolute top-4 right-4 font-bold">
+              03
+            </div>
+            <div className="w-9 h-9 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-300 mb-3.5">
+              <FileText className="w-4 h-4" />
+            </div>
+            <h4 className="text-sm font-semibold text-amber-200 font-serif">3. 괘해석 리포트 생성</h4>
+            <p className="text-xs text-stone-400 font-light mt-1.5 leading-relaxed">
+              도출된 괘상과 원문 주석을 바탕으로 진단·행동지침·경계·미래귀결 4단계 심층 맞춤 컨설팅 리포트를 집필합니다.
+            </p>
+          </div>
+
+          {/* Step 4 */}
           <div className="bg-stone-900/60 border border-stone-800/80 rounded-2xl p-5 backdrop-blur-sm relative overflow-hidden group hover:border-stone-700 transition">
             <div className="text-3xl font-serif text-amber-500/20 absolute top-4 right-4 font-bold">
-              03
+              04
             </div>
             <div className="w-9 h-9 rounded-lg bg-stone-800/80 flex items-center justify-center text-amber-400 mb-3.5">
               <BookOpen className="w-4 h-4" />
             </div>
-            <h4 className="text-sm font-semibold text-stone-100 font-serif">3. 1:1 심층 성찰 상담</h4>
+            <h4 className="text-sm font-semibold text-stone-100 font-serif">4. 1:1 심층 성찰 대화</h4>
             <p className="text-xs text-stone-400 font-light mt-1.5 leading-relaxed">
-              2,536건 정전·본의 역사적 주석에 기반하여 단정적 예언이 아닌 질문을 건네며, 스스로 해답을 발견하도록 돕습니다.
+              완성된 리포트를 숙고한 후 수석 AI 상담사와 1:1 대화를 나누며 스스로 해답을 발견하도록 돕습니다.
             </p>
           </div>
         </div>
@@ -140,9 +152,9 @@ export const MicroLandingSection: React.FC<MicroLandingSectionProps> = ({ onSele
               <BookOpen className="w-4 h-4" />
               <span>2,536건 문헌 근거</span>
             </div>
-            <h4 className="text-sm font-medium text-stone-100">근거 없는 잡담 ❌ / 역사적 주석 ⭕</h4>
+            <h4 className="text-sm font-medium text-stone-100">근거 없는 잡담 ❌ / 원문 심층 리포트 ⭕</h4>
             <p className="text-xs text-stone-400 font-light mt-2 leading-relaxed">
-              출처 불명의 LLM 환각을 배제하고, 한적리포지토리(Kanripo) 정본의 『이천역전』(정전)과 주자 『본의』의 역사적 주석에 기반해 답합니다.
+              출처 불명의 환각을 배제하고, 『이천역전』(정전)과 주자 『본의』의 역사적 원문에 기반해 1:1 맞춤 컨설팅 리포트를 발급합니다.
             </p>
           </div>
 

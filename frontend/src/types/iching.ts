@@ -120,4 +120,7 @@ export interface JournalSummary {
   keyInsights: string[];
   suggestedAction: string;
   createdAt: string;
+  cardMarkdown?: string;
+  cardData?: any;
+  isCrisis?: boolean;
 }

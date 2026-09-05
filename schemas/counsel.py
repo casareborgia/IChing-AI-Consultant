@@ -1,4 +1,4 @@
-from typing import List, Literal, Optional
+from typing import Any, Dict, List, Literal, Optional
 from pydantic import BaseModel, Field
 
 
@@ -91,8 +91,33 @@ class CounselTurnSchema(BaseModel):
     )
 
 
+class ActionCommitmentCardSchema(BaseModel):
+    """[+1] ACT 기반 마음 전념 카드 페이로드 스키마"""
+    is_crisis: bool = Field(False, description="위기 여부 (항상 False)")
+    universe_transition: str = Field(..., description="괘의 전이 및 흐름 요약")
+    sacred_metaphor: str = Field(..., description="고전의 은유적 한 구절")
+    client_aha_moment: str = Field(..., description="내려놓을 아집이나 정서적 고착 상태")
+    client_action_pledge: str = Field(..., description="10분 이내 실행 가능한 SMART 전념 행동")
+    is_smart_compliant: bool = Field(True, description="SMART 기준 부합 여부")
+    counselor_reframing: str = Field(..., description="마음의 지지와 격려가 담긴 1문장 리프레이밍")
+
+
+class SPICardPayloadSchema(BaseModel):
+    """[+1] Stanley-Brown 안전계획(SPI) 긴급 안심 카드 페이로드 스키마"""
+    is_crisis: bool = Field(True, description="위기 여부 (항상 True)")
+    crisis_warning_signs: str = Field(..., description="내담자가 보인 위험 신호 요약")
+    inner_coping_strategies: List[str] = Field(..., description="내적 대처 방법 리스트 (호흡, 감각접지 등)")
+    external_contacts_advice: str = Field(..., description="신뢰할 수 있는 친구/가족 연락 지침")
+    emergency_professional_agencies: List[str] = Field(..., description="24시간 위기 전문기관 리스트")
+    safe_environment_steps: List[str] = Field(..., description="물리적 공간 위험요소 제거 등 안전 확보 수칙")
+
+
 class JournalEntrySchema(BaseModel):
-    """[+1] 저널 에이전트 요약 스키마"""
+    """[+1] 저널 에이전트 요약 스키마 (v2 행동 전념 카드 호환)"""
     summary: str = Field(..., description="상담 세션 전체 내용 요약")
     key_insights: str = Field(..., description="주역 괘상과 대화를 통해 얻은 핵심 성찰")
     action_items: Optional[str] = Field(None, description="향후 고민해볼 점 또는 실천해볼 방향")
+    card_data: Optional[Dict[str, Any]] = Field(None, description="고도화된 행동 전념 카드 또는 SPI 안전계획 카드 페이로드")
+    card_markdown: Optional[str] = Field(None, description="카드 인앱 뷰어 렌더링용 마크다운")
+    is_crisis: Optional[bool] = Field(False, description="위기 상황(자살/자해) 감지 및 SPI 발동 여부")
+

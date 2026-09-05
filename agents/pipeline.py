@@ -47,6 +47,7 @@ class TurnResult:
     safety_category: str = "NORMAL"   # 내부 로깅/DB용 (사용자 미노출)
     is_duplicate: bool = False
     journal_summary: Optional[str] = None
+    journal_data: Optional[Dict[str, Any]] = None
     focus_rule: Optional[Dict[str, Any]] = None
     evidences: List[Dict[str, Any]] = field(default_factory=list)  # 답변에 실제로 쓰인 주석
     # 확정 근거 요약(괘사·효사 한글 + 초점 규칙). `evidences`가 그 위에 쌓인 주석이라면
@@ -552,9 +553,18 @@ async def run_turn(
         await session.commit()
 
         journal_summary = None
+        journal_data = None
         if counsel_turn_res.is_final:
             j = await write_journal(session, sid, client=clients.get("journal"))
             journal_summary = j.summary
+            journal_data = {
+                "summary": j.summary,
+                "key_insights": j.key_insights,
+                "action_items": j.action_items,
+                "card_data": getattr(j, "card_data", None),
+                "card_markdown": getattr(j, "card_markdown", None),
+                "is_crisis": getattr(j, "is_crisis", False),
+            }
 
         merged_evidences = _merge_evidences(interp_res.evidences, counsel_turn_res.evidences)
 
@@ -569,6 +579,7 @@ async def run_turn(
             changing_lines=interp_res.changing_lines,
             safety_category=safety_res.category,
             journal_summary=journal_summary,
+            journal_data=journal_data,
             focus_rule=evidence.focus_rule.model_dump(),
             evidences=merged_evidences,
             raw_text=interp_res.raw_text,
@@ -641,9 +652,18 @@ async def run_turn(
     await session.commit()
 
     journal_summary = None
+    journal_data = None
     if counsel_turn_res.is_final:
         j = await write_journal(session, c_session.id, client=clients.get("journal"))
         journal_summary = j.summary
+        journal_data = {
+            "summary": j.summary,
+            "key_insights": j.key_insights,
+            "action_items": j.action_items,
+            "card_data": getattr(j, "card_data", None),
+            "card_markdown": getattr(j, "card_markdown", None),
+            "is_crisis": getattr(j, "is_crisis", False),
+        }
 
     return TurnResult(
         session_id=c_session.id,
@@ -656,6 +676,7 @@ async def run_turn(
         changing_lines=cast.changing_lines,
         safety_category=safety_res.category,
         journal_summary=journal_summary,
+        journal_data=journal_data,
         focus_rule=evidence.focus_rule.model_dump(),
         evidences=_merge_evidences(interp_stub.evidences, counsel_turn_res.evidences),
         raw_text=interp_stub.raw_text,

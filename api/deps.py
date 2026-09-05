@@ -136,3 +136,31 @@ async def require_user(request: Request) -> str:
             headers={"WWW-Authenticate": "Bearer"},
         )
     return sub
+
+
+import time
+from collections import defaultdict
+
+_request_records = defaultdict(list)
+_RATE_LIMIT_WINDOW = 60
+_RATE_LIMIT_MAX_REQUESTS = 30
+
+
+async def check_rate_limit(request: Request):
+    """클라이언트 IP 또는 인증 토큰 기준 슬라이딩 윈도우 Rate Limiter."""
+    now = time.time()
+    if len(_request_records) > 5000:
+        expired_keys = [k for k, v in _request_records.items() if not v or (now - v[-1] > _RATE_LIMIT_WINDOW)]
+        for k in expired_keys:
+            _request_records.pop(k, None)
+
+    client_key = request.headers.get("authorization", "") or (request.client.host if request.client else "unknown")
+    records = _request_records[client_key]
+    _request_records[client_key] = [t for t in records if now - t < _RATE_LIMIT_WINDOW]
+
+    if len(_request_records[client_key]) >= _RATE_LIMIT_MAX_REQUESTS:
+        raise HTTPException(
+            status_code=429,
+            detail="요청 빈도가 너무 높습니다. 1분 후 다시 시도해 주세요.",
+        )
+    _request_records[client_key].append(now)

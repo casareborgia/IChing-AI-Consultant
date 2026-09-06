@@ -3,7 +3,7 @@ FROM python:3.11-slim
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    PATH="/root/.local/bin:$PATH"
+    PORT=8080
 
 WORKDIR /app
 
@@ -31,6 +31,5 @@ USER appuser
 # Cloud Run 기본 포트 8080 노출
 EXPOSE 8080
 
-# ASGI 서버 실행 (api/main.py 진입점)
-CMD ["python", "-m", "uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8080"]
-
+# ASGI 서버 실행 (Cloud Run 공식 exec 패턴)
+CMD exec uvicorn api.main:app --host 0.0.0.0 --port ${PORT:-8080}

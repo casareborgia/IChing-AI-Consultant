@@ -94,7 +94,7 @@ flowchart TD
     FastAPI -->|4. JWT 서명 검증 & user_id 확정| JWTAuth
     FastAPI -->|5. 2,536건 송대 주석 균형 검색| DB
     FastAPI -->|6. 64괘 386효 규칙 엔진 & 에이전트 추론| Gemini
-    FastAPI -->>Browser: 7. 4단계 고품격 리포트, 성찰 질문, 실시간 근거 반환
+    FastAPI -->|7. 4단계 고품격 리포트·성찰 질문·실시간 근거 반환| Browser
 ```
 
 ---

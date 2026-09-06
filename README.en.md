@@ -94,7 +94,7 @@ flowchart TD
     FastAPI -->|4. Verify JWT and resolve user_id| JWTAuth
     FastAPI -->|5. Balanced search over 2,536 commentaries| DB
     FastAPI -->|6. 64-hexagram rule engine and agent inference| Gemini
-    FastAPI -->>Browser: 7. Four-part report, reflective questions, live evidence
+    FastAPI -->|7. Four-part report, reflective questions, live evidence| Browser
 ```
 
 ---

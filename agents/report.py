@@ -6,8 +6,8 @@
 - Gemini LLM complete_json과 Zero-Defect JSON Assembler를 통한 4단계 고품격 주역 컨설팅 보고서 구조화 JSON 반환
 """
 
-import json
-from typing import Any, Dict, List, Optional
+import logging
+from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple, Union
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
@@ -22,6 +22,10 @@ from schemas.report import (
     FocusAndBodyUseSchema,
     SectionItemSchema,
 )
+from schemas.counsel import EvidenceItem
+
+
+logger = logging.getLogger(__name__)
 
 
 def _get_line_name(pos: int) -> str:
@@ -89,11 +93,11 @@ def determine_gobyeonjeom_rule(
     elif count == 6:
         rule_code = "RULE_6_CHANGING"
         rule_name = "변효 6개 (전효 변)"
-        if "건" in original_name and "중천건" in original_name:
-            target_focus = "중지곤 괘의 용육(用六) 효사"
+        if "중천건" in original_name:
+            target_focus = f"본괘({original_name})의 용구(用九) 효사"
             target_line_idx = 7
-        elif "곤" in original_name and "중지곤" in original_name:
-            target_focus = "중지곤 괘의 용구(用九) 효사"
+        elif "중지곤" in original_name:
+            target_focus = f"본괘({original_name})의 용육(用六) 효사"
             target_line_idx = 7
         else:
             target_focus = f"지괘({transformed_name})의 괘사"
@@ -108,6 +112,61 @@ def determine_gobyeonjeom_rule(
         "description": description,
         "target_line_idx": target_line_idx,
     }
+
+
+def _resolve_primary_source(
+    rule_info: Dict[str, Any],
+    original_hex_id: int,
+    transformed_hex_id: Optional[int],
+    changing_lines: Sequence[int],
+) -> Tuple[int, Optional[int]]:
+    """고변점이 선택한 핵심 대상의 실제 괘 ID와 효 번호를 반환한다.
+
+    고변점 판단 자체는 ``determine_gobyeonjeom_rule``에 그대로 두고, 이 함수는
+    그 판단 결과와 DB 조회 대상이 어긋나지 않도록 연결만 담당한다.
+    ``line_number=None``은 해당 괘의 괘사를 뜻한다.
+    """
+    target_idx = rule_info["target_line_idx"]
+    if target_idx in (-2, -3, -4):
+        if transformed_hex_id is None:
+            raise ValueError("지괘 중심 고변점인데 transformed_hex_id가 없습니다")
+        if target_idx == -2:
+            return transformed_hex_id, None
+        stationary = sorted(set(range(1, 7)) - set(changing_lines))
+        line_number = stationary[0]
+        return transformed_hex_id, line_number
+    if target_idx == -1:
+        return original_hex_id, None
+    return original_hex_id, int(target_idx)
+
+
+EvidenceLike = Union[EvidenceItem, Mapping[str, Any]]
+
+
+def _evidence_value(evidence: EvidenceLike, key: str, default: Any = None) -> Any:
+    if isinstance(evidence, Mapping):
+        return evidence.get(key, default)
+    return getattr(evidence, key, default)
+
+
+def _select_report_evidences(
+    evidences: Sequence[EvidenceLike],
+    target_hex_id: int,
+    target_line_number: Optional[int],
+    limit: int = 6,
+) -> List[EvidenceLike]:
+    """초점 효/괘의 근거를 먼저 싣되 해석 에이전트가 고른 근거 순서를 보존한다."""
+    indexed = list(enumerate(evidences))
+
+    def priority(item: Tuple[int, EvidenceLike]) -> Tuple[int, int]:
+        index, evidence = item
+        same_hex = _evidence_value(evidence, "hexagram_id") == target_hex_id
+        line_number = _evidence_value(evidence, "line_number")
+        exact_line = target_line_number is not None and same_hex and line_number == target_line_number
+        whole_hex = target_line_number is None and same_hex and line_number is None
+        return (0 if exact_line or whole_hex else 1 if same_hex else 2, index)
+
+    return [evidence for _, evidence in sorted(indexed, key=priority)[:limit]]
 
 
 async def _fetch_line_hanja(session: AsyncSession, hex_id: int, pos: int) -> str:
@@ -171,16 +230,32 @@ def _extract_section_interpretation(res_dict: Dict[str, Any], key: str, fallback
     return fallback_default
 
 
+def _require_report_draft(res_dict: Dict[str, Any]) -> Dict[str, str]:
+    """불완전한 모델 출력을 정상 맞춤 리포트로 위장하지 않는다."""
+    required = (
+        "section1_diagnosis",
+        "section2_action",
+        "section3_warning",
+        "section4_future",
+        "final_summary",
+    )
+    values = {key: _extract_section_interpretation(res_dict, key, "") for key in required}
+    missing = [key for key, value in values.items() if not value]
+    if missing:
+        raise ValueError(f"리포트 LLM 응답 필드 누락: {', '.join(missing)}")
+    return values
+
+
 async def run_report_agent(
     session: AsyncSession,
     *,
     question: str,
     original_hex_id: int,
-    transformed_hex_id: int,
+    transformed_hex_id: Optional[int],
     changing_lines: List[int],
     lines_val: List[int],  # 예: [7, 8, 9, 8, 9, 7]
     focus_rule: Dict[str, Any],
-    evidences: List[Dict[str, Any]],
+    evidences: Sequence[EvidenceLike],
     topic_category: str = "기타",
     client: Optional[LLMClient] = None,
     enable_refinement_loop: bool = True,
@@ -228,15 +303,14 @@ async def run_report_agent(
             note=note,
         ))
 
-    # 주요 초점 효 한자 원문 조회
-    target_lines = focus_rule.get("target_line_numbers") or []
-    primary_target_pos = target_lines[0] if target_lines else None
-    
-    primary_line_hanja = ""
-    if primary_target_pos:
-        primary_line_hanja = await _fetch_line_hanja(session, original_hex_id, primary_target_pos)
+    # 고변점 판단이 가리키는 실제 괘·효에서 핵심 원문을 조회한다.
+    primary_hex_id, primary_target_pos = _resolve_primary_source(
+        rule_info, original_hex_id, transformed_hex_id, changing_lines
+    )
+    if primary_target_pos is None:
+        primary_line_hanja = await _fetch_hex_statement_hanja(session, primary_hex_id)
     else:
-        primary_line_hanja = await _fetch_hex_statement_hanja(session, original_hex_id)
+        primary_line_hanja = await _fetch_line_hanja(session, primary_hex_id, primary_target_pos)
 
     # 보조 동효 한자 원문 조회
     aux_pos = None
@@ -256,8 +330,14 @@ async def run_report_agent(
 
     # RAG 고전 주석 정리
     evidence_texts = []
-    for e in evidences[:3]:
-        evidence_texts.append(f"[{e.get('source_title', '고전주석')}] {e.get('content', '')}")
+    selected_evidences = _select_report_evidences(
+        evidences, primary_hex_id, primary_target_pos
+    )
+    for e in selected_evidences:
+        evidence_texts.append(
+            f"[{_evidence_value(e, 'source_title', '고전주석')}] "
+            f"{_evidence_value(e, 'content', '')}"
+        )
     rag_context = "\n".join(evidence_texts) if evidence_texts else "기본 고전 주석 기반"
 
     focus_target_str = rule_info["target_focus"]
@@ -304,20 +384,14 @@ Return a JSON with these exact string keys:
 }}
 """
 
-    # 1차 초안 기본 텍스트 (네트워크 장애 등 폴백 시에도 도메인 중립적 주역 성찰 언어 유지)
-    sec1_text = f"현재 질문자님의 고민은 {orig_meta['fullNameHangul']} 괘가 가르치는 '{orig_meta['natureSummary']}'의 국면에 닿아 있습니다. 조급함을 내려놓고 상황의 본질과 내면의 흐름을 먼저 고요히 살피십시오."
-    sec2_text = f"주요 해석 대상인 {focus_target_str}의 조언에 따라 고민 사연('{question}')에 대해 외적인 조급함보다는 올바른 명분과 단단한 중심을 먼저 확립하는 것이 이롭습니다."
-    sec3_text = f"경계할 점은 '{orig_meta['coreTheme']}'의 본래 도리를 벗어나 감정이나 충동으로 무리수를 두는 것입니다. 매사에 중심을 지키고 지나친 마찰을 경계하십시오."
-    sec4_text = f"변화 이후 도달할 지괘 {trans_meta['fullNameHangul']}의 가르침처럼 내면의 지혜와 덕을 충실히 기르며 순리대로 나아가는 것이 핵심 귀결입니다."
-    final_summary_text = f"'{orig_meta['fullNameHangul']}' 괘의 상징인 '{orig_meta['coreTheme']}'에 비추어 사연('{question}')을 성찰하되, 성급함을 피하고 내실을 바로잡으십시오."
-
     try:
         draft_dict = llm.complete_json(user_prompt, system=system_prompt, temperature=0.1)
-        sec1_text = _extract_section_interpretation(draft_dict, "section1_diagnosis", sec1_text)
-        sec2_text = _extract_section_interpretation(draft_dict, "section2_action", sec2_text)
-        sec3_text = _extract_section_interpretation(draft_dict, "section3_warning", sec3_text)
-        sec4_text = _extract_section_interpretation(draft_dict, "section4_future", sec4_text)
-        final_summary_text = draft_dict.get("final_summary") or final_summary_text
+        draft = _require_report_draft(draft_dict)
+        sec1_text = draft["section1_diagnosis"]
+        sec2_text = draft["section2_action"]
+        sec3_text = draft["section3_warning"]
+        sec4_text = draft["section4_future"]
+        final_summary_text = draft["final_summary"]
 
         if enable_refinement_loop:
             try:
@@ -345,10 +419,11 @@ Return a JSON with exact keys: "section1_diagnosis", "section2_action", "section
                 sec4_text = _extract_section_interpretation(refined_dict, "section4_future", sec4_text)
                 final_summary_text = refined_dict.get("final_summary") or final_summary_text
             except Exception as ref_err:
-                print(f"[v4.1 Refinement Warning]: {ref_err}")
+                logger.warning("리포트 정제 호출 실패, 초안 사용: %s", ref_err, exc_info=True)
 
     except Exception as e:
-        print(f"[v4.1 Report Agent LLM Exception]: {e}")
+        logger.error("리포트 LLM 초안 생성 실패", exc_info=True)
+        raise RuntimeError("맞춤 해석 리포트 생성에 실패했습니다") from e
 
     # Zero-Defect JSON Assembler로 완벽한 HexagramReportSchema 반환
     return HexagramReportSchema(

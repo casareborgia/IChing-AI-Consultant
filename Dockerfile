@@ -23,8 +23,10 @@ RUN useradd -u 1000 -m appuser
 COPY --chown=appuser:appuser . .
 COPY --chown=appuser:appuser prompts/ /app/prompts/
 
-# 프롬프트 파일 존재 검증 (빌드 타임 안전망)
-RUN test -f /app/prompts/safety_screening.md && ls -la /app/prompts/
+# 모든 런타임 프롬프트 존재 검증 (하나라도 누락되면 이미지를 만들지 않는다)
+RUN for prompt in safety_screening intake interpret counsel journal report; do \
+      test -f "/app/prompts/${prompt}.md" || exit 1; \
+    done
 
 USER appuser
 

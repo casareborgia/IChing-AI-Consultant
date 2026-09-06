@@ -25,6 +25,30 @@ export const HexagramReportView: React.FC<HexagramReportViewProps> = ({
   const [copied, setCopied] = useState(false);
   const [showTechnicalDetails, setShowTechnicalDetails] = useState(true);
 
+  if (!reportData) {
+    return (
+      <div className="w-full max-w-3xl mx-auto py-10">
+        <div className="rounded-3xl border border-amber-500/40 bg-stone-900/95 p-8 text-stone-100 shadow-2xl space-y-5">
+          <div className="flex items-center gap-3 text-amber-300">
+            <ShieldAlert className="w-6 h-6" />
+            <h2 className="text-lg font-serif font-bold">맞춤 해석 리포트를 불러오지 못했습니다</h2>
+          </div>
+          <p className="text-sm leading-relaxed text-stone-300">
+            괘 도출 결과는 유지되어 있습니다. 현재 화면의 고정 문구로 해석을 대신하지 않고,
+            상담 대화에서 확인할 수 있도록 안내합니다.
+          </p>
+          <button
+            onClick={onProceedToCounsel}
+            className="inline-flex items-center gap-2 rounded-xl bg-amber-500 px-5 py-3 text-sm font-bold text-stone-950 hover:bg-amber-400 transition"
+          >
+            상담 대화로 계속하기
+            <ArrowRight className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   const originalMeta = HEXAGRAMS_META[castResult.originalHexId];
   const transformedMeta = HEXAGRAMS_META[castResult.transformedHexId];
   const hasTransformation = castResult.changingPositions.length > 0;

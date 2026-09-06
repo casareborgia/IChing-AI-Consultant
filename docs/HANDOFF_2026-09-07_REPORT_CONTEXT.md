@@ -97,7 +97,7 @@
 
 ### Git
 
-- 로컬 커밋: `8c60c34 Persist report context across counsel turns`
+- 로컬 커밋: `e639f65 Persist report context across counsel turns`
 - 브랜치: `main`
 - 이 인계 문서는 위 커밋 이후 생성했다.
 
@@ -146,7 +146,7 @@
 
 6. 원격 Git 반영
 
-   로컬 커밋 `8c60c34`는 아직 원격 push 여부를 확인하지 못했다. `git status -sb`, `git log -1`, `git remote -v`를 확인한 뒤 필요하면 push한다. 이 인계 문서도 별도 커밋에 포함한다.
+   로컬 커밋 `e639f65`는 아직 원격 push 여부를 확인하지 못했다. `git status -sb`, `git log -1`, `git remote -v`를 확인한 뒤 필요하면 push한다. 이 인계 문서도 별도 커밋에 포함한다.
 
 7. 서비스 모델 프롬프트 회귀 측정
 
@@ -169,7 +169,7 @@
 - 운영 DB 마이그레이션은 서비스 배포 전에 이미 완료됐다. 같은 migration을 수동 SQL로 다시 적용하지 않는다.
 - 새 코드는 DB 컬럼에 의존하므로 운영 DB를 이전 revision으로 downgrade하지 않는다.
 - 프롬프트를 다시 수정할 때 클라이언트 설정이나 모델을 동시에 바꾸지 않는다.
-- `prompts/report.md`는 기존 ignore 규칙에 걸려 `git add -f`로 처음 추적했다. 이후 수정은 추적 파일이므로 일반 `git add`가 가능하다.
+- `prompts/report.md`는 기존 ignore 규칙에 걸려 `git add -f`로 처음 추적했다. **이 조치는 이후 되돌렸다.** 공개 저장소에 노출되어 히스토리에서 제거했다(아래 "공개 히스토리 정리" 절). 지금은 나머지 프롬프트와 같이 추적하지 않는다.
 
 ## 검증 실행 결과 (2026-09-07 추가)
 
@@ -216,7 +216,7 @@
 
 ### 6. 원격 Git 반영 — 완료
 
-`origin/main`을 `9f62aad`에서 `70b1d2b`으로 갱신했다. 운영 배포 코드와 원격이 일치한다.
+`origin/main`을 `ee8c782`에서 `c033547`으로 갱신했다. 운영 배포 코드와 원격이 일치한다.
 
 ### 7. 프롬프트 회귀 측정 — 실행 완료, 회귀 없음
 
@@ -235,7 +235,7 @@
 
 `161 passed, 4 skipped` — 인계 문서 기재값과 동일.
 
-주의: 이 저장소는 `prompts/*.md`를 gitignore하며 `prompts/report.md`만 추적한다. 새 worktree에서 테스트를 돌리려면 나머지 프롬프트 파일과 `.env`를 메인 체크아웃에서 복사해야 한다.
+주의: 이 저장소는 `prompts/*.md`를 전부 gitignore한다(`prompts/.gitkeep`만 추적). 새 worktree에서 테스트를 돌리려면 프롬프트 9개와 `.env`를 메인 체크아웃에서 복사해야 한다.
 
 ## 로깅 결함 발견 및 수정 (2026-09-07)
 
@@ -357,3 +357,69 @@ WARNING  iching_auth  HS256 JWT 서명 검증 실패: InvalidSignatureError
 | 16:19:39 | `2e0be535` | 11,906 |
 
 표본 2개다. 이전 관측 편차가 4.4~33.3초였으므로 정제 루프 유지 여부는 실사용이 붙은 뒤 판단한다. 이제 로그가 쌓이므로 위 조회로 모을 수 있다.
+
+## 공개 히스토리 정리 (2026-09-07)
+
+### 발견
+
+이 저장소는 `visibility: PUBLIC`이다. 그런데 `.gitignore`가 "공개 대상이 아닌 것"으로 분류한 파일들이 히스토리에 그대로 남아 있었다. 과거의 `6fa4b66`, `88a0bf6` 같은 커밋이 "Git 추적 해제"를 했지만 추적만 끊고 히스토리는 남겼기 때문이다. 여기에 `prompts/report.md`가 `e639f65`에서 `git add -f`로 새로 추가되며 현재 트리에도 올라갔다.
+
+제거 대상은 19개 경로였다.
+
+- `prompts/` 9개 전부
+- `AGENTS.md`, `frontend/AGENTS.md` (내부 실측·원가·약점 분석)
+- `CLAUDE.md`, `frontend/CLAUDE.md` (측정 방법론·비용 수치·약점 목록)
+- `docs/DEPLOYMENT_AND_MONETIZATION_BLUEPRINT.md` (가격·원가·마진)
+- `docs/STEP5_INSTRUCTIONS.md`
+- `pilot/HANDOFF.md`, `pilot/PROMPT.md`, `pilot/RUBRIC.md`
+- `env.production.yaml`
+
+`env.production.yaml`은 모든 버전을 검사했고 자격증명이 없었다. 키가 `ENVIRONMENT`, `LLM_PROVIDER`, `GOOGLE_CLOUD_PROJECT`, `GEMINI_MODEL`, `CORS_ORIGINS`, `CRISIS_LATCH_HOURS` 6개뿐이며, DB 비밀번호와 JWT 시크릿은 처음부터 Secret Manager를 썼다. **자격증명 유출은 없었다.**
+
+### 조치
+
+1. `--mirror` 클론 후 재작성 전 전체를 번들로 백업했다.
+2. `git filter-repo --invert-paths`로 19개 경로를 전체 히스토리에서 제거했다. 248개 커밋을 재작성했다.
+3. 브랜치 7개와 태그 2개를 force push했다. `refs/pull/*`는 GitHub이 읽기 전용으로 관리하므로 대상에서 제외했다.
+
+검증 결과 제거 대상 외 파일 목록은 재작성 전후가 동일했다(314개). `prompts/.gitkeep`은 보존되어 디렉터리 구조가 유지된다.
+
+### 남은 노출
+
+**히스토리 재작성으로 완전 삭제가 되지는 않았다.** 옛 커밋 SHA로 직접 접근하면 아직 읽힌다.
+
+```
+현재 main 경로            404  (제거 완료)
+b949a7b/prompts/report.md 200  ← 아직 읽힘
+e639f65 이전 SHA          200  ← 아직 읽힘
+```
+
+원인은 두 가지다.
+
+- GitHub은 unreachable 객체를 즉시 GC하지 않는다.
+- PR #1, #2의 `refs/pull/*`가 옛 커밋을 계속 참조한다. 이 ref는 사용자가 삭제할 수 없다.
+
+완전히 없애려면 GitHub Support에 unreachable 객체 GC를 요청해야 한다. 저장소를 비공개로 전환하면 포크와 함께 즉시 차단되지만, 이번에는 공개 유지를 택했다.
+
+### SHA 변경
+
+히스토리 재작성으로 모든 커밋 SHA가 바뀌었다. 이 문서의 참조는 새 값으로 갱신했다.
+
+| 이전 | 이후 | 내용 |
+| --- | --- | --- |
+| `9f62aad` | `ee8c782` | Merge pull request #2 |
+| `cd3eea6` | `f610f8e` | fix: align report evidence and source selection |
+| `f274107` | `88a0bf6` | fix(docker): Cloud Run 표준 exec uvicorn |
+| `8c60c34` | `e639f65` | Persist report context across counsel turns |
+| `70b1d2b` | `c033547` | Document report context deployment handoff |
+| `ba46c96` | `8be2118` | Record verification results |
+| `9347ce2` | `efe9bd1` | Configure root logger |
+| `03155ec` | `5db2b52` | Quiet httpx and google_genai request logs |
+| `b949a7b` | `d54e21b` | Record log noise reduction verification |
+
+Alembic 리비전(`d7f4a1c2e8b9`, `b41d7e6a2f95`), 컨테이너 이미지 digest, 세션 UUID는 Git SHA가 아니므로 그대로 두었다.
+
+### 주의사항
+
+- 재작성 후 로컬 저장소를 `git reset --hard origin/main`으로 맞추면 **`prompts/report.md`가 삭제된다.** 추적 파일이었다가 추적 대상에서 빠졌기 때문이다. 리셋 전에 `prompts/`를 복사해 두고, 리셋 후 되돌려 놓아야 한다. 실제로 이 과정에서 한 번 삭제됐고 메인 체크아웃 사본으로 복구했다(blob 해시 `94db4c73...` 일치 확인).
+- 재작성 이전 히스토리를 가진 로컬 브랜치와 worktree가 남아 있으면 force push된 원격과 충돌한다. 각각 `git fetch` 후 리셋해야 한다.

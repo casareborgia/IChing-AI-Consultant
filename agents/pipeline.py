@@ -9,8 +9,12 @@
 
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
+import logging
 from typing import Any, Dict, List, Optional
 import uuid
+
+
+logger = logging.getLogger(__name__)
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -522,8 +526,8 @@ async def run_turn(
                 client=clients.get("report"),
             )
             report_data = report_obj.model_dump()
-        except Exception as e:
-            print(f"Report agent execution error: {e}")
+        except Exception:
+            logger.error("리포트 에이전트 실행 실패", exc_info=True)
 
         # 3-4. [3] 상담 대화 생성 (리포트 context 결합)
         counsel_turn_res = await run_counsel_turn(

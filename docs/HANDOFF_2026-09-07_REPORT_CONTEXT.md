@@ -170,3 +170,69 @@
 - 새 코드는 DB 컬럼에 의존하므로 운영 DB를 이전 revision으로 downgrade하지 않는다.
 - 프롬프트를 다시 수정할 때 클라이언트 설정이나 모델을 동시에 바꾸지 않는다.
 - `prompts/report.md`는 기존 ignore 규칙에 걸려 `git add -f`로 처음 추적했다. 이후 수정은 추적 파일이므로 일반 `git add`가 가능하다.
+
+## 검증 실행 결과 (2026-09-07 추가)
+
+위 "남은 작업" 7개 항목 중 5번(실제 로그인 E2E)을 제외한 전 항목을 실행했다.
+
+### 1. 백엔드 헬스 체크 — 통과
+
+`HTTP/2 200`, 본문 `{"status":"ok","service":"iching-oracle-api","env":"production","database":"ok"}`.
+
+### 2. 최신 리비전 로그 — 통과
+
+- 서비스 `iching-counsel-api`의 최신 준비 리비전과 트래픽 100% 리비전이 모두 `iching-counsel-api-00030-cvd`.
+- 이미지 태그 `report-context-20260907` 확인.
+- `severity>=WARNING` 로그 0건.
+- startup 정상: `Started server process [1]` → `Application startup complete` → `Uvicorn running on http://0.0.0.0:8080`, STARTUP TCP probe 1회 성공.
+- DB 컬럼 오류, 5xx, `리포트 에이전트 실행 실패` 없음.
+- 단, 배포 이후 상담 트래픽이 아직 없어 `리포트 생성 완료` 로그도 아직 없다. 이는 5번 E2E에서 확인해야 한다.
+
+### 3. 운영 DB Alembic 버전 — 통과 (대체 확인)
+
+`gcloud run jobs execute --args=current` 실행은 이 환경의 권한 정책에 막혀 수행하지 못했다. 대신 기존 Job 실행 로그로 확인했다.
+
+- 실행 `iching-db-migrate-lshk4`: `Running upgrade b41d7e6a2f95 -> d7f4a1c2e8b9, persist report context on counsel sessions` 후 `Container called exit(0)`.
+- 로컬 리비전 그래프상 `d7f4a1c2e8b9`를 `down_revision`으로 참조하는 리비전이 없으므로 head가 맞다.
+
+### 4. 운영 프런트 번들 — 통과
+
+운영 페이지가 참조하는 JS chunk 9개(약 1.0MB)를 받아 검사했다.
+
+- `타당성 객관 검증` 0건
+- `안정적 연착륙` 0건
+- `승리의 열쇠` 0건
+- `기류 속에 있습니다` 0건
+- `재삼덕` 오타 0건
+
+같은 번들에서 `맞춤 해석 리포트를 불러오지 못했습니다`, `마크다운 전문 복사`, `도출된 지괘` 등 `HexagramReportView` 문자열이 검출되므로, 대상 컴포넌트가 실제로 포함된 상태에서의 0건이다.
+
+### 5. 실제 로그인 세션 E2E — 미실행
+
+계정 로그인과 크레딧 차감이 필요해 보류했다. 확인해야 할 로그 패턴은 다음과 같다.
+
+- 성공: `리포트 생성 완료: session=<sid> status=ready duration_ms=<n>`
+- 실패: `리포트 에이전트 실행 실패: session=<sid> error_code=<type>`
+
+### 6. 원격 Git 반영 — 완료
+
+`origin/main`을 `9f62aad`에서 `70b1d2b`으로 갱신했다. 운영 배포 코드와 원격이 일치한다.
+
+### 7. 프롬프트 회귀 측정 — 실행 완료, 회귀 없음
+
+`python scripts/compare_report_prompt_priming.py -p gemini -n 2`
+
+- 결과 요약: `{"legacy_examples": 0, "current_zero_shot": 0}` (질문 3종 × 2회 × 2군 = 12회)
+- 출력 분량: legacy 평균 2,039자(1,870~2,279), zero-shot 평균 1,962자(1,775~2,319). 품질 저하나 빈 응답 없음. 괘사·효사 한문 원문, 고변점 규칙 설명, 체용 관계 서술 모두 정상 생성.
+- 해석: zero-shot 프롬프트에 **회귀는 없다**. 다만 legacy 군에서도 누출이 0이라 이번 표본으로는 "예시 어휘가 오염을 유발한다"는 가설을 검증도 반증도 하지 못했다.
+- 이 하네스로 가설을 실제로 검정하려면 다음이 필요하다.
+  - 표본 확대 (군당 6회는 부족)
+  - `temperature=0.1` 고정 해제
+  - 경계 사례 질문 추가 (예: 가족 문제인데 금전·계약 어휘가 섞인 질문)
+- 원본 데이터: `/tmp/report_prompt_priming.json`
+
+### 백엔드 테스트 재실행
+
+`161 passed, 4 skipped` — 인계 문서 기재값과 동일.
+
+주의: 이 저장소는 `prompts/*.md`를 gitignore하며 `prompts/report.md`만 추적한다. 새 worktree에서 테스트를 돌리려면 나머지 프롬프트 파일과 `.env`를 메인 체크아웃에서 복사해야 한다.

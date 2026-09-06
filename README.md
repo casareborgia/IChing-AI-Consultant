@@ -188,7 +188,20 @@ npm install
 cd ..
 ```
 
-### 2. 환경 변수 설정 (`.env` 및 `env.production.yaml`)
+### 2. 프롬프트 파일 배치 (필수)
+
+에이전트 프롬프트(`prompts/*.md`)는 이 저장소에 포함되어 있지 않습니다. 이 저장소는 공개이고 프롬프트는 공개 대상이 아니라 `.gitignore`로 제외했습니다. **프롬프트 없이는 백엔드가 임포트 단계에서 `FileNotFoundError`로 죽습니다.**
+
+접근 권한이 있다면 비공개 저장소에서 받아옵니다.
+
+```bash
+rm -rf prompts
+git clone https://github.com/casareborgia/iching-prompts.git prompts
+```
+
+권한이 없다면 `core/prompts.py`가 요구하는 파일 9개(`counsel.md`, `duplicate_response.md`, `intake.md`, `interpret.md`, `journal.md`, `rag_translation.md`, `report.md`, `safety_response.md`, `safety_screening.md`)를 직접 작성해야 합니다. 각 파일은 `## 시스템 프롬프트` 제목과 그 아래 코드펜스(```)를 포함해야 하며, 로더는 그 펜스 안의 내용만 읽습니다(`core/prompts.py`).
+
+### 3. 환경 변수 설정 (`.env` 및 `env.production.yaml`)
 
 - 로컬 개발용 `.env` 설정 (예시: `.env.example` 참조)
 - 프로덕션 배포 시: `env.production.yaml.example`을 복사하여 `env.production.yaml`을 생성하고 실제 GCP 프로젝트 ID와 배포 도메인을 입력합니다.
@@ -206,13 +219,13 @@ GOOGLE_CLOUD_PROJECT=your-gcp-project-id
 SUPABASE_JWT_SECRET=your-supabase-jwt-secret
 ```
 
-### 3. 백엔드 실행
+### 4. 백엔드 실행
 
 ```bash
 .venv/bin/uvicorn api.main:app --host 0.0.0.0 --port 8008 --reload
 ```
 
-### 4. 프론트엔드 실행
+### 5. 프론트엔드 실행
 
 ```bash
 cd frontend

@@ -300,3 +300,60 @@
 - 헬스 체크: HTTP 200, `database: ok`
 
 서드파티 로거를 조용히 시킨 변경은 이 배포 이후 별도 이미지로 나간다.
+
+## 로그 소음 감소 배포 및 검증 (2026-09-07)
+
+### 배포
+
+- 이미지 태그: `asia-northeast3-docker.pkg.dev/southern-engine-495314-p2/cloud-run-source-deploy/iching-counsel-api:log-noise-20260907`
+- 이미지 digest: `sha256:69b4fd663abeef2a561efc2110f5fb4e8d5b734a571080400d4e82ac3a119f4c`
+- 리비전: `iching-counsel-api-00032-r6f`, 트래픽 100%
+- env var 8개 유지, 기동 정상, 헬스 체크 HTTP 200 / `database: ok`
+
+배포 직후 서명이 틀린 JWT로 401 경로를 태워, 서드파티를 조용히 시키면서 앱 로거까지 막지는 않았음을 먼저 확인했다.
+
+```
+WARNING  iching_auth  HS256 JWT 서명 검증 실패: InvalidSignatureError
+```
+
+### 검증 결과
+
+배포 후 상담 한 사이클(16:19:17~16:24:26)을 돌려 로거별 줄 수를 셌다.
+
+| 로거 | 수정 전 사이클 | 수정 후 사이클 | 판정 |
+| --- | --- | --- | --- |
+| `httpx` INFO | 12줄 | 0줄 | 통과 |
+| `httpcore` INFO | — | 0줄 | 통과 |
+| `google_genai.models` INFO | 10줄 | 0줄 | 통과 |
+| `agents.pipeline` INFO | 1줄 | 1줄 | 유지 |
+
+마지막 행이 핵심이다. 서드파티를 줄이면서 정작 필요한 줄까지 사라지면 실패인데, 그대로 남았다.
+
+```
+16:19:39  INFO  agents.pipeline
+리포트 생성 완료: session=2e0be535-54c6-447a-b903-19433405bea1 status=ready duration_ms=11906
+```
+
+사이클 전체도 정상이다. `POST /api/counsel/start` 200(16:19:42), `POST /api/counsel/turn` 200 4회(16:21:45 / 16:22:16 / 16:23:33 / 16:24:26). 5xx 없음, `리포트 에이전트 실행 실패` 없음.
+
+### 남겨둔 것
+
+- `google_genai.models`가 사이클당 남기는 AFC 권고 메시지 1줄은 그대로 둔다. 원래 WARNING 레벨이라 필터를 통과하며, SDK 사용법에 대한 실제 경고이므로 지우면 손해다.
+- 로거별 줄 수를 셀 때는 최상위 `severity` 필드를 쓴다. Cloud Logging이 JSON의 `severity` 키를 엔트리 필드로 올리므로 `jsonPayload.severity`로 조회하면 아무것도 걸리지 않는다.
+
+  ```bash
+  gcloud logging read \
+    'resource.type="cloud_run_revision" AND resource.labels.revision_name="<리비전>" AND jsonPayload.logger="agents.pipeline" AND severity="INFO"' \
+    --project southern-engine-495314-p2
+  ```
+
+- 루트 경로 `GET /` 404가 간헐적으로 찍힌다. 핸들러가 없어서 나는 정상 동작이고 이번 작업과 무관하다.
+
+### duration_ms 누적
+
+| 시각 | 세션 | duration_ms |
+| --- | --- | --- |
+| 15:54:04 | `447e9a7e` | 17,754 |
+| 16:19:39 | `2e0be535` | 11,906 |
+
+표본 2개다. 이전 관측 편차가 4.4~33.3초였으므로 정제 루프 유지 여부는 실사용이 붙은 뒤 판단한다. 이제 로그가 쌓이므로 위 조회로 모을 수 있다.

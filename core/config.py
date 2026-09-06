@@ -71,6 +71,13 @@ class Settings(BaseSettings):
     # ACT 행동 전념 카드 및 민감 상담 데이터 암호화용 32바이트 키 (미지정 시 안전 파생키 사용)
     ACTION_CARD_ENCRYPTION_KEY: str = ""
 
+    # --- 로깅 ---
+    # uvicorn은 자기 로거만 설정하고 root는 건드리지 않는다. 앱에서 별도로 잡아주지
+    # 않으면 root에 핸들러가 없어 기본 레벨 WARNING이 걸리고, logger.info()가 통째로
+    # 사라진다. 실제로 리포트 생성의 status/duration_ms 로그가 운영에서 한 줄도
+    # 남지 않았다(api/main.py의 configure_logging 참고).
+    LOG_LEVEL: str = "INFO"
+
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
 

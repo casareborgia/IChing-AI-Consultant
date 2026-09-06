@@ -15,7 +15,13 @@ from fastapi.responses import JSONResponse
 
 from core.config import settings
 from core.db import AsyncSessionLocal
+from core.logging_config import configure_logging
 from sqlalchemy import text
+
+# uvicorn은 root 로거를 설정하지 않는다. 라우터·에이전트를 임포트하기 전에 여기서
+# 잡아두지 않으면 앱의 logger.info()가 전부 유실된다(core/logging_config.py 참고).
+configure_logging(settings.LOG_LEVEL, settings.ENVIRONMENT)
+
 from api.routers import counsel, card, safety
 
 # 하위 호환성 Re-export (단위 테스트 및 기존 모듈 100% 호환 보장)

@@ -10,6 +10,7 @@
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 import logging
+from time import perf_counter
 from typing import Any, Dict, List, Optional
 import uuid
 
@@ -60,6 +61,8 @@ class TurnResult:
     # 괘가 없는 턴(주역 문의·위기·되묻기)에는 자연히 None이다.
     raw_text: Optional[str] = None
     report_data: Optional[Dict[str, Any]] = None
+    report_status: str = "not_requested"
+    report_error_code: Optional[str] = None
 
 
 def _merge_evidences(*groups: List[EvidenceItem]) -> List[Dict[str, Any]]:
@@ -512,6 +515,9 @@ async def run_turn(
         # 서로 다른 괘가 된다. `evidence.target_hexagram_id`가 그 자리를 가리킨다.
         # 3-3. 수석 주역 AI 컨설팅 리포트 에이전트 가동
         report_data = None
+        report_status = "failed"
+        report_error_code = None
+        report_started = perf_counter()
         try:
             report_obj = await run_report_agent(
                 session,
@@ -526,8 +532,28 @@ async def run_turn(
                 client=clients.get("report"),
             )
             report_data = report_obj.model_dump()
-        except Exception:
-            logger.error("리포트 에이전트 실행 실패", exc_info=True)
+            report_status = "ready"
+            c_session.report_data = report_data
+            c_session.report_status = report_status
+            c_session.report_error_code = None
+        except Exception as exc:
+            report_error_code = type(exc).__name__
+            c_session.report_data = None
+            c_session.report_status = report_status
+            c_session.report_error_code = report_error_code
+            logger.error(
+                "리포트 에이전트 실행 실패: session=%s error_code=%s",
+                sid,
+                report_error_code,
+                exc_info=True,
+            )
+        finally:
+            logger.info(
+                "리포트 생성 완료: session=%s status=%s duration_ms=%d",
+                sid,
+                report_status,
+                round((perf_counter() - report_started) * 1000),
+            )
 
         # 3-4. [3] 상담 대화 생성 (리포트 context 결합)
         counsel_turn_res = await run_counsel_turn(
@@ -589,6 +615,8 @@ async def run_turn(
             evidences=merged_evidences,
             raw_text=interp_res.raw_text,
             report_data=report_data,
+            report_status=report_status,
+            report_error_code=report_error_code,
         )
 
     # 4. 이미 괘가 있는 세션 -> 그 괘를 되살려 상담을 잇는다
@@ -640,6 +668,7 @@ async def run_turn(
         client=clients.get("counsel"),
         caution_append=(safety_res.category == "CAUTION"),
         retrieve=make_retriever(session, hexagram_id=evidence.target_hexagram_id),
+        report_data=c_session.report_data,
     )
 
     new_turn = CounselTurn(
@@ -685,4 +714,7 @@ async def run_turn(
         focus_rule=evidence.focus_rule.model_dump(),
         evidences=_merge_evidences(interp_stub.evidences, counsel_turn_res.evidences),
         raw_text=interp_stub.raw_text,
+        report_data=c_session.report_data,
+        report_status=c_session.report_status,
+        report_error_code=c_session.report_error_code,
     )

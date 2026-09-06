@@ -143,6 +143,8 @@ export async function startConsultationApi(
   firstMessage?: ChatMessage;
   remainingCredits?: number;
   reportData?: HexagramReportData;
+  reportStatus?: 'ready' | 'failed' | 'not_requested';
+  reportErrorCode?: string;
 }> {
   try {
     const { data: { session } } = await supabase.auth.getSession();
@@ -212,6 +214,8 @@ export async function startConsultationApi(
       firstMessage,
       remainingCredits: data.remaining_credits,
       reportData: data.report_data,
+      reportStatus: data.report_status,
+      reportErrorCode: data.report_error_code,
     };
 
   } catch (error) {

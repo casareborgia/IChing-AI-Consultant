@@ -1,7 +1,7 @@
 """리포트 프롬프트의 구체 예시 어휘가 가족 사연에 미치는 영향을 A/B 비교한다.
 
-동일한 사용자 질문과 주역 근거를 두 프롬프트에 넣고, 구체적인 도메인·상징 예시만
-제거한 B안과 현재 운영 A안을 같은 Gemini 설정으로 반복 호출한다.
+동일한 사용자 질문과 주역 근거를 두 프롬프트에 넣고, 과거의 구체 예시 프롬프트와
+현재 운영 중인 추상 규칙 프롬프트를 같은 Gemini 설정으로 반복 호출한다.
 
 사용법:
     python scripts/compare_report_prompt_priming.py -p gemini -n 2
@@ -52,9 +52,8 @@ CONTEXT = """<actual_divination_context>
 
 [CRITICAL INSTRUCTION - DOMAIN CONTEXT ALIGNMENT & NO TEMPLATE CLICHES]
 Write a customized I-Ching consulting report in Korean adhering strictly to the JSON schema below.
-- Align the terminology, emotional tone, and metaphors with the User's Real Question and Topic Category (가족/인간관계).
-  * Family/Interpersonal/Emotional: Use psychological depth, relational balance, boundaries, empathy, and personal reflection. NEVER inject corporate or business jargon (such as market validation, contract risks, soft landing, profit margins) into family or interpersonal issues.
-  * Career/Business/Studies: Adapt appropriately to practical decisions, pacing, structural challenges, and strategic timing.
+- Derive terminology, emotional tone, and metaphors only from the User's Real Question and Topic Category (가족/인간관계).
+- Do not import vocabulary from a domain absent from the user's question.
 - Map the ancient I-Ching metaphor 1:1 to the user's specific real-world question.
 
 Return a JSON with these exact string keys:
@@ -71,7 +70,7 @@ SYSTEM_DOMAIN_EXAMPLES = """- Strict Domain Alignment: Strictly adopt the vocabu
 SYSTEM_DOMAIN_ABSTRACT = """- Strict Domain Alignment: Derive vocabulary and framing only from the user's question and supplied topic category. Do not import concepts from an unrelated domain."""
 
 SYSTEM_IMAGE_EXAMPLES = """- Step 1 [Metaphor Conceptualization]: Understand the primitive physical objects/actions in the retrieved I-Ching text (e.g., tiger's tail, old rags, boat leaks, clothing, thunder, fire, mountain) and conceptualize their underlying philosophical warning/message."""
-SYSTEM_IMAGE_ABSTRACT = """- Step 1 [Metaphor Conceptualization]: Identify the concrete image in the retrieved I-Ching text and conceptualize its underlying philosophical warning or message."""
+SYSTEM_IMAGE_ABSTRACT = """- Step 1 [Metaphor Conceptualization]: Identify the concrete image or action in the retrieved I-Ching text and conceptualize its underlying philosophical warning or message."""
 
 SYSTEM_TONE_EXAMPLES = """- Category-Specific Tone Adaptation:
   * For business/finance/career: Use a professional, analytical, and sharp consultant's voice.
@@ -91,14 +90,14 @@ LEAK_TERMS = (
 )
 
 
-def sanitized_prompts(system: str, user: str) -> tuple[str, str]:
-    clean_system = system.replace(SYSTEM_DOMAIN_EXAMPLES, SYSTEM_DOMAIN_ABSTRACT)
-    clean_system = clean_system.replace(SYSTEM_IMAGE_EXAMPLES, SYSTEM_IMAGE_ABSTRACT)
-    clean_system = clean_system.replace(SYSTEM_TONE_EXAMPLES, SYSTEM_TONE_ABSTRACT)
-    clean_user = user.replace(USER_DOMAIN_EXAMPLES, USER_DOMAIN_ABSTRACT)
-    if clean_system == system or clean_user == user:
+def legacy_prompts(system: str, user: str) -> tuple[str, str]:
+    legacy_system = system.replace(SYSTEM_DOMAIN_ABSTRACT, SYSTEM_DOMAIN_EXAMPLES)
+    legacy_system = legacy_system.replace(SYSTEM_IMAGE_ABSTRACT, SYSTEM_IMAGE_EXAMPLES)
+    legacy_system = legacy_system.replace(SYSTEM_TONE_ABSTRACT, SYSTEM_TONE_EXAMPLES)
+    legacy_user = user.replace(USER_DOMAIN_ABSTRACT, USER_DOMAIN_EXAMPLES)
+    if legacy_system == system or legacy_user == user:
         raise RuntimeError("현재 프롬프트 문구가 바뀌어 A/B 치환 규칙을 적용하지 못했습니다")
-    return clean_system, clean_user
+    return legacy_system, legacy_user
 
 
 def flatten(result: Dict[str, Any]) -> str:
@@ -123,11 +122,11 @@ def main() -> None:
 
     for question in QUESTIONS:
         current_user = CONTEXT.format(question=question)
-        clean_system, clean_user = sanitized_prompts(current_system, current_user)
+        legacy_system, legacy_user = legacy_prompts(current_system, current_user)
         for repeat in range(1, args.repeats + 1):
             for variant, system, user in (
-                ("current", current_system, current_user),
-                ("zero_shot", clean_system, clean_user),
+                ("legacy_examples", legacy_system, legacy_user),
+                ("current_zero_shot", current_system, current_user),
             ):
                 result = client.complete_json(user, system=system, temperature=0.1)
                 rows.append({
@@ -141,7 +140,7 @@ def main() -> None:
 
     summary = {
         variant: sum(bool(row["leaked_terms"]) for row in rows if row["variant"] == variant)
-        for variant in ("current", "zero_shot")
+        for variant in ("legacy_examples", "current_zero_shot")
     }
     payload = {"provider": args.provider, "repeats": args.repeats, "summary": summary, "rows": rows}
     args.output.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")

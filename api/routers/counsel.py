@@ -30,6 +30,12 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/counsel", tags=["Counsel"])
 
 
+def _string_result_attr(result, name: str, default=None):
+    """실제 TurnResult와 기존 테스트/호환 객체 모두에서 문자열 메타데이터만 꺼낸다."""
+    value = getattr(result, name, default)
+    return value if isinstance(value, str) else default
+
+
 class StartConsultationRequest(BaseModel):
     question: str = Field(
         ...,
@@ -132,6 +138,8 @@ async def start_consultation_endpoint(
                 "evidences": result.evidences,
                 "remaining_credits": remaining_credits,
                 "report_data": result.report_data if isinstance(result.report_data, dict) else None,
+                "report_status": _string_result_attr(result, "report_status", "not_requested"),
+                "report_error_code": _string_result_attr(result, "report_error_code"),
             }
 
         except HTTPException:
@@ -236,6 +244,9 @@ async def counsel_turn_endpoint(
                 "focus_rule": result.focus_rule,
                 "evidences": result.evidences,
                 "remaining_credits": remaining_credits,
+                "report_data": result.report_data if isinstance(result.report_data, dict) else None,
+                "report_status": _string_result_attr(result, "report_status", "not_requested"),
+                "report_error_code": _string_result_attr(result, "report_error_code"),
             }
         except HTTPException:
             await db_session.rollback()

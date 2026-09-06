@@ -8,11 +8,14 @@
 """
 
 import logging
+import asyncio
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from core.config import settings
+from core.db import AsyncSessionLocal
+from sqlalchemy import text
 from api.routers import counsel, card, safety
 
 # 하위 호환성 Re-export (단위 테스트 및 기존 모듈 100% 호환 보장)
@@ -97,7 +100,29 @@ async def add_security_headers_and_limit_size(request: Request, call_next):
 # 3. 헬스 체크 엔드포인트
 @app.get("/health", summary="시스템 헬스 체크")
 async def health_check():
-    return {"status": "ok", "service": "iching-oracle-api", "env": settings.ENVIRONMENT}
+    try:
+        async def check_db():
+            async with AsyncSessionLocal() as session:
+                await session.execute(text("SELECT 1"))
+
+        await asyncio.wait_for(check_db(), timeout=3.0)
+    except Exception:
+        logger.error("헬스 체크 DB 연결 실패", exc_info=True)
+        return JSONResponse(
+            status_code=503,
+            content={
+                "status": "degraded",
+                "service": "iching-oracle-api",
+                "env": settings.ENVIRONMENT,
+                "database": "unavailable",
+            },
+        )
+    return {
+        "status": "ok",
+        "service": "iching-oracle-api",
+        "env": settings.ENVIRONMENT,
+        "database": "ok",
+    }
 
 
 # 4. 기능별 APIRouter 등록

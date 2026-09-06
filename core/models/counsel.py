@@ -48,6 +48,13 @@ class CounselSession(Base):
     )
     
     status: Mapped[str] = mapped_column(String(20), default="active", server_default="active", nullable=False)
+    report_data: Mapped[Optional[dict]] = mapped_column(
+        JSON().with_variant(postgresql.JSONB, "postgresql"), nullable=True
+    )
+    report_status: Mapped[str] = mapped_column(
+        String(20), default="not_requested", server_default="not_requested", nullable=False
+    )
+    report_error_code: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)

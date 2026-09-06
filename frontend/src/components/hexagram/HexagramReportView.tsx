@@ -77,70 +77,31 @@ export const HexagramReportView: React.FC<HexagramReportViewProps> = ({
   // === 4단계 완벽 리포트 데이터 바인딩 (LLM 전용 reportData 최우선) ===
   
   // 1. 질문 및 마음가짐 세팅
-  const part1Question = reportData?.question_setting.question || userQuestion;
-  const part1Mindset = reportData?.question_setting.mindset_rule || 
-    '질문자는 삿된 사리사욕이나 무분별한 호기심을 비우고, 무념무상의 경건한 마음으로 단 한 번만 점을 치는 재삼덕 금기 원칙을 준수하며 점을 쳤습니다.';
+  const part1Question = reportData.question_setting.question;
+  const part1Mindset = reportData.question_setting.mindset_rule;
 
   // 2. 괘 도출 과정
-  const linesCastingList = reportData?.hexagram_casting.lines || castResult.lines.map((l, idx) => {
-    const pos = idx + 1;
-    const isChanging = castResult.changingPositions.includes(pos);
-    let typeKo = '소양', sym = '⚊', note = '변하지 않는 양효';
-    if (l.value === 8) { typeKo = '소음'; sym = '⚋'; note = '변하지 않는 음효'; }
-    if (l.value === 9) { typeKo = '노양'; sym = '⚊○'; note = '동효(변효) (양에서 음으로 변함)'; }
-    if (l.value === 6) { typeKo = '노음'; sym = '⚋✕'; note = '동효(변효) (음에서 양으로 변함)'; }
-    return { position: pos, name: `${pos}효`, value: l.value, line_type_ko: typeKo, symbol: sym, is_changing: isChanging, note };
-  });
+  const linesCastingList = reportData.hexagram_casting.lines;
 
-  const origNameFull = reportData?.hexagram_casting.original_name_full || originalMeta.fullNameHangul;
-  const origNameHanja = reportData?.hexagram_casting.original_name_hanja || originalMeta.nameHanja;
-  const origSummary = reportData?.hexagram_casting.original_summary || originalMeta.natureSummary;
+  const origNameFull = reportData.hexagram_casting.original_name_full;
+  const origNameHanja = reportData.hexagram_casting.original_name_hanja;
+  const origSummary = reportData.hexagram_casting.original_summary;
 
-  const transNameFull = reportData?.hexagram_casting.transformed_name_full || transformedMeta.fullNameHangul;
-  const transNameHanja = reportData?.hexagram_casting.transformed_name_hanja || transformedMeta.nameHanja;
-  const transSummary = reportData?.hexagram_casting.transformed_summary || transformedMeta.natureSummary;
+  const transNameFull = reportData.hexagram_casting.transformed_name_full || origNameFull;
+  const transNameHanja = reportData.hexagram_casting.transformed_name_hanja || origNameHanja;
+  const transSummary = reportData.hexagram_casting.transformed_summary || origSummary;
 
   // 3. 고변점 및 체용
-  const ruleDesc = reportData?.focus_and_body_use.rule_description || focusRuleDesc;
-  const primaryTargetName = reportData?.focus_and_body_use.primary_target_name || focusTargetName;
-  const bodyUseFlow = reportData?.focus_and_body_use.body_use_flow || 
-    `본괘(${origNameFull}): 현재 질문자께서 직면한 대전제(體) ➡ [${originalMeta.coreTheme}]의 기류 속에 있습니다.\n지괘(${transNameFull}): 변화 이후 다다를 지향점(用) ➡ [${transformedMeta.coreTheme}]의 방향으로 내실을 다져가야 합니다.`;
+  const ruleDesc = reportData.focus_and_body_use.rule_description;
+  const primaryTargetName = reportData.focus_and_body_use.primary_target_name;
+  const bodyUseFlow = reportData.focus_and_body_use.body_use_flow;
 
   // 4. 괘사·효사 종합 해석 및 실질적 조언
-  const sec1 = reportData?.section1_diagnosis || {
-    title: `① 현재 상황 진단 (본괘: ${origNameFull})`,
-    target_name: origNameFull,
-    hanja_text: origNameHanja,
-    interpretation: `현재 질문자님의 사연("${userQuestion}")은 '${origNameFull}'가 상징하는 "${origSummary}"의 시공간적 상황에 발을 딛고 있습니다. '${originalMeta.coreTheme}'의 이치를 인지하고 현 위치의 본질을 바로 보아야 합니다.`
-  };
-
-  const sec2 = reportData?.section2_action || {
-    title: `② 핵심 행동 지침 (주 주요 해석 대상: ${primaryTargetName})`,
-    target_name: primaryTargetName,
-    hanja_text: null,
-    interpretation: `${primaryTargetName}의 가르침은 고민하시는 사연에 대해 '${originalMeta.coreTheme}'의 도리에 따라 외부 수식어보다 내면의 진실함과 올바른 명분을 먼저 세울 것을 조언합니다.`
-  };
-
-  const sec3 = reportData?.section3_warning || {
-    title: `③ 보조 경계 지침 (${hasTransformation ? `함께 동한 ${changingLinesText}` : '불변괘 경계 지침'})`,
-    target_name: hasTransformation ? changingLinesText : `${origNameFull} 경계 지침`,
-    hanja_text: null,
-    interpretation: hasTransformation
-      ? `'${origNameFull}' 괘에서 동한 ${changingLinesText}의 변화에 따라, 현 시점에서는 성급한 감정이나 주관적 무리수를 삼가고 상황의 흐름과 맥락을 객관적으로 살피며 중심을 지켜야 합니다.`
-      : `'${origNameFull}' 괘가 경계하는 핵심 바는 '${originalMeta.coreTheme}'의 중심을 잃고 조급해지는 것입니다. 내담자님의 사연("${userQuestion}")에 대해 이 괘가 전하는 본래의 바른 덕목을 흔들림 없이 지켜내십시오.`
-  };
-
-  const sec4 = reportData?.section4_future || {
-    title: `④ 미래의 귀결 및 주의점 (${hasTransformation ? `지괘: ${transNameFull}` : `본괘 유지: ${origNameFull}`})`,
-    target_name: hasTransformation ? transNameFull : origNameFull,
-    hanja_text: null,
-    interpretation: hasTransformation
-      ? `변화 이후 다다를 지괘는 '${transNameFull}'의 이치를 지닙니다. "${transSummary}"의 상징처럼 내면의 지혜를 가꾸고 순리에 맞게 흐름을 정돈해 나가는 것이 핵심 귀결입니다.`
-      : `'${origNameFull}'의 굳건한 이치를 온전히 지켜나간다면 "${origSummary}"의 순리를 얻어 안정을 다지고 결실을 다지게 됩니다.`
-  };
-
-  const finalSummaryText = reportData?.final_summary || 
-    `"${origNameFull} 괘의 핵심 이치인 '${originalMeta.coreTheme}'에 따라 내담자님의 사연을 성찰하되, 성급함을 삼가고 중심을 바로 세우십시오. ${hasTransformation ? `이후 마주할 지괘(${transNameFull})의 지혜처럼 스스로를 바로잡고 때를 기다리는 것이 지혜로운 해법입니다.` : `현재 괘의 본래 중심을 굳건히 지키는 것이 해법입니다.`}"`;
+  const sec1 = reportData.section1_diagnosis;
+  const sec2 = reportData.section2_action;
+  const sec3 = reportData.section3_warning;
+  const sec4 = reportData.section4_future;
+  const finalSummaryText = reportData.final_summary;
 
   // 마크다운 원문 복사 구성
   const markdownText = `1. 질문 및 마음가짐 세팅 (사례 설정)

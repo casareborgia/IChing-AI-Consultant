@@ -368,10 +368,9 @@ async def run_report_agent(
 
 [CRITICAL INSTRUCTION - DOMAIN CONTEXT ALIGNMENT & NO TEMPLATE CLICHES]
 Write a razor-sharp, highly customized I-Ching consulting report in Korean adhering strictly to the JSON schema below.
-- Align the terminology, emotional tone, and metaphors with the User's Real Question and Topic Category ({topic_category}).
-  * Family/Interpersonal/Emotional: Use psychological depth, relational balance, boundaries, empathy, and personal reflection. NEVER inject corporate or business jargon (such as market validation, contract risks, soft landing, profit margins) into family or interpersonal issues.
-  * Career/Business/Studies: Adapt appropriately to practical decisions, pacing, structural challenges, and strategic timing.
-- Do NOT use robotic, repetitive template phrases (e.g. "~의 기류 속에 있습니다", "~에 직면해 있습니다", "~이 핵심입니다", "~을 당부합니다").
+- Derive terminology, emotional tone, and metaphors only from the User's Real Question and Topic Category ({topic_category}).
+- Do not import vocabulary, entities, goals, or assumptions from a domain absent from the user's question.
+- Avoid repetitive template phrasing. Vary sentence openings and reasoning structure according to the supplied evidence.
 - Map the ancient I-Ching metaphors ('{primary_line_hanja}') 1:1 to the user's specific real-world question ('{question}') in fluid, elegant, natural Korean prose.
 
 Return a JSON with these exact string keys:
@@ -379,7 +378,7 @@ Return a JSON with these exact string keys:
   "section1_diagnosis": "Deep diagnosis of the user's situation using the original hexagram metaphor in rich Korean prose (2-3 sentences)",
   "section2_action": "Specific 1:1 action guidance mapping '{primary_line_hanja}' to the user's question",
   "section3_warning": "Solemn cautions or bad habits to avoid based on changing dynamics",
-  "section4_future": "Future resolution and landing strategy based on transformed hexagram",
+  "section4_future": "Future direction based on transformed hexagram",
   "final_summary": "Powerful 1-2 sentence final wisdom summary"
 }}
 """
@@ -405,9 +404,9 @@ Section 4: {sec4_text}
 Final Summary: {final_summary_text}
 
 [CRITICAL INSTRUCTION]
-1. Eradicate ALL repetitive clichés (such as "~의 기류 속에", "~에 직면해 있습니다", "~이 핵심입니다").
+1. Remove repetitive phrasing and vary sentence openings according to the supplied evidence.
 2. Deepen the 1:1 mapping with the target Hanja ('{primary_line_hanja}').
-3. Maintain rigorous domain context alignment with the user's specific concern (e.g. family/interpersonal vs. career). Never introduce mismatched business or corporate jargon into personal emotional concerns.
+3. Derive all domain vocabulary from the user's question and supplied category. Do not introduce concepts from an absent domain.
 4. Write in highly elegant, fluid, and natural Korean prose with respectful honorifics.
 
 Return a JSON with exact keys: "section1_diagnosis", "section2_action", "section3_warning", "section4_future", "final_summary"."""
@@ -429,7 +428,7 @@ Return a JSON with exact keys: "section1_diagnosis", "section2_action", "section
     return HexagramReportSchema(
         question_setting=QuestionSettingSchema(
             question=question,
-            mindset_rule="질문자는 사리사욕이나 무분별한 호기심을 비우고, 무념무상의 경건한 마음으로 단 한 번만 점을 치는 재삼덕 금기 원칙을 준수하며 점을 쳤습니다."
+            mindset_rule="질문자는 사리사욕이나 무분별한 호기심을 비우고, 무념무상의 경건한 마음으로 단 한 번만 점을 치는 재삼독 금기 원칙을 준수하며 점을 쳤습니다."
         ),
         hexagram_casting=HexagramCastingSchema(
             lines=casting_items,

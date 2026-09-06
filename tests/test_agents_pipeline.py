@@ -541,6 +541,21 @@ async def test_후속턴은_같은_괘를_유지하고_다시_뽑지_않는다(m
         first_trans = res1.transformed_hexagram_id
         first_lines = res1.changing_lines
 
+        # 첫 턴 리포트가 세션에 저장됐다는 조건을 만들고 후속 턴 프롬프트까지
+        # 실제로 복원되는지 확인한다. 저장만 하고 전달하지 않으면 상담이 2턴부터
+        # 리포트의 핵심 결론을 잃는다.
+        from core.models.counsel import CounselSession
+        c_session = await session.get(CounselSession, res1.session_id)
+        c_session.report_data = {
+            "section2_action": {"interpretation": "저장된 리포트 행동 지침"},
+            "final_summary": "저장된 리포트 최종 요약",
+        }
+        c_session.report_status = "ready"
+        await session.commit()
+
+        followup_counsel = MockLLMDispatcher({"default": counsel_resp})
+        mock_clients["counsel"] = followup_counsel
+
         monkeypatch.setattr("core.hexagram_engine.cast_single_line", _no_recast)
 
         for _ in range(3):
@@ -554,6 +569,12 @@ async def test_후속턴은_같은_괘를_유지하고_다시_뽑지_않는다(m
             assert res.hexagram_id == first_hex
             assert res.transformed_hexagram_id == first_trans
             assert res.changing_lines == first_lines
+
+        assert any(
+            "저장된 리포트 행동 지침" in call["user"]
+            and "저장된 리포트 최종 요약" in call["user"]
+            for call in followup_counsel.calls
+        ), "후속 상담 프롬프트에서 저장된 리포트 결론이 사라졌습니다"
 
 
 @pytest.mark.asyncio

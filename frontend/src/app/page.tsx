@@ -171,6 +171,7 @@ export default function Home() {
     setFirstAiMessage(null);
     setJournal(null);
     setSessionId('');
+    setReportData(undefined);
   };
 
   return (

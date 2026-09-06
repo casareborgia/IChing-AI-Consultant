@@ -21,6 +21,10 @@ RUN useradd -u 1000 -m appuser
 
 # 애플리케이션 코드 복사 및 소유권 변경
 COPY --chown=appuser:appuser . .
+COPY --chown=appuser:appuser prompts/ /app/prompts/
+
+# 프롬프트 파일 존재 검증 (빌드 타임 안전망)
+RUN test -f /app/prompts/safety_screening.md && ls -la /app/prompts/
 
 USER appuser
 

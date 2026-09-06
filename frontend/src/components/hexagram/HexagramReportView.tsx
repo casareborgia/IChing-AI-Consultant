@@ -102,7 +102,7 @@ export const HexagramReportView: React.FC<HexagramReportViewProps> = ({
     target_name: hasTransformation ? changingLinesText : `${origNameFull} 경계 지침`,
     hanja_text: null,
     interpretation: hasTransformation
-      ? `'${origNameFull}' 괘에서 동한 ${changingLinesText}의 변화에 따라, 현 시점에서는 성급한 주관적 무리수를 삼가고 추진 전 계획의 타당성을 다각도로 객관 검증해야 합니다.`
+      ? `'${origNameFull}' 괘에서 동한 ${changingLinesText}의 변화에 따라, 현 시점에서는 성급한 감정이나 주관적 무리수를 삼가고 상황의 흐름과 맥락을 객관적으로 살피며 중심을 지켜야 합니다.`
       : `'${origNameFull}' 괘가 경계하는 핵심 바는 '${originalMeta.coreTheme}'의 중심을 잃고 조급해지는 것입니다. 내담자님의 사연("${userQuestion}")에 대해 이 괘가 전하는 본래의 바른 덕목을 흔들림 없이 지켜내십시오.`
   };
 
@@ -111,12 +111,12 @@ export const HexagramReportView: React.FC<HexagramReportViewProps> = ({
     target_name: hasTransformation ? transNameFull : origNameFull,
     hanja_text: null,
     interpretation: hasTransformation
-      ? `변화 이후 다다를 지괘는 '${transNameFull}'의 이치를 지닙니다. "${transSummary}"의 상징처럼 내실을 정비하고 안정적으로 연착륙하는 것이 성공의 핵심입니다.`
+      ? `변화 이후 다다를 지괘는 '${transNameFull}'의 이치를 지닙니다. "${transSummary}"의 상징처럼 내면의 지혜를 가꾸고 순리에 맞게 흐름을 정돈해 나가는 것이 핵심 귀결입니다.`
       : `'${origNameFull}'의 굳건한 이치를 온전히 지켜나간다면 "${origSummary}"의 순리를 얻어 안정을 다지고 결실을 다지게 됩니다.`
   };
 
   const finalSummaryText = reportData?.final_summary || 
-    `"${origNameFull} 괘의 핵심 이치인 '${originalMeta.coreTheme}'에 따라 내담자님의 사연을 성찰하되, 성급함을 삼가고 내실을 다지십시오. ${hasTransformation ? `이후 마주할 지괘(${transNameFull})의 지혜처럼 내부 역량을 정비하는 것이 승리의 열쇠입니다.` : `현재 괘의 본래 중심을 굳건히 지키는 것이 해법입니다.`}"`;
+    `"${origNameFull} 괘의 핵심 이치인 '${originalMeta.coreTheme}'에 따라 내담자님의 사연을 성찰하되, 성급함을 삼가고 중심을 바로 세우십시오. ${hasTransformation ? `이후 마주할 지괘(${transNameFull})의 지혜처럼 스스로를 바로잡고 때를 기다리는 것이 지혜로운 해법입니다.` : `현재 괘의 본래 중심을 굳건히 지키는 것이 해법입니다.`}"`;
 
   // 마크다운 원문 복사 구성
   const markdownText = `1. 질문 및 마음가짐 세팅 (사례 설정)

@@ -518,6 +518,7 @@ async def run_turn(
                 lines_val=getattr(interp_res, "lines_val", [7, 8, 9, 8, 9, 7]),
                 focus_rule=evidence.focus_rule.model_dump(),
                 evidences=interp_res.evidences,
+                topic_category=c_session.topic_category or "기타",
                 client=clients.get("report"),
             )
             report_data = report_obj.model_dump()

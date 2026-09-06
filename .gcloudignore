@@ -1,0 +1,43 @@
+.git
+.gitignore
+
+# 로컬 환경 변수 파일 (절대 업로드 금지)
+.env*
+env.production.yaml
+
+.venv
+venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache
+.coverage
+htmlcov
+
+# 프론트엔드 및 불필요한 빌드 아티팩트
+frontend/
+node_modules/
+.next/
+
+scripts/supabase_batches/
+scripts/production_seed_dump.sql
+data/transcripts/
+data/.cache/
+pilot/
+로컬튜닝용/
+
+# 내부 문서
+AGENTS.md
+CLAUDE*.md
+BACKLOG.md
+docs/ANTIGRAVITY_*.md
+docs/STEP5_INSTRUCTIONS.md
+pilot/*.md
+
+.agent/
+.gemini/
+
+# 필수 프롬프트 파일 포함 보장
+!prompts/
+!prompts/**

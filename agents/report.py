@@ -181,6 +181,7 @@ async def run_report_agent(
     lines_val: List[int],  # 예: [7, 8, 9, 8, 9, 7]
     focus_rule: Dict[str, Any],
     evidences: List[Dict[str, Any]],
+    topic_category: str = "기타",
     client: Optional[LLMClient] = None,
     enable_refinement_loop: bool = True,
 ) -> HexagramReportSchema:
@@ -267,6 +268,7 @@ async def run_report_agent(
     # v4.1 LLM 프롬프트 조립 (Strict JSON Format Instruction)
     user_prompt = f"""<actual_divination_context>
 - User's Real Question: "{question}"
+- Topic Category: {topic_category}
 - Original Hexagram: {orig_meta['fullNameHangul']}({orig_meta['nameHanja']}) ("{orig_meta['natureSummary']}")
 - Core Theme: {orig_meta['coreTheme']}
 - Changing Lines: {changing_lines if has_trans else 'None (Invariant)'}
@@ -284,8 +286,11 @@ async def run_report_agent(
 {rag_context}
 </actual_divination_context>
 
-[CRITICAL INSTRUCTION - NO TEMPLATE CLICHES]
+[CRITICAL INSTRUCTION - DOMAIN CONTEXT ALIGNMENT & NO TEMPLATE CLICHES]
 Write a razor-sharp, highly customized I-Ching consulting report in Korean adhering strictly to the JSON schema below.
+- Align the terminology, emotional tone, and metaphors with the User's Real Question and Topic Category ({topic_category}).
+  * Family/Interpersonal/Emotional: Use psychological depth, relational balance, boundaries, empathy, and personal reflection. NEVER inject corporate or business jargon (such as market validation, contract risks, soft landing, profit margins) into family or interpersonal issues.
+  * Career/Business/Studies: Adapt appropriately to practical decisions, pacing, structural challenges, and strategic timing.
 - Do NOT use robotic, repetitive template phrases (e.g. "~의 기류 속에 있습니다", "~에 직면해 있습니다", "~이 핵심입니다", "~을 당부합니다").
 - Map the ancient I-Ching metaphors ('{primary_line_hanja}') 1:1 to the user's specific real-world question ('{question}') in fluid, elegant, natural Korean prose.
 
@@ -299,15 +304,15 @@ Return a JSON with these exact string keys:
 }}
 """
 
-    # 1차 초안 LLM 호출
-    sec1_text = f"현재 질문자님의 고민 사연은 {orig_meta['fullNameHangul']} 괘가 가르치는 '{orig_meta['natureSummary']}'의 국면에 위치해 있습니다. 무리한 확장이나 조급함을 피하고 상황의 본질을 직시하십시오."
-    sec2_text = f"주요 해석 대상인 {focus_target_str}의 조언에 따라 사연('{question}')에 대해 겉치레보다는 올바른 명분과 단단한 내면의 신뢰를 먼저 구축해야 합니다."
-    sec3_text = f"경계할 점은 '{orig_meta['coreTheme']}'의 본래 도리를 버리고 섣부른 무리수를 두는 것입니다. 추진 전 사연의 현실적 조건과 리스크를 신중히 검증하십시오."
-    sec4_text = f"변화 이후 도달할 지괘 {trans_meta['fullNameHangul']}의 가르침처럼 내부 역량을 충실히 가꾸고 안정적으로 연착륙하는 것이 핵심 귀결입니다."
-    final_summary_text = f"'{orig_meta['fullNameHangul']}' 괘의 핵심 상징인 '{orig_meta['coreTheme']}'에 비추어 사연('{question}')을 성찰하되, 성급함을 피하고 내실을 바로잡으십시오."
+    # 1차 초안 기본 텍스트 (네트워크 장애 등 폴백 시에도 도메인 중립적 주역 성찰 언어 유지)
+    sec1_text = f"현재 질문자님의 고민은 {orig_meta['fullNameHangul']} 괘가 가르치는 '{orig_meta['natureSummary']}'의 국면에 닿아 있습니다. 조급함을 내려놓고 상황의 본질과 내면의 흐름을 먼저 고요히 살피십시오."
+    sec2_text = f"주요 해석 대상인 {focus_target_str}의 조언에 따라 고민 사연('{question}')에 대해 외적인 조급함보다는 올바른 명분과 단단한 중심을 먼저 확립하는 것이 이롭습니다."
+    sec3_text = f"경계할 점은 '{orig_meta['coreTheme']}'의 본래 도리를 벗어나 감정이나 충동으로 무리수를 두는 것입니다. 매사에 중심을 지키고 지나친 마찰을 경계하십시오."
+    sec4_text = f"변화 이후 도달할 지괘 {trans_meta['fullNameHangul']}의 가르침처럼 내면의 지혜와 덕을 충실히 기르며 순리대로 나아가는 것이 핵심 귀결입니다."
+    final_summary_text = f"'{orig_meta['fullNameHangul']}' 괘의 상징인 '{orig_meta['coreTheme']}'에 비추어 사연('{question}')을 성찰하되, 성급함을 피하고 내실을 바로잡으십시오."
 
     try:
-        draft_dict = llm.complete_json(user_prompt, system=system_prompt, temperature=0.2)
+        draft_dict = llm.complete_json(user_prompt, system=system_prompt, temperature=0.1)
         sec1_text = _extract_section_interpretation(draft_dict, "section1_diagnosis", sec1_text)
         sec2_text = _extract_section_interpretation(draft_dict, "section2_action", sec2_text)
         sec3_text = _extract_section_interpretation(draft_dict, "section3_warning", sec3_text)
@@ -317,7 +322,7 @@ Return a JSON with these exact string keys:
         if enable_refinement_loop:
             try:
                 refine_prompt = f"""You are a Master Scribe refining an I-Ching report into a masterpiece in Korean.
-Review the following interpretations for the user's question: "{question}"
+Review the following interpretations for the user's question: "{question}" (Topic: {topic_category})
 
 Section 1: {sec1_text}
 Section 2: {sec2_text}
@@ -328,11 +333,12 @@ Final Summary: {final_summary_text}
 [CRITICAL INSTRUCTION]
 1. Eradicate ALL repetitive clichés (such as "~의 기류 속에", "~에 직면해 있습니다", "~이 핵심입니다").
 2. Deepen the 1:1 mapping with the target Hanja ('{primary_line_hanja}').
-3. Write in highly elegant, fluid, and natural Korean prose with respectful honorifics.
+3. Maintain rigorous domain context alignment with the user's specific concern (e.g. family/interpersonal vs. career). Never introduce mismatched business or corporate jargon into personal emotional concerns.
+4. Write in highly elegant, fluid, and natural Korean prose with respectful honorifics.
 
 Return a JSON with exact keys: "section1_diagnosis", "section2_action", "section3_warning", "section4_future", "final_summary"."""
 
-                refined_dict = llm.complete_json(refine_prompt, system=system_prompt, temperature=0.2)
+                refined_dict = llm.complete_json(refine_prompt, system=system_prompt, temperature=0.1)
                 sec1_text = _extract_section_interpretation(refined_dict, "section1_diagnosis", sec1_text)
                 sec2_text = _extract_section_interpretation(refined_dict, "section2_action", sec2_text)
                 sec3_text = _extract_section_interpretation(refined_dict, "section3_warning", sec3_text)

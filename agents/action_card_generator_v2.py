@@ -154,7 +154,7 @@ You must reframe ancient I-Ching concepts into scientifically validated, non-sup
 
 [ACT Committed Action & SMART Rules]
 1. [Core Pledge (나의 전념 행동)]: Extract the client's action plan. It MUST be filtered and refined into a SMART (Specific, Measurable, Actionable, Realistic, Time-bound) behavioral goal.
-   - It MUST be a concrete action they can perform within 10-20 minutes today/tomorrow (e.g., "나는 오늘 밤 9시에 후배에게 전화를 걸어 5분간 사과하겠다").
+   - It MUST be a concrete action they can perform within 10-20 minutes today/tomorrow matching their problem domain (e.g., for relationships/family: taking 3 deep breaths before responding or stepping away for 5 minutes; for work/career: organizing a single priority checklist for 15 minutes; for inner slump: practicing 10 minutes of quiet mindfulness/journaling).
    - It MUST NOT be an unrealistic long-term goal ("나는 평생 화내지 않겠다"), a vague state of mind ("나는 앞으로 긍정적으로 살겠다"), or emotional suppression ("나는 불안을 억누르겠다").
    - If the client's original statement is too broad or unrealistic, you MUST break it down and rewrite it into a highly actionable, bite-sized SMART task.
 2. [Aha! Moment (아집의 내려놓음)]: Summarize what dysfunctional cognitive obsession, control bias, or emotional avoidance the client realized they need to let go of.
@@ -170,6 +170,7 @@ You must reframe ancient I-Ching concepts into scientifically validated, non-sup
 - Original Hexagram: {report_info.get('original_hex_name', '미상')} (No. {report_info.get('original_hex_num', 0)})
 - Resulting Hexagram: {report_info.get('resulting_hex_name', '미상')} (No. {report_info.get('resulting_hex_num', 0)})
 - Key Metaphor of Target Line: {report_info.get('target_line_text', '미상')}
+- Topic Category: {report_info.get('topic_category', '기타')}
 </divination_context>
 
 <counseling_transcript>

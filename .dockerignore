@@ -27,6 +27,9 @@ data/.cache/
 pilot/
 로컬튜닝용/
 
-*.md
+/*.md
+!prompts/
+!prompts/**
+!prompts/*.md
 .agent/
 .gemini/

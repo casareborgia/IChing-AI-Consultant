@@ -79,6 +79,7 @@ def adapt_to_report_payload(
         agenda_items.append(f"고민 매핑: {contextual_mapping}")
 
     return {
+        "topic_category": report_data.get("topic_category") or "기타",
         "derivation_data": {
             "original_hexagram": {
                 "name": orig_name,
@@ -178,13 +179,16 @@ Respond strictly in JSON:
   "is_final": <false for turns 1-4, true for turn 5>
 }}"""
 
+        category_val = report_payload.get("topic_category") or "기타"
         user_prompt = f"""<divination_context>
 - User's Original Struggle: "{user_question}"
+- Category of Struggle: {category_val}
 - Original Hexagram (본괘): {orig_name}
 - Resulting Hexagram (지괘): {res_name}
 - Target Line of Reflection: {target_focus}
 - Core Ancient Metaphor Text: {target_text} ({target_line_name})
 - Pre-set Agenda Items: {json.dumps(agenda_items, ensure_ascii=False)}
+- Domain Lens Directive: Strictly tailor your questioning to the '{category_val}' domain (e.g. for relationships: emotional boundaries and acceptance; for career/business: timing, execution, and realistic preparation). NEVER use uncalled-for corporate/startup jargon in personal or family struggles.
 </divination_context>
 
 <current_stage>

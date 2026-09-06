@@ -5,11 +5,13 @@
 [![Architecture](https://img.shields.io/badge/Architecture-3--Tier_Serverless-blue?style=flat&logo=googlecloud)](https://github.com/casareborgia/IChing-AI-Consultant)
 [![Frontend](https://img.shields.io/badge/Frontend-Next.js_16-black?style=flat&logo=nextdotjs)](https://github.com/casareborgia/IChing-AI-Consultant)
 [![Backend](https://img.shields.io/badge/Backend-FastAPI_v1.0-009688?style=flat&logo=fastapi)](https://github.com/casareborgia/IChing-AI-Consultant)
-[![Tests](https://img.shields.io/badge/Tests-150_Passed-brightgreen?style=flat&logo=pytest)](https://github.com/casareborgia/IChing-AI-Consultant)
+[![Tests](https://img.shields.io/badge/Tests-167_Passed-brightgreen?style=flat&logo=pytest)](https://github.com/casareborgia/IChing-AI-Consultant)
 [![Socratic Counsel](https://img.shields.io/badge/Socratic_Counsel-v0.5.0_5Turn_ActionCard-gold?style=flat&logo=openai)](https://github.com/casareborgia/IChing-AI-Consultant)
 [![Security](https://img.shields.io/badge/Security-Zero_Trust_JWT-emerald?style=flat&logo=auth0)](https://github.com/casareborgia/IChing-AI-Consultant)
 [![License: Code](https://img.shields.io/badge/Code-MIT_License-blue?style=flat)](LICENSE)
 [![License: Data](https://img.shields.io/badge/Data-CC_BY--SA_4.0-lightgrey?style=flat)](data/PROVENANCE.md)
+
+**한국어** · [English](README.en.md)
 
 ---
 
@@ -21,20 +23,21 @@
 - **5턴 소크라테스 코칭 대화 엔진 (v0.5.0 NEW)**: 성리학의 자성(自省)과 퇴계의 경(敬) 철학에 기반한 5단계 소크라테스 코칭 모델 도입. 무한 꼬리물기 대화를 방지하는 5턴 하드 가드레일(`is_final: true`) 및 4 Quality Gates 자아비판(Critique & Refinement) 루프를 통해 상투어/클리셰를 배제하고 높은 품격의 한국어 상담을 제공합니다.
 - **성찰 결과 액션 카드 v2 및 카드 캔버스 렌더러 (v0.5.0 NEW)**: 5턴 상담 완료 시 내담자의 1가지 구체적 실천 다짐(Action Pledge)을 구조화하여, 모바일/웹 저장 및 공유가 가능한 그래픽 액션 카드로 렌더링하고 안전 암호화 내보내기를 지원합니다.
 - **수석 주역 AI 1:1 맞춤 컨설팅 리포트 결합**: TCREI 프레임워크 기반 전용 `Report Agent`가 6효 수리 산출, 주자 고변점 룰, DB 효사 한문 원문, RAG 고전 주석을 종합 융합하여 **4단계 고품격 1:1 맞춤 리포트**를 집필하며, 확정된 리포트 핵심 결론을 `Counsel Agent` 상담 대화 맥락에 1:1 바인딩합니다.
+- **리포트 컨텍스트 영속화**: 첫 턴에서 집필한 리포트 전문을 세션(`counsel_sessions.report_data`)에 저장하고, 이후 모든 턴의 상담 프롬프트에 다시 주입합니다. 2턴째 이후 답변이 1턴 리포트의 행동 지침·최종 요약과 어긋나지 않습니다. 생성 상태는 `report_status`(`ready`/`failed`/`not_requested`)와 `report_error_code`로 추적합니다.
 - **근거 투명성 (Provenance)**: AI 환각(Hallucination) 없이 DB 1:1 확정 원문과 pgvector RAG 주석을 프론트엔드 근거 패널에 투명하게 공개
 - **다계층 안전망 & SaMD 웰니스**: 위기 신호(자살/자해, 폭력) 감지 시 괘 도출을 차단하고 24시간 자살예방 상담전화(`109`)로 즉시 안전 이관 (24시간 위기 래치 적용 및 100% 자동 크레딧 환불)
 - **제로 트러스트 보안 (Zero-Trust)**: 요청 본문 `user_id`를 불허하고, Supabase JWT 서명 검증(`HS256`, `audience="authenticated"`)을 통해 신원을 강제 확정하여 위기 래치 및 세션 소유권(BOLA) 변조를 원천 차단
 
 ---
 
-## 📋 4단계 고품격 주역 컨설팅 리포트 구조 (v0.3.0)
+## 📋 4단계 고품격 주역 컨설팅 리포트 구조 (Report Agent v4.1)
 
 > 백엔드 LLM(Gemini)이 내담자 사연에 맞게 100% 가변형으로 직접 집필하는 1:1 심층 성찰 보고서 서식입니다.
 
 ```markdown
 1. 질문 및 마음가짐 세팅 (사례 설정)
    - 질문자의 고민 사연 100% 반영
-   - 재삼덕 금기 점서 예식 명시 (사리사욕을 비운 경건한 단 1회 점서 원칙)
+   - 재삼독 금기 점서 예식 명시 (사리사욕을 비운 경건한 단 1회 점서 원칙)
 
 2. 괘 도출 과정 (수리 도출 및 효 쌓기)
    - 1효(초효) ~ 6효(상효) 수리 산출 (소양 7, 소음 8, 노양 9○, 노음 6✕)
@@ -65,7 +68,7 @@ flowchart TD
     
     subgraph Vercel ["Vercel Edge (Seoul icn1)"]
         NextApp[Next.js 16 App Router]
-        AuthCallback[/auth/callback 클라이언트 페이지]
+        AuthCallback["/auth/callback 클라이언트 페이지"]
     end
     
     subgraph Supabase ["Supabase Cloud (Seoul ap-northeast-2)"]
@@ -82,7 +85,7 @@ flowchart TD
     end
     
     subgraph AI ["Google Cloud Vertex AI"]
-        Gemini[Gemini 2.5 Flash\nthinking_budget=0 / 3초 지연]
+        Gemini["Gemini 2.5 Flash<br/>thinking_budget=0 · 1턴 3초"]
     end
 
     Browser -->|1. Google 소셜 로그인 & 세션 발급| Auth
@@ -113,11 +116,12 @@ flowchart TD
     - 주자 점법(Focus Rule)에 따라 DB 1:1 확정 괘사·효사 조회
     - RAG(core.rag)를 통해 정전(程傳 1,752건) 및 본의(本義 784건) 균형 검색
             ↓
-[★] 리포트 에이전트 (Report Agent v0.3.0 - NEW)
+[★] 리포트 에이전트 (Report Agent v4.1)
     - 내담자 질문, 6효 수리 배열, 고변점 룰, 한문 효사 원문, RAG 주석 융합
     - 4단계 고품격 1:1 맞춤 주역 컨설팅 보고서 구조화 JSON 집필
             ↓
 [3] 상담 에이전트 (Counsel Agent - 5턴 소크라테스 코칭 모델 v0.5.0)
+    - 세션에 저장된 리포트(report_data)를 매 턴 프롬프트에 재주입하여 해석 기준 유지
     - 성리학 자성(自省)과 경(敬) 철학 기반 5단계 코칭 (화두 → 맹점 → 처방 → 미래 → 실천 다짐)
     - 5턴 하드 가드레일 (`is_final: true`)로 무한 꼬리물기 대화 원천 차단
     - 4 Quality Gates 자아비판(Critique & Refinement) 루프로 상투어 0건 억제
@@ -143,6 +147,8 @@ flowchart TD
 | **DoS 및 과금 방어** | 슬라이딩 윈도우 Rate Limiter (IP/사용자당 1분 30회) + 메모리 자동 정리 | 비인가 호출 및 Financial DoS 방어 |
 | **컨테이너 하드닝** | Dockerfile 비루트 사용자(`appuser:1000`) 실행 및 진입점 고정 | 컨테이너 이탈 및 루트 권한 탈취 방지 |
 | **정보 노출 방지** | OWASP 표준 보안 헤더 + 에러 스택트레이스 마스킹 | 민감한 인프라 내부 정보 클라이언트 노출 차단 |
+| **운영 관측성** | 구조화 JSON 로깅(`core/logging_config.py`) — 운영에서 `severity` 필드를 명시해 Cloud Logging이 실제 레벨로 인식 | 리포트 생성 상태와 `duration_ms`를 로그로 추적. `httpx`·`google_genai`는 WARNING으로 낮춰 상담 1건당 20여 줄의 호출 로그 억제 |
+| **헬스 체크** | `/health`가 DB에 `SELECT 1` 실행 (3초 타임아웃) | 정상 200 `database: ok`, DB 장애 시 503 `database: unavailable` |
 
 ---
 
@@ -238,10 +244,10 @@ npm run dev
 
 ## 🧪 테스트 및 벤치마크
 
-본 프로젝트는 150개 이상의 자동화 테스트 스위트와 Codex/CI 검증을 위한 표준 평가 하네스를 제공합니다:
+본 프로젝트는 167개의 자동화 테스트 스위트와 Codex/CI 검증을 위한 표준 평가 하네스를 제공합니다:
 
 ```bash
-# 1. 전체 단위 및 보안 통합 테스트 실행 (150개 케이스 전수 검증 100% PASS)
+# 1. 전체 단위 및 보안 통합 테스트 실행 (167 passed, 4 skipped)
 .venv/bin/pytest -v
 
 # 2. 크레딧 동시성(Race Condition) 및 결제 가드 전용 테스트

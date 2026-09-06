@@ -46,6 +46,13 @@ class CloudRunJsonFormatter(logging.Formatter):
         return json.dumps(payload, ensure_ascii=False)
 
 
+# root에 핸들러를 붙이면 서드파티 로거도 함께 흘러나온다. 이 둘은 LLM·임베딩을
+# 호출할 때마다 요청 URL을 INFO로 남겨, 상담 1건에 20줄 넘게 쌓였다. 앱 로그를
+# 보려고 붙인 핸들러이므로 여기서만 레벨을 올려 조용히 시킨다. 호출 실패는
+# WARNING 이상이라 그대로 보인다.
+_NOISY_LOGGERS = ("httpx", "httpcore", "google_genai")
+
+
 def build_logging_config(level: str, environment: str) -> Dict[str, Any]:
     """dictConfig에 넘길 설정을 만든다.
 
@@ -71,6 +78,7 @@ def build_logging_config(level: str, environment: str) -> Dict[str, Any]:
                 "stream": sys.stdout,
             }
         },
+        "loggers": {name: {"level": "WARNING"} for name in _NOISY_LOGGERS},
         "root": {"handlers": ["default"], "level": normalized},
     }
 

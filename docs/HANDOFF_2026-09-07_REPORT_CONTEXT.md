@@ -236,3 +236,67 @@
 `161 passed, 4 skipped` — 인계 문서 기재값과 동일.
 
 주의: 이 저장소는 `prompts/*.md`를 gitignore하며 `prompts/report.md`만 추적한다. 새 worktree에서 테스트를 돌리려면 나머지 프롬프트 파일과 `.env`를 메인 체크아웃에서 복사해야 한다.
+
+## 로깅 결함 발견 및 수정 (2026-09-07)
+
+### 문제
+
+위 "완료한 작업 / 2. 운영 관측성"은 실제로 동작하지 않았다. 배포 후 상담 한 사이클(start 1회 + turn 5회, 전부 200)을 돌렸는데 `리포트 생성 완료` 로그가 한 줄도 남지 않았다.
+
+원인은 root 로거에 핸들러가 없었던 것이다. `uvicorn api.main:app`으로 띄우면 uvicorn은 자기 로거("uvicorn", "uvicorn.error", "uvicorn.access")만 설정하고 root는 건드리지 않는다. root에 핸들러가 없으면 파이썬은 lastResort 핸들러(WARNING 이상, stderr)로만 내보낸다. 저장소 어디에도 `logging.basicConfig()`나 `dictConfig()` 호출이 없었다.
+
+결과적으로 다음과 같이 갈렸다.
+
+- `리포트 생성 완료: ... status=... duration_ms=...` — `logger.info` → 전량 유실
+- `리포트 에이전트 실행 실패: ... error_code=...` — `logger.error` → lastResort로 출력
+
+실패는 보이는데 성공과 소요 시간이 보이지 않는 상태였다. 보류 항목이던 "정제 루프 유지 여부를 `duration_ms` 로그를 모아 판단한다"도 데이터가 쌓이지 않아 불가능했다.
+
+### 수정
+
+- `core/logging_config.py` 추가. 앱 임포트 시점에 `dictConfig`로 root에 핸들러를 붙인다.
+- `api/main.py`에서 라우터·에이전트를 임포트하기 전에 `configure_logging()`을 호출한다.
+- `core/config.py`에 `LOG_LEVEL`을 추가했다. 기본 `INFO`, 인식할 수 없는 값이면 `INFO`로 폴백한다.
+- Cloud Run은 stdout을 INFO, stderr를 ERROR로 뭉뚱그린다. 그래서 운영에서는 `severity` 필드를 담은 JSON 한 줄로 내보내 Cloud Logging이 실제 레벨을 읽게 했다. 로컬은 평문을 유지한다.
+- `disable_existing_loggers`는 False다. True면 먼저 만들어진 uvicorn 로거가 꺼져 액세스 로그가 사라진다.
+- root에 핸들러를 붙이면 서드파티 로거도 함께 흘러나온다. `httpx`, `httpcore`, `google_genai`는 LLM·임베딩 호출마다 요청 URL을 INFO로 남겨 상담 1건에 20줄 넘게 쌓였다. 이 셋만 WARNING으로 올렸다. 호출 실패는 WARNING 이상이라 그대로 보인다.
+- 회귀 테스트 `tests/test_logging_config.py` 6개를 추가했다.
+
+### 검증
+
+- 전체 백엔드: `167 passed, 4 skipped`
+- uvicorn `LOGGING_CONFIG`를 먼저 적용한 뒤 앱을 임포트하는 실제 기동 순서를 재현해, 앱 로그가 JSON으로 나오고 uvicorn 액세스 로그가 중복 없이 한 줄만 나오는 것을 확인했다.
+- 운영 확인: 서명이 틀린 JWT로 401 경로를 태워 다음을 얻었다. `severity>=WARNING` 조회에 걸리므로 Cloud Logging이 JSON을 파싱해 실제 레벨을 붙인 것이 확인된다.
+
+  ```
+  WARNING  iching_auth  HS256 JWT 서명 검증 실패: InvalidSignatureError
+  ```
+
+### 남은 작업 5번(실제 로그인 E2E) 완료
+
+로깅 수정 배포 후 상담 한 사이클을 더 돌려 확인했다.
+
+```
+15:53:36  start 시작
+15:53:41  임베딩 (RAG)
+15:54:04  리포트 생성 완료: session=447e9a7e-... status=ready duration_ms=17754
+15:54:06  POST /api/counsel/start  200   (총 약 30초)
+15:56:39  POST /api/counsel/turn   200   (약 3.6초)
+15:57:29  POST /api/counsel/turn   200   (약 4.5초)
+15:58:18  POST /api/counsel/turn   200   (약 4.9초)
+15:58:58  POST /api/counsel/turn   200   (약 7.4초)
+```
+
+`status=ready`는 `report_data` 저장의 직접 증거다. `agents/pipeline.py`에서 `report_status = "ready"`는 `c_session.report_data = report_data` 바로 뒤에서만 설정되기 때문이다. `리포트 에이전트 실행 실패`도 5xx도 없었다.
+
+`duration_ms` 첫 실측값은 17,754ms다. 표본 1개이고 이전 관측 편차가 4.4~33.3초였으므로, 정제 루프 유지 여부는 더 모은 뒤 판단한다.
+
+### 배포
+
+- 이미지 태그: `asia-northeast3-docker.pkg.dev/southern-engine-495314-p2/cloud-run-source-deploy/iching-counsel-api:logging-config-20260907`
+- 이미지 digest: `sha256:0ed4936c8a846f6deee1af7aa182cfdb086c14b1252fcfff318d75e122896daf`
+- 리비전: `iching-counsel-api-00031-kt8`, 트래픽 100%
+- 기존 서비스 설정(서비스 계정, timeout 300s, concurrency 80, 1 CPU / 1Gi, env var 8개)은 그대로 유지됐다.
+- 헬스 체크: HTTP 200, `database: ok`
+
+서드파티 로거를 조용히 시킨 변경은 이 배포 이후 별도 이미지로 나간다.

@@ -11,18 +11,25 @@ import logging.config
 
 import pytest
 
-from core.logging_config import build_logging_config, configure_logging
+from core.logging_config import _NOISY_LOGGERS, build_logging_config, configure_logging
 
 
 @pytest.fixture(autouse=True)
 def restore_logging():
-    """테스트가 전역 로깅 상태를 바꾸므로 원래대로 되돌린다."""
+    """테스트가 전역 로깅 상태를 바꾸므로 원래대로 되돌린다.
+
+    root뿐 아니라 서드파티 로거 레벨도 되돌린다. 안 그러면 이 파일이 올려둔
+    WARNING이 같은 세션의 다른 테스트까지 조용히 시킨다.
+    """
     root = logging.getLogger()
     saved_handlers = root.handlers[:]
     saved_level = root.level
+    saved_third_party = {name: logging.getLogger(name).level for name in _NOISY_LOGGERS}
     yield
     root.handlers[:] = saved_handlers
     root.level = saved_level
+    for name, level in saved_third_party.items():
+        logging.getLogger(name).setLevel(level)
 
 
 def test_root_logger_emits_info_after_configure(capsys):
@@ -59,6 +66,31 @@ def test_existing_loggers_are_not_disabled():
     access = logging.getLogger("uvicorn.access")
     configure_logging("INFO", "production")
     assert access.disabled is False
+
+
+def test_noisy_third_party_loggers_are_quieted(capsys):
+    """httpx/google_genai의 호출별 INFO는 버리고 WARNING 이상만 남긴다."""
+    configure_logging("INFO", "production")
+
+    logging.getLogger("httpx").info("HTTP Request: POST https://example.invalid/x 200 OK")
+    # 실제 로거 이름은 google_genai.models다. 부모에 건 레벨이 상속되는지 본다.
+    logging.getLogger("google_genai.models").info("AFC is enabled with max remote calls: 10.")
+    logging.getLogger("httpx").warning("호출 실패는 그대로 보여야 한다")
+
+    lines = [ln for ln in capsys.readouterr().out.strip().splitlines() if ln]
+    assert len(lines) == 1
+    payload = json.loads(lines[0])
+    assert payload["severity"] == "WARNING"
+    assert payload["logger"] == "httpx"
+
+
+def test_app_logger_is_not_quieted(capsys):
+    """서드파티를 조용히 시키느라 앱 로거까지 막으면 안 된다."""
+    configure_logging("INFO", "production")
+
+    logging.getLogger("agents.pipeline").info("리포트 생성 완료: session=s status=ready duration_ms=1")
+
+    assert "duration_ms=1" in capsys.readouterr().out
 
 
 def test_unknown_level_falls_back_to_info():

@@ -24,6 +24,8 @@ env.production.yaml
 .pytest_cache/
 .coverage
 htmlcov/
+acceptance-manifest.json
+suite.json
 
 # Database data
 pgdata/
@@ -61,14 +63,25 @@ scripts/production_seed_dump.sql
 
 .vercel
 
+# Supabase CLI connection cache is local, including linked project metadata.
+supabase/.temp/
+
 # 대외 공개 대상이 아닌 내부 문서 (가격·원가·마진). 스키마는 docs/DB_SCHEMA_AND_RLS.md 로 분리했다.
 docs/DEPLOYMENT_AND_MONETIZATION_BLUEPRINT.md
 
 # 공개 대상이 아닌 것 (2026-08-30). 로컬에는 그대로 두고 추적만 하지 않는다.
-#   prompts/*.md  튜닝된 에이전트 프롬프트 — 이 프로젝트의 실질적인 산출물
 #   CLAUDE.md     측정 방법론·모델 선정 실측·비용 수치·현재 약점 목록
 #   ANTIGRAVITY_* 내부 작업 지시서 (조치 완료된 취약점을 공격 관점으로 서술)
-prompts/*.md
+#
+# prompts/*.md 는 2026-09-18부터 여기서 무시하지 않는다. private 저장소
+# `casareborgia/iching-prompts` 를 `prompts/` 서브모듈로 참조한다. 이 저장소에는
+# 프롬프트 내용이 아니라 "어느 프롬프트 커밋을 썼는가"만 기록된다.
+# 공개 저장소에는 .gitmodules 에 저장소 이름만 남고 내용은 나가지 않는다.
+#
+# 이렇게 바꾼 이유: 프롬프트가 메인 저장소 커밋과 묶여 있지 않아 검수자가 제출 SHA
+# 시점의 프롬프트를 재현할 수 없었다. 상담·리포트 품질을 결정하는 입력이 버전에
+# 없으면 "제출 SHA에 붙어 직접 재현한다"는 원칙이 절반만 성립한다. report_v2.md 만
+# 예외로 추적했던 2026-09-12 결정은 그 증상을 덮은 것이라 여기서 걷어낸다.
 CLAUDE.md
 AGENTS.md
 docs/ANTIGRAVITY_*.md
@@ -77,3 +90,9 @@ CLAUDE_HANDOFF.md
 pilot/HANDOFF.md
 pilot/RUBRIC.md
 pilot/PROMPT.md
+
+# 상업화 내부 에이전트 인수인계/취약점 분석/테스트 로그 (비공개 대상)
+docs/commercialization/notes/
+docs/commercialization/artifacts/
+notes/
+

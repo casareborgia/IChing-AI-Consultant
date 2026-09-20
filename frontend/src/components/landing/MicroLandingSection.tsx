@@ -143,7 +143,7 @@ export const MicroLandingSection: React.FC<MicroLandingSectionProps> = ({ onSele
             </div>
             <h4 className="text-sm font-medium text-stone-100">단정적 예언 ❌ / 내면 성찰 ⭕</h4>
             <p className="text-xs text-stone-400 font-light mt-2 leading-relaxed">
-              "합격한다/불합격한다"는 공포 마케팅이나 운명론적 단정을 거부합니다. 지금 어떤 태도로 상황에 임해야 하는지 성찰의 질문을 건넵니다.
+              &quot;합격한다/불합격한다&quot;는 공포 마케팅이나 운명론적 단정을 거부합니다. 지금 어떤 태도로 상황에 임해야 하는지 성찰의 질문을 건넵니다.
             </p>
           </div>
 

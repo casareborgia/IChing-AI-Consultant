@@ -16,6 +16,10 @@ TEST_JWT_SECRET = "super-secret-test-jwt-key-for-unit-testing-only-12345"
 def setup_jwt_secret(monkeypatch):
     """테스트 시 SUPABASE_JWT_SECRET을 주입하여 엄격한 서명 검증을 활성화합니다."""
     monkeypatch.setattr(settings, "SUPABASE_JWT_SECRET", TEST_JWT_SECRET)
+    from api.routers.counsel import require_service_gate
+    app.dependency_overrides[require_service_gate] = lambda: None
+    yield
+    app.dependency_overrides.pop(require_service_gate, None)
 
 
 def create_test_token(sub: str = "user-uuid-1234", exp_delta: int = 3600, aud: str = "authenticated") -> str:

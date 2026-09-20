@@ -14,6 +14,7 @@ import urllib.request
 import urllib.error
 
 from core.config import settings
+from core.cost_budget import budget_tracker
 
 
 def clean_json_response(raw_text: str) -> str:
@@ -91,6 +92,7 @@ class AnthropicClient:
     ) -> Dict[str, Any]:
         max_tokens = max_tokens or self.max_tokens
         sys_prompt = system or self.system_prompt or ""
+        budget_tracker.check_budget_available()
         last_err = None
         for attempt in range(1, self.retries + 1):
             try:
@@ -102,6 +104,10 @@ class AnthropicClient:
                     messages=[{"role": "user", "content": user}],
                 )
                 raw_text = response.content[0].text if response.content else ""
+                usage = getattr(response, "usage", None)
+                in_tok = getattr(usage, "input_tokens", len(user) // 4)
+                out_tok = getattr(usage, "output_tokens", len(raw_text) // 4)
+                budget_tracker.record_usage(self.model_name, in_tok, out_tok, provider="anthropic")
                 cleaned = clean_json_response(raw_text)
                 return json.loads(cleaned)
             except Exception as e:
@@ -219,6 +225,9 @@ class OllamaClient:
                         )
 
                     cleaned = clean_json_response(raw_text)
+                    in_tok = res_body.get("prompt_eval_count") or (len(user) // 4)
+                    out_tok = res_body.get("eval_count") or (len(raw_text) // 4)
+                    budget_tracker.record_usage(self.model_name, in_tok, out_tok, provider="ollama")
                     return json.loads(cleaned)
             except Exception as e:
                 last_err = e
@@ -396,6 +405,7 @@ class GeminiClient:
         if self.json_mode:
             config_kwargs["response_mime_type"] = "application/json"
         config = self._types.GenerateContentConfig(**config_kwargs)
+        budget_tracker.check_budget_available()
         last_err = None
         for attempt in range(1, self.retries + 1):
             try:
@@ -405,6 +415,10 @@ class GeminiClient:
                     config=config,
                 )
                 raw_text = response.text or ""
+                usage = getattr(response, "usage_metadata", None)
+                in_tok = getattr(usage, "prompt_token_count", len(user) // 4) if usage else (len(user) // 4)
+                out_tok = getattr(usage, "candidates_token_count", len(raw_text) // 4) if usage else (len(raw_text) // 4)
+                budget_tracker.record_usage(self.model_name, in_tok, out_tok, provider="gemini")
                 cleaned = clean_json_response(raw_text)
                 return json.loads(cleaned)
             except Exception as e:

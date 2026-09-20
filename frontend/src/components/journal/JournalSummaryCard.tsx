@@ -7,26 +7,27 @@ import {
   Calendar,
   CheckCircle2,
   Download,
-  ExternalLink,
-  HeartHandshake,
   RotateCcw,
   Sparkles,
   Target,
+  Trash2,
 } from 'lucide-react';
 import { JournalSummary } from '../../types/iching';
-import { exportCardImageApi } from '../../lib/api';
+import { exportCardImageApi, deleteRecordApi } from '../../lib/api';
 import { renderCardCanvas } from '../../lib/cardCanvasRenderer';
 import { ActionCardModal } from './ActionCardModal';
 
 interface JournalSummaryCardProps {
   journal: JournalSummary;
   onRestart: () => void;
+  sessionId?: string;
   className?: string;
 }
 
 export const JournalSummaryCard: React.FC<JournalSummaryCardProps> = ({
   journal,
   onRestart,
+  sessionId,
   className = '',
 }) => {
   const isCrisis = Boolean(journal.isCrisis);
@@ -34,21 +35,35 @@ export const JournalSummaryCard: React.FC<JournalSummaryCardProps> = ({
   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [isServerDownloading, setIsServerDownloading] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  // 서버 사이드 고화질 EXIF 세척 이미지 다운로드 (모바일 인앱 브라우저 호환)
+  const handleDeleteRecord = async () => {
+    if (!sessionId || isDeleting) return;
+    setIsDeleting(true);
+    try {
+      await deleteRecordApi(sessionId);
+      alert('상담 대화록 및 성찰 저널이 즉시 완전히 삭제되었습니다.');
+      setIsDeleteModalOpen(false);
+      onRestart();
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : '상담 기록 삭제 중 오류가 발생했습니다.';
+      alert(message);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  // 서버 사이드 고화질 EXIF 세척 이미지 다운로드 (모바일 인앱 브라우저 호환, BLK-C08-01)
   const handleServerDownload = async () => {
     if (isServerDownloading) return;
+    if (!sessionId) {
+      alert('세션 정보를 찾을 수 없습니다. 브라우저 저장 기능을 이용해 주세요.');
+      return;
+    }
     setIsServerDownloading(true);
     try {
-      const cardPayload = journal.cardData || {
-        is_crisis: isCrisis,
-        universe_transition: journal.clarifiedQuestion,
-        sacred_metaphor: journal.hexagramSummary,
-        client_aha_moment: (journal.keyInsights || []).join('\n'),
-        client_action_pledge: journal.suggestedAction,
-        counselor_reframing: '당신의 고결한 뜻과 실천을 온 마음으로 응원합니다.',
-      };
-      const blob = await exportCardImageApi(cardPayload);
+      const blob = await exportCardImageApi(sessionId);
       const blobUrl = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.style.display = 'none';
@@ -64,7 +79,7 @@ export const JournalSummaryCard: React.FC<JournalSummaryCardProps> = ({
       setTimeout(() => setIsDownloaded(false), 3000);
     } catch (err) {
       console.error('서버 카드 다운로드 오류:', err);
-      alert('서버 이미지 생성 중 문제가 발생했습니다. 브라우저 저장 기능을 이용해 주세요.');
+      alert('서버 저장 카드를 불러오는 데 실패했습니다. 브라우저 저장 기능을 이용해 주세요.');
     } finally {
       setIsServerDownloading(false);
     }
@@ -270,9 +285,54 @@ export const JournalSummaryCard: React.FC<JournalSummaryCardProps> = ({
               <RotateCcw className="w-3.5 h-3.5" />
               <span>새로운 상담</span>
             </button>
+
+            {sessionId && (
+              <button
+                onClick={() => setIsDeleteModalOpen(true)}
+                className="py-2.5 px-3.5 rounded-xl bg-stone-900/60 hover:bg-rose-950/40 text-stone-400 hover:text-rose-300 text-xs flex items-center justify-center gap-1.5 border border-stone-800 hover:border-rose-800/60 transition-all cursor-pointer"
+                title="상담 기록 영구 삭제"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>이 상담 기록 삭제</span>
+              </button>
+            )}
           </div>
         </motion.div>
       </div>
+
+      {/* 상담 기록 영구 삭제 확인 모달 */}
+      {isDeleteModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-950/80 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-2xl border border-rose-900/60 bg-stone-900 p-6 shadow-2xl text-stone-200">
+            <h4 className="font-semibold text-rose-400 text-base flex items-center gap-2">
+              <Trash2 className="w-4 h-4 text-rose-400" />
+              상담 기록 영구 삭제
+            </h4>
+            <p className="mt-3 text-xs leading-relaxed text-stone-300">
+              이 상담의 대화 내용 및 성찰 저널을 완전히 삭제하시겠습니까?
+            </p>
+            <p className="mt-2 text-[11px] leading-relaxed text-rose-300/80 bg-rose-950/30 p-2.5 rounded-lg border border-rose-900/40">
+              삭제된 기록은 즉시 영구 파기되며 다시 복구할 수 없습니다 (원장의 크레딧 차감 내역은 보존되나 상담 본문은 완전 삭제됩니다).
+            </p>
+            <div className="mt-5 flex gap-2 justify-end">
+              <button
+                onClick={() => setIsDeleteModalOpen(false)}
+                disabled={isDeleting}
+                className="px-3.5 py-2 text-xs rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-300 transition"
+              >
+                취소
+              </button>
+              <button
+                onClick={handleDeleteRecord}
+                disabled={isDeleting}
+                className="px-3.5 py-2 text-xs rounded-xl bg-rose-700 hover:bg-rose-600 text-white font-medium transition flex items-center gap-1.5"
+              >
+                {isDeleting ? '삭제 중...' : '영구 삭제'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 인앱 뷰어 모달 (서브 컴포넌트) */}
       <ActionCardModal

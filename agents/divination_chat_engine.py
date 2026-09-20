@@ -11,6 +11,65 @@ import json
 from typing import Any, Dict, List, Optional
 
 
+_REPORT_V2 = "2.0"
+
+
+def _v2_report_payload(report_data: Dict[str, Any]) -> Dict[str, Any]:
+    """v2 리포트를 DivinationChatEngine 규격으로 옮긴다.
+
+    `local_target_text`에 **한글 번역**을 넣는다. v1 경로는 여기에
+    `section2_action.hanja_text`를 넣어, "한문 원문 노출 차단"을 표방한 상담
+    에이전트의 프롬프트로 한문이 들어가고 있었다.
+    """
+    academic = report_data.get("academic_details") or {}
+    casting = academic.get("casting") or {}
+    focus = academic.get("focus_rule") or {}
+    handoff = report_data.get("counseling_handoff") or {}
+
+    primary = next(
+        (s for s in (academic.get("sources") or []) if s.get("role") == "primary"),
+        {},
+    )
+
+    agenda: List[str] = []
+    for key in ("working_hypotheses", "unconfirmed_points"):
+        for item in (handoff.get(key) or []):
+            if str(item or "").strip():
+                agenda.append(str(item).strip())
+    opening = str(handoff.get("opening_question") or "").strip()
+    if opening:
+        agenda.append(opening)
+
+    where = ""
+    line_number = primary.get("line_number")
+    if line_number:
+        where = " 용구/용육" if line_number == 7 else f" {line_number}효"
+    elif primary:
+        where = " 괘사"
+
+    return {
+        "topic_category": report_data.get("topic_category") or "기타",
+        "derivation_data": {
+            "original_hexagram": {
+                "name": casting.get("original_name") or "",
+                "summary": "",
+            },
+            # 불변괘에서는 지괘가 없다. 본괘 이름을 되풀이해 채우지 않는다.
+            "resulting_hexagram": {
+                "name": casting.get("transformed_name") or "",
+                "summary": "",
+            },
+        },
+        "judgment_rules": {
+            "target_focus": f"{primary.get('hexagram_name', '')}{where}".strip(),
+            "local_target_text": primary.get("classical_translation") or "",
+            "local_target_line_name": f"{primary.get('hexagram_name', '')}{where}".strip(),
+            "description": focus.get("description_ko", ""),
+        },
+        "counseling_agenda": agenda,
+    }
+
+
 def adapt_to_report_payload(
     report_data: Optional[Dict[str, Any]] = None,
     interpretation_raw_text: str = "",
@@ -29,6 +88,12 @@ def adapt_to_report_payload(
     # 1. 이미 derivation_data 형태를 갖추고 있는 경우 바로 반환
     if "derivation_data" in report_data and "judgment_rules" in report_data:
         return report_data
+
+    # 1-1. v2 리포트는 필드 구조가 다르다. v1 이름으로 파면 전부 빈 문자열이
+    # 나오고, 그 빈 값이 "미상 본괘"·"핵심 괘효사" 같은 기본값으로 바뀌어
+    # 상담 프롬프트에 사실처럼 들어간다.
+    if report_data.get("schema_version") == _REPORT_V2:
+        return _v2_report_payload(report_data)
 
     # 2. HexagramReportSchema 형태의 report_data 추출
     hex_casting = report_data.get("hexagram_casting", {})
@@ -57,9 +122,11 @@ def adapt_to_report_payload(
         or "핵심 괘효사"
     )
 
+    # 한글 해석을 먼저 본다. 예전에는 `hanja_text`가 앞이라 한문 원문이 상담
+    # 프롬프트로 들어갔다 — 이 모듈을 쓰는 상담 에이전트는 "한문 원문 노출 차단"을
+    # 첫 줄에 적어 두고 있다.
     local_target_text = (
-        sec2.get("hanja_text")
-        or sec2.get("interpretation")
+        sec2.get("interpretation")
         or (focus_rule.get("description") if focus_rule else None)
         or interpretation_raw_text
         or ""
@@ -124,9 +191,10 @@ class DivinationChatEngine:
     ) -> Dict[str, str]:
         """
         현재 대화 단계에 맞추어 소크라테스식 코칭 질문을 출력하기 위한 영문 지시 및 컨텍스트 프롬프트를 구성합니다.
+        1~5턴은 5단계 Socratic 모델을 따르며, 6턴 이상은 후속 대화(Follow-up) 계약을 따릅니다.
         """
         turn_num = turn_num_override if turn_num_override is not None else self.get_next_turn_number(conversation_history)
-        turn_num = max(1, min(turn_num, 5))
+        turn_num = max(1, turn_num)
         
         # Extract metadata from report_payload safely
         derivation = report_payload.get("derivation_data", {})
@@ -141,8 +209,62 @@ class DivinationChatEngine:
         target_line_name = rules.get("local_target_line_name", "괘사")
         
         agenda_items = report_payload.get("counseling_agenda", [])
+        category_val = report_payload.get("topic_category") or "기타"
 
-        system_prompt = f"""You are an elite, Neo-Confucian I-Ching counseling master.
+        if turn_num >= 6:
+            system_prompt = f"""You are an elite, Neo-Confucian I-Ching counseling master.
+Your goal is to converse with the client in a continuous follow-up reflection session.
+The initial 5-step Socratic coaching arc and the client's concrete Action Pledge have ALREADY been completed in earlier turns.
+
+[CRITICAL DIALOGUE DESIGN: FOLLOW-UP STAGE (TURN 6+)]
+- The 5-turn coaching arc and the action pledge are already complete.
+- Do NOT derive a new hexagram or restart coaching from Turn 1.
+- Do NOT apply Turn 5 Action Pledge Call or Hard Termination. Do not force another Action Pledge Card.
+- Respond directly and thoughtfully to what the client brings now.
+- When relevant, gently connect back to the previous wisdom ({target_focus}: "{target_text}") or their established pledge, but do not lecture.
+- Keep the tone grounded, supportive, and reflective.
+
+[Output Language & Tone Guidelines]
+- Language: Korean (한국어).
+- Tone: Highly elegant, literary, deeply respectful, comforting yet razor-sharp honorifics (경어체). It must sound like a wise philosopher-counselor.
+- Length: Keep your response concise (maximum 3-4 flowing sentences per turn). You are in a chat room, so long speeches will break the immersion.
+- Crucial Rule: End your response with a thoughtful, open-ended question or reflective prompt.
+- Anti-Repetition Mandate: Do not repeat previous raw hexagram quotations or clichéd patterns across turns.
+
+[JSON Response Format]
+Respond strictly in JSON:
+{{
+  "message": "<Counselor's follow-up response in elegant Korean, within 3-4 sentences>",
+  "needs_followup": true,
+  "followup_question": "<the ending open-ended reflection question>",
+  "is_final": false
+}}"""
+
+            user_prompt = f"""<divination_context>
+- User's Original Struggle: "{user_question}"
+- Category of Struggle: {category_val}
+- Original Hexagram (본괘): {orig_name}
+- Resulting Hexagram (지괘): {res_name}
+- Target Line of Reflection: {target_focus}
+- Core Ancient Metaphor Text: {target_text} ({target_line_name})
+- Pre-set Agenda Items: {json.dumps(agenda_items, ensure_ascii=False)}
+- Domain Lens Directive: Strictly tailor your questioning to the '{category_val}' domain.
+</divination_context>
+
+<current_stage>
+- Next Turn to Generate: Turn {turn_num} (Follow-up Stage)
+- Turn Goal: {self._get_turn_goal_description(turn_num)}
+- Stage Note: The 5-turn arc and action pledge are already complete. Do NOT ask for another pledge card or terminate the session.
+</current_stage>
+
+<conversation_history>
+{json.dumps(conversation_history, ensure_ascii=False, indent=2)}
+</conversation_history>
+
+Generate the counselor's next follow-up response following the designated goal of Turn {turn_num} and the strict tone rules. Ensure it is written in Korean with exquisite literary prose. Return valid JSON."""
+
+        else:
+            system_prompt = f"""You are an elite, Neo-Confucian I-Ching counseling master.
 Your goal is to guide the client to self-reflect (자성 自省) and discover their own inner "righteous path" (도심 道心) rather than predicting fortunes or simply agreeing with their emotional complaints.
 You must strictly follow a 5-step Socratic Counseling model, ensuring the conversation reaches a concrete "Action Pledge" by Turn 5.
 
@@ -179,8 +301,7 @@ Respond strictly in JSON:
   "is_final": <false for turns 1-4, true for turn 5>
 }}"""
 
-        category_val = report_payload.get("topic_category") or "기타"
-        user_prompt = f"""<divination_context>
+            user_prompt = f"""<divination_context>
 - User's Original Struggle: "{user_question}"
 - Category of Struggle: {category_val}
 - Original Hexagram (본괘): {orig_name}
@@ -215,6 +336,12 @@ Generate the counselor's next response following the designated goal of Turn {tu
             4: "Turn 4: Integration. Validate their shift, introduce the Resulting Hexagram's wisdom/energy, and ask how they can let go of the struggle to align with this destination.",
             5: "Turn 5: Action Pledge Call. State that self-reflection must lead to immediate action (지행합일). Ask for EXACTLY ONE concrete action pledge for their Action Card."
         }
+        if turn_num >= 6:
+            return (
+                "Turn 6+: Follow-up. The 5-turn coaching arc and the action pledge are already complete. "
+                "Do not restart coaching or re-derive the hexagram. Respond to what the client "
+                "brings now, referring to their pledge when relevant. Keep it short and grounded."
+            )
         return goals.get(turn_num, "Socratic conversation turn.")
 
     def generate_critique_prompt(
@@ -225,10 +352,36 @@ Generate the counselor's next response following the designated goal of Turn {tu
         turn_num_override: Optional[int] = None,
     ) -> str:
         """
-        생성된 챗봇 답변 초안이 5단계 Socratic 모델 및 고격조 어조 기준에 부합하는지 비판적으로 검증하는 프롬프트를 생성합니다.
+        생성된 챗봇 답변 초안이 5단계 Socratic 모델(1~5턴) 또는 후속 대화(6턴 이상) 기준에 부합하는지 비판적으로 검증하는 프롬프트를 생성합니다.
         """
         turn_num = turn_num_override if turn_num_override is not None else self.get_next_turn_number(conversation_history)
-        turn_num = max(1, min(turn_num, 5))
+        turn_num = max(1, turn_num)
+
+        if turn_num >= 6:
+            return f"""You are a senior dialog auditor and a Neo-Confucian classical scholar reviewing our AI Counselor's Turn {turn_num} (Follow-up Stage) response draft.
+Critique the [Draft Response] strictly against the following 4 Quality Gates. Do not compliment; focus entirely on defects.
+
+[4 Quality Gates of Follow-up Dialogue (Turn 6+)]
+1. [Follow-up Alignment]: Does the response recognize that the 5-turn coaching arc and action pledge are already complete? It MUST NOT derive a new hexagram, restart coaching from Turn 1, or demand another Action Pledge/Hard Termination. It must naturally engage with the client's current input.
+2. [No Clichés or Repetitions]: Does it contain robotic clichéd patterns or repeat the exact same raw hexagram quotation/phrasing?
+3. [Proportional & Concise Length]: Is the response concise (within 3-4 sentences)? In a real-time chat, paragraphs of text will destroy the user's attention.
+4. [Single Profound Question]: Does it end with an appropriate reflective question or prompt without forcing an artificial ultimatum?
+
+[Input Data]
+- Current Turn: Turn {turn_num} (Follow-up Stage)
+- Target Metaphor: {report_payload.get("judgment_rules", {}).get("local_target_text", "")}
+- Draft Response:
+\"\"\"
+{draft_response}
+\"\"\"
+
+[Output Format]
+Write a ruthless audit report matching this structure (all in Korean):
+- [Follow-up Alignment Audit]: (Pass/Fail and reason)
+- [Cliché & Repetitive Pattern Check]: (List forbidden phrases or repetitions found, if any)
+- [Conciseness & Length Audit]: (Pass/Fail and sentence count)
+- [Single Question Check]: (Pass/Fail and validation of the ending question)
+- [Overall Redirection Line]: (1-sentence strict direction for the rewrite)"""
         
         critique_prompt = f"""You are a senior dialog auditor and a Neo-Confucian classical scholar reviewing our AI Counselor's Turn {turn_num} response draft.
 Critique the [Draft Response] strictly against the following 4 Quality Gates. Do not compliment; focus entirely on defects.
@@ -269,7 +422,28 @@ Write a ruthless audit report matching this structure (all in Korean):
         자가 비판 결과를 수렴하여 대화 초안의 모든 상투성과 오류를 말끔히 지우고 완벽하게 리팩토링하는 프롬프트를 생성합니다.
         """
         turn_num = turn_num_override if turn_num_override is not None else self.get_next_turn_number(conversation_history)
-        turn_num = max(1, min(turn_num, 5))
+        turn_num = max(1, turn_num)
+
+        if turn_num >= 6:
+            return f"""You are the master scribe of the I-Ching counseling team.
+Your task is to rewrite the AI Counselor's Turn {turn_num} (Follow-up Stage) response draft by fully integrating the issues raised in the [Auditor's Critique].
+
+[Follow-up Refinement Mandate]
+1. Resolve every defect pointed out in the [Auditor's Critique] with 100% precision.
+2. Ensure the rewritten response is an ongoing follow-up conversation: do NOT ask for an Action Pledge card, do NOT derive new hexagrams, and do NOT hard-terminate.
+3. Ensure the rewritten response is elegant, concise (strictly under 4 sentences), flows like wind, and ends with one thoughtful reflection question.
+4. Clean out any repetitive phrases, verbatim quotation echoes from earlier turns, jargon, or translation-like structures. Paraphrase the wisdom dynamically.
+
+[Data for Reference]
+- Auditor's Critique:
+{critique_result}
+
+- Original Draft:
+\"\"\"
+{draft_response}
+\"\"\"
+
+Generate ONLY the refined, flawless counselor response in elegant Korean. No explanations or preambles."""
         
         refinement_prompt = f"""You are the master scribe of the I-Ching counseling team. 
 Your task is to rewrite the AI Counselor's Turn {turn_num} response draft by fully integrating the issues raised in the [Auditor's Critique].

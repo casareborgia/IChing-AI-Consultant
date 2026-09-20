@@ -16,13 +16,29 @@ from fastapi.responses import JSONResponse
 from core.config import settings
 from core.db import AsyncSessionLocal
 from core.logging_config import configure_logging
+from core.release_gate import (
+    check_config_consistency,
+    evaluate_release_gate,
+    public_service_config,
+)
 from sqlalchemy import text
 
 # uvicorn은 root 로거를 설정하지 않는다. 라우터·에이전트를 임포트하기 전에 여기서
 # 잡아두지 않으면 앱의 logger.info()가 전부 유실된다(core/logging_config.py 참고).
 configure_logging(settings.LOG_LEVEL, settings.ENVIRONMENT)
 
-from api.routers import counsel, card, safety
+logger = logging.getLogger("iching_api")
+
+# 설정끼리 모순되면 기동을 막는다. free_beta인데 결제가 켜져 있다거나, allowlist에
+# 없는 provider/리전으로 가려는 상태로 서비스가 뜨면 안 된다. 개발 환경에서는
+# 경고만 남겨 로컬 실험을 막지 않는다.
+_config_problems = check_config_consistency(settings)
+if _config_problems:
+    if settings.ENVIRONMENT == "production":
+        raise RuntimeError("설정 모순으로 기동할 수 없습니다: " + "; ".join(_config_problems))
+    logger.warning("설정 모순 감지(개발 환경이라 계속 진행): %s", "; ".join(_config_problems))
+
+from api.routers import counsel, card, credits, safety, consent, records, support, ops, account, telemetry
 
 # 하위 호환성 Re-export (단위 테스트 및 기존 모듈 100% 호환 보장)
 from services.credit_service import (
@@ -37,6 +53,18 @@ from services.credit_service import (
     ensure_user_profile,
     is_chargeable,
 )
+from services.credit_operation_service import (
+    ENDPOINT_START,
+    ENDPOINT_TURN,
+    OPERATION_LEASE_SECONDS,
+    begin_operation,
+    compute_request_hash,
+    finalize_release,
+    finalize_success,
+    read_credit_state,
+    recover_expired_operations,
+    validate_idempotency_key,
+)
 from api.deps import check_rate_limit, require_user
 from agents.pipeline import run_turn
 from api.routers.counsel import (
@@ -45,10 +73,10 @@ from api.routers.counsel import (
     StartConsultationRequest,
     ConsultationTurnApiRequest,
 )
+from api.routers.counsel import get_operation_status_endpoint
+from api.routers.credits import get_my_credits
 from api.routers.card import export_card_image, CardExportRequest
 from api.routers.safety import get_safety_resources
-
-logger = logging.getLogger("iching_api")
 
 app = FastAPI(
     title="주역 AI 상담 API",
@@ -103,7 +131,42 @@ async def add_security_headers_and_limit_size(request: Request, call_next):
     return response
 
 
-# 3. 헬스 체크 엔드포인트
+from api.deps import ConsentRequiredError
+
+
+@app.exception_handler(ConsentRequiredError)
+async def consent_required_handler(request: Request, exc: ConsentRequiredError):
+    return JSONResponse(
+        status_code=403,
+        content={
+            "code": "CONSENT_REQUIRED",
+            "message": "서비스 이용약관 동의가 필요합니다.",
+            "detail": "서비스 이용약관 동의가 필요합니다.",
+        },
+    )
+
+
+
+# 3. 공개 서비스 설정 (DRAFT: 소비 형태는 Antigravity와 합의 후 확정)
+# 프런트가 요율·1회 차감량·결제 가능 여부를 따로 하드코딩하지 않도록 서버가 알려준다.
+# 비밀값과 운영자 결정 원문은 포함하지 않는다.
+@app.get("/api/public/config", summary="프런트가 읽는 최소 공개 설정")
+async def public_config():
+    return public_service_config(
+        settings,
+        consultation_credit_cost=CONSULTATION_CREDIT_COST,
+        welcome_credits=WELCOME_CREDITS,
+    )
+
+
+# 4. 출시 게이트 상태 (읽기 전용 진단)
+# 운영자와 Codex의 출시 검사 스크립트가 같은 판정을 보게 한다.
+@app.get("/api/public/release-gate", summary="설정 기준 출시 게이트 상태")
+async def release_gate_status():
+    return evaluate_release_gate(settings).to_dict()
+
+
+# 5. 헬스 체크 엔드포인트
 @app.get("/health", summary="시스템 헬스 체크")
 async def health_check():
     try:
@@ -133,5 +196,12 @@ async def health_check():
 
 # 4. 기능별 APIRouter 등록
 app.include_router(counsel.router)
+app.include_router(credits.router)
 app.include_router(card.router)
 app.include_router(safety.router)
+app.include_router(consent.router)
+app.include_router(records.router)
+app.include_router(support.router)
+app.include_router(ops.router)
+app.include_router(account.router)
+app.include_router(telemetry.router)

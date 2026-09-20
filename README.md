@@ -5,7 +5,8 @@
 [![Architecture](https://img.shields.io/badge/Architecture-3--Tier_Serverless-blue?style=flat&logo=googlecloud)](https://github.com/casareborgia/IChing-AI-Consultant)
 [![Frontend](https://img.shields.io/badge/Frontend-Next.js_16-black?style=flat&logo=nextdotjs)](https://github.com/casareborgia/IChing-AI-Consultant)
 [![Backend](https://img.shields.io/badge/Backend-FastAPI_v1.0-009688?style=flat&logo=fastapi)](https://github.com/casareborgia/IChing-AI-Consultant)
-[![Tests](https://img.shields.io/badge/Tests-167_Passed-brightgreen?style=flat&logo=pytest)](https://github.com/casareborgia/IChing-AI-Consultant)
+[![Status](https://img.shields.io/badge/Status-Free_Beta_Live-brightgreen?style=flat)](https://github.com/casareborgia/IChing-AI-Consultant)
+[![Tests](https://img.shields.io/badge/Regression_Tests-348_Passed-brightgreen?style=flat&logo=pytest)](https://github.com/casareborgia/IChing-AI-Consultant)
 [![Socratic Counsel](https://img.shields.io/badge/Socratic_Counsel-v0.5.0_5Turn_ActionCard-gold?style=flat&logo=openai)](https://github.com/casareborgia/IChing-AI-Consultant)
 [![Security](https://img.shields.io/badge/Security-Zero_Trust_JWT-emerald?style=flat&logo=auth0)](https://github.com/casareborgia/IChing-AI-Consultant)
 [![License: Code](https://img.shields.io/badge/Code-MIT_License-blue?style=flat)](LICENSE)
@@ -15,18 +16,43 @@
 
 ---
 
-## 🌟 프로젝트 개요
+## 🚀 서비스 운영 및 출시 상태
+
+본 서비스는 현재 **무료 베타(Free Beta)** 단계로 안정적으로 배포 및 가동 중입니다.
+
+- **프로덕션 웹**: [https://i-ching-ai-consultant.vercel.app](https://i-ching-ai-consultant.vercel.app)
+- **백엔드 API**: Google Cloud Run (Seoul `asia-northeast3`) 서버리스 컨테이너
+- **데이터베이스**: Supabase (PostgreSQL 16 + pgvector, RLS 보안 적용)
+
+| 영역 | 상태 | 상세 내용 |
+|---|---|---|
+| **상담 대화 엔진** | ✅ 정상 가동 | 5턴 소크라테스 자성(自省) 코칭 + 액션 카드 v2 렌더러 + **과거 상담 이어가기(Session Resume)** |
+| **사전 분석 리포트** | ✅ v2 반영 | 본괘/지괘 카드 시각화, 체용(體用) 흐름, 주자 고변점 초점 효사, 학술 패널 |
+| **보안 가드레일** | ✅ 하드닝 완료 | OWASP LLM01 준수 프롬프트 인젝션 방어(태그 격리, 탈옥 패턴 차단, 조기 종료 위조 방지) |
+| **크레딧 & 원장** | ✅ 멱등성 보장 | 턴당 10C 차감, 12시간 50C 자동 리필, 분산 트랜잭션 원자성 및 실패 자동 복구 |
+| **안전 & 프라이버시**| ✅ 컴플라이언스 | 24시간 위기 래치(109 안내), 제로트러스트 JWT 인증, AI 기본법 및 개인정보보호법 고지 |
+
+상세 아키텍처 및 검증 기준은
+[`PROJECT_CONTROL.md`](docs/commercialization/PROJECT_CONTROL.md),
+[`TEST_MATRIX.md`](docs/commercialization/TEST_MATRIX.md),
+[`CONTRACTS.md`](docs/commercialization/CONTRACTS.md)에서 확인하실 수 있습니다.
+
+---
+
+## 🌟 프로젝트 핵심 특징
 
 **I-Ching AI Consultant**는 사용자의 고민을 경청하고, 주자 변효 규칙 엔진을 통해 괘를 도출한 뒤, 전통 원문(괘사·효사)과 송대 주석(정전·본의 2,536건)을 현대적 심리 상담 언어로 풀어내는 AI 상담 시스템입니다.
 
 - **포지셔닝**: 미래를 단정 짓는 '예언자'가 아닌, 스스로 내면의 답을 찾도록 돕는 **'의사결정 지원 동반자이자 거울'**
-- **5턴 소크라테스 코칭 대화 엔진 (v0.5.0 NEW)**: 성리학의 자성(自省)과 퇴계의 경(敬) 철학에 기반한 5단계 소크라테스 코칭 모델 도입. 무한 꼬리물기 대화를 방지하는 5턴 하드 가드레일(`is_final: true`) 및 4 Quality Gates 자아비판(Critique & Refinement) 루프를 통해 상투어/클리셰를 배제하고 높은 품격의 한국어 상담을 제공합니다.
-- **성찰 결과 액션 카드 v2 및 카드 캔버스 렌더러 (v0.5.0 NEW)**: 5턴 상담 완료 시 내담자의 1가지 구체적 실천 다짐(Action Pledge)을 구조화하여, 모바일/웹 저장 및 공유가 가능한 그래픽 액션 카드로 렌더링하고 안전 암호화 내보내기를 지원합니다.
-- **수석 주역 AI 1:1 맞춤 컨설팅 리포트 결합**: TCREI 프레임워크 기반 전용 `Report Agent`가 6효 수리 산출, 주자 고변점 룰, DB 효사 한문 원문, RAG 고전 주석을 종합 융합하여 **4단계 고품격 1:1 맞춤 리포트**를 집필하며, 확정된 리포트 핵심 결론을 `Counsel Agent` 상담 대화 맥락에 1:1 바인딩합니다.
-- **리포트 컨텍스트 영속화**: 첫 턴에서 집필한 리포트 전문을 세션(`counsel_sessions.report_data`)에 저장하고, 이후 모든 턴의 상담 프롬프트에 다시 주입합니다. 2턴째 이후 답변이 1턴 리포트의 행동 지침·최종 요약과 어긋나지 않습니다. 생성 상태는 `report_status`(`ready`/`failed`/`not_requested`)와 `report_error_code`로 추적합니다.
-- **근거 투명성 (Provenance)**: AI 환각(Hallucination) 없이 DB 1:1 확정 원문과 pgvector RAG 주석을 프론트엔드 근거 패널에 투명하게 공개
-- **다계층 안전망 & SaMD 웰니스**: 위기 신호(자살/자해, 폭력) 감지 시 괘 도출을 차단하고 24시간 자살예방 상담전화(`109`)로 즉시 안전 이관 (24시간 위기 래치 적용 및 100% 자동 크레딧 환불)
-- **제로 트러스트 보안 (Zero-Trust)**: 요청 본문 `user_id`를 불허하고, Supabase JWT 서명 검증(`HS256`, `audience="authenticated"`)을 통해 신원을 강제 확정하여 위기 래치 및 세션 소유권(BOLA) 변조를 원천 차단
+- **과거 상담 이어가기 (Session Resume - NEW)**: 로그인 회원이 '상담 및 성찰 저널 복습' 보관함에서 과거 완료된 상담을 메인 화면으로 언제든 다시 불러와, 6턴부터 대화를 끊김 없이 계속 이어나갈 수 있는 연속 상담 지원.
+- **사전 상담 리포트 v2 (Pre-counseling Report v2 - NEW)**: TCREI 프레임워크 기반 전용 `Report Agent`가 6효 수리 산출, 주자 고변점 룰, DB 효사 한문 원문, RAG 고전 주석을 종합 융합하여 본괘/지괘 시각화 카드 및 학술 패널이 포함된 고품격 1:1 맞춤 리포트 제공.
+- **강력한 프롬프트 인젝션 방어 (Prompt Injection Defense - NEW)**: 입력 살균(Sanitization), `<untrusted_user_input>` 태그 샌드박싱, 탈옥 식별자 차단, 조기 종료 위조 차단 가드레일을 구축하여 악의적 프롬프트 주입을 원천 방어.
+- **5턴 소크라테스 코칭 대화 엔진 (v0.5.0)**: 성리학의 자성(自省)과 퇴계의 경(敬) 철학에 기반한 5단계 소크라테스 코칭 모델 도입. 무한 꼬리물기 대화를 방지하는 5턴 하드 가드레일(`is_final: true`) 및 4 Quality Gates 자아비판(Critique & Refinement) 루프를 통해 상투어/클리셰를 배제하고 높은 품격의 한국어 상담 제공.
+- **성찰 결과 액션 카드 v2 및 카드 캔버스 렌더러 (v0.5.0)**: 5턴 상담 완료 시 내담자의 1가지 구체적 실천 다짐(Action Pledge)을 구조화하여 그래픽 액션 카드로 렌더링하고 안전 암호화 내보내기 지원.
+- **근거 투명성 (Provenance)**: AI 환각(Hallucination) 없이 DB 1:1 확정 원문과 pgvector RAG 주석을 프론트엔드 근거 패널에 투명하게 공개.
+- **다계층 안전망 & SaMD 웰니스**: 위기 신호(자살/자해, 폭력) 감지 시 괘 도출을 차단하고 24시간 자살예방 상담전화(`109`)로 즉시 안전 이관 (24시간 위기 래치 적용 및 100% 자동 크레딧 환불).
+- **제로 트러스트 보안 (Zero-Trust)**: 요청 본문 `user_id`를 불허하고, Supabase JWT 서명 검증(`HS256`, `audience="authenticated"`)을 통해 신원을 강제 확정하여 위기 래치 및 세션 소유권(BOLA) 변조를 원천 차단.
+
 
 ---
 
@@ -196,14 +222,25 @@ cd ..
 
 ### 2. 프롬프트 파일 배치 (필수)
 
-에이전트 프롬프트(`prompts/*.md`)는 이 저장소에 포함되어 있지 않습니다. 이 저장소는 공개이고 프롬프트는 공개 대상이 아니라 `.gitignore`로 제외했습니다. **프롬프트 없이는 백엔드가 임포트 단계에서 `FileNotFoundError`로 죽습니다.**
+에이전트 프롬프트(`prompts/*.md`)는 이 저장소에 내용이 들어 있지 않습니다. 저장소 공개
+여부와 무관하게 프롬프트를 별도 비공개 자산으로 관리하기 위해, 비공개 저장소
+`casareborgia/iching-prompts`를 `prompts/` **서브모듈**로 참조합니다.
+**프롬프트 없이는 백엔드가 임포트 단계에서 `FileNotFoundError`로 종료됩니다.**
 
-접근 권한이 있다면 비공개 저장소에서 받아옵니다.
+접근 권한이 있다면 서브모듈을 받아옵니다. 클론·worktree 생성 직후 한 번만 하면 됩니다.
 
 ```bash
-rm -rf prompts
-git clone https://github.com/casareborgia/iching-prompts.git prompts
+git submodule update --init
 ```
+
+클론할 때부터 함께 받으려면 `git clone --recurse-submodules`를 씁니다.
+
+**`git worktree add`로 만든 작업 트리에서도 매번 `git submodule update --init`이
+필요합니다.** 이걸 빠뜨리면 프롬프트를 읽는 테스트 약 35건이 실패하며, 그 실패를
+"원래 있던 실패"로 오해하기 쉽습니다(2026-09-18 이전 검수들이 실제로 그랬습니다).
+
+서브모듈이라 **메인 저장소의 커밋마다 프롬프트 커밋이 고정됩니다.** 검수자가 제출 SHA에
+붙으면 그 시점의 프롬프트가 그대로 따라옵니다.
 
 권한이 없다면 `core/prompts.py`가 요구하는 파일 9개(`counsel.md`, `duplicate_response.md`, `intake.md`, `interpret.md`, `journal.md`, `rag_translation.md`, `report.md`, `safety_response.md`, `safety_screening.md`)를 직접 작성해야 합니다. 각 파일은 `## 시스템 프롬프트` 제목과 그 아래 코드펜스(```)를 포함해야 하며, 로더는 그 펜스 안의 내용만 읽습니다(`core/prompts.py`).
 
@@ -244,10 +281,12 @@ npm run dev
 
 ## 🧪 테스트 및 벤치마크
 
-본 프로젝트는 167개의 자동화 테스트 스위트와 Codex/CI 검증을 위한 표준 평가 하네스를 제공합니다:
+본 프로젝트는 자동화 테스트와 Codex/CI 검증용 평가 하네스를 제공합니다. 아래 숫자는
+전체 출시 검증이 아니라 CYCLE-03 통합 시 실행한 **DB 비접속 선택 회귀 348건**의 결과입니다.
+환경이 필요한 테스트는 별도로 실행하고 `TEST_MATRIX.md`에 근거를 기록해야 합니다.
 
 ```bash
-# 1. 전체 단위 및 보안 통합 테스트 실행 (167 passed, 4 skipped)
+# 1. 전체 테스트 실행(로컬 테스트 DB와 프롬프트 등 필요한 환경을 먼저 준비)
 .venv/bin/pytest -v
 
 # 2. 크레딧 동시성(Race Condition) 및 결제 가드 전용 테스트

@@ -1,0 +1,83 @@
+name: Release Acceptance Suite & Signature
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+concurrency:
+  group: release-suite-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  acceptance-suite:
+    name: Run Suite & Sign Manifest
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install uv
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Python dependencies
+        run: |
+          uv venv
+          uv pip install -r requirements.txt
+
+      - name: Install Frontend dependencies
+        run: |
+          npm --prefix frontend ci
+
+      - name: Pull PostgreSQL image for disposable DB
+        run: |
+          docker pull pgvector/pgvector:pg16
+
+      - name: Execute Release Suite
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: "https://mock.supabase.co"
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: "mock-anon-key-for-ci-build"
+        run: |
+          uv run python scripts/release/run_suite.py --out suite.json
+
+      - name: Sign Acceptance Manifest
+        if: success()
+        env:
+          ACCEPTANCE_SIGNING_KEY: ${{ secrets.ACCEPTANCE_SIGNING_KEY }}
+        run: |
+          if [ -z "$ACCEPTANCE_SIGNING_KEY" ]; then
+            echo "::warning ::ACCEPTANCE_SIGNING_KEY secret이 설정되지 않아 서명을 건너뜁니다."
+          else
+            uv run python scripts/release/make_manifest.py \
+              --suite suite.json \
+              --target-sha "${{ github.sha }}" \
+              --key-env ACCEPTANCE_SIGNING_KEY \
+              --out acceptance-manifest.json
+          fi
+
+      - name: Upload Suite Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-suite-artifacts
+          path: |
+            suite.json
+            acceptance-manifest.json
+          if-no-files-found: warn

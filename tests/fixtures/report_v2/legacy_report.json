@@ -1,0 +1,106 @@
+{
+  "final_summary": "작게 나누어 씹어 넘기는 것이 이번의 방법입니다.",
+  "focus_and_body_use": {
+    "body_use_flow": "동효가 없어 지괘가 없습니다. 체용(體用) 보완 규칙은 적용되지 않습니다.",
+    "changing_count": 0,
+    "primary_target_name": "화뢰서합 괘사",
+    "rule_description": "변효가 없으므로 본괘의 괘사(卦辭)를 주 해석으로 삼습니다."
+  },
+  "hexagram_casting": {
+    "has_transformation": false,
+    "lines": [
+      {
+        "is_changing": false,
+        "line_type_ko": "소양",
+        "name": "1효 (초효)",
+        "note": "변하지 않는 양효",
+        "position": 1,
+        "symbol": "⚊",
+        "value": 7
+      },
+      {
+        "is_changing": false,
+        "line_type_ko": "소음",
+        "name": "2효 (이효)",
+        "note": "변하지 않는 음효",
+        "position": 2,
+        "symbol": "⚋",
+        "value": 8
+      },
+      {
+        "is_changing": false,
+        "line_type_ko": "소음",
+        "name": "3효 (삼효)",
+        "note": "변하지 않는 음효",
+        "position": 3,
+        "symbol": "⚋",
+        "value": 8
+      },
+      {
+        "is_changing": false,
+        "line_type_ko": "소양",
+        "name": "4효 (사효)",
+        "note": "변하지 않는 양효",
+        "position": 4,
+        "symbol": "⚊",
+        "value": 7
+      },
+      {
+        "is_changing": false,
+        "line_type_ko": "소음",
+        "name": "5효 (오효)",
+        "note": "변하지 않는 음효",
+        "position": 5,
+        "symbol": "⚋",
+        "value": 8
+      },
+      {
+        "is_changing": false,
+        "line_type_ko": "소양",
+        "name": "6효 (상효)",
+        "note": "변하지 않는 양효",
+        "position": 6,
+        "symbol": "⚊",
+        "value": 7
+      }
+    ],
+    "original_hex_id": 21,
+    "original_lower_trigram": "진(우레)",
+    "original_name_full": "화뢰서합",
+    "original_name_hanja": "噬嗑",
+    "original_summary": "서합은 형통하니, 옥사를 씀이 이롭다.",
+    "original_upper_trigram": "리(불)",
+    "transformed_hex_id": null,
+    "transformed_name_full": null,
+    "transformed_name_hanja": null,
+    "transformed_summary": null
+  },
+  "question_setting": {
+    "mindset_rule": "재삼독(再三瀆) 원칙에 따라 이 세션의 괘는 한 번 도출한 뒤 다시 뽑지 않고 그대로 이어집니다.",
+    "question": "요즘 일이 막혀 있는 느낌입니다."
+  },
+  "section1_diagnosis": {
+    "hanja_text": "噬嗑",
+    "interpretation": "지금은 막힌 것을 다루어야 하는 자리입니다.",
+    "target_name": "화뢰서합",
+    "title": "① 현재 상황 진단 (본괘: 화뢰서합)"
+  },
+  "section2_action": {
+    "hanja_text": "噬嗑 亨 利用獄",
+    "interpretation": "걸려 있는 것을 하나씩 떼어내십시오.",
+    "target_name": "화뢰서합 괘사",
+    "title": "② 핵심 행동 지침 (주 해석 대상: 화뢰서합 괘사)"
+  },
+  "section3_warning": {
+    "hanja_text": null,
+    "interpretation": "한 번에 끝내려는 조급함을 경계하십시오.",
+    "target_name": "경계 지침",
+    "title": "③ 보조 경계 지침 (경계 지침)"
+  },
+  "section4_future": {
+    "hanja_text": null,
+    "interpretation": "지금의 국면이 이어집니다.",
+    "target_name": "화뢰서합",
+    "title": "④ 미래의 귀결 및 주의점 (본괘 유지)"
+  }
+}

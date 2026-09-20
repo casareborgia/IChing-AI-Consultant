@@ -8,13 +8,41 @@ from sqlalchemy import cast, delete, select, String
 
 
 from api.main import app
+from api.routers import counsel as counsel_router
 from core.config import settings
 from core.db import AsyncSessionLocal, Base, engine
 from core.models.counsel import CounselSession, CreditLedger, UserProfile
 
 
+# 이 파일의 autouse fixture는 세 테이블을 전량 DELETE한다. 각 테스트에 marker를
+# 반복하지 않고 모듈 전체를 파괴적 DB 테스트로 분류한다.
+pytestmark = [pytest.mark.destructive_db]
+
+
+def _idem(**extra):
+    """계약상 두 POST는 Idempotency-Key를 요구한다.
+
+    한 사용자 행동 = 키 하나다. 그래서 서로 다른 요청에는 매번 새 키를 준다.
+    같은 키를 재사용하면 그것은 '재시도'라는 뜻이 되어 저장된 결과가 재생되고,
+    아래 연속·동시 차감 검증이 성립하지 않는다.
+    """
+    headers = {"Idempotency-Key": str(uuid.uuid4())}
+    headers.update(extra)
+    return headers
+
+
+def _open_service_gates():
+    """이 파일은 credit 계약만 검증하므로 출시/킬 스위치 dependency를 명시적으로 연다."""
+
+    async def _noop():
+        return None
+
+    app.dependency_overrides[counsel_router.require_service_gate] = _noop
+    app.dependency_overrides[counsel_router.require_generation_enabled] = _noop
+
+
 @pytest.fixture(autouse=True)
-async def setup_db():
+async def setup_db(require_disposable_database):
     """테스트 전 테이블 레코드 정돈."""
     async with AsyncSessionLocal() as session:
         await session.execute(delete(CreditLedger))
@@ -37,6 +65,7 @@ async def test_start_consultation_deducts_credit(monkeypatch):
     app.dependency_overrides = {}
     from api.deps import require_user
     app.dependency_overrides[require_user] = mock_require_user
+    _open_service_gates()
 
     # run_turn 모킹 (실제 LLM 호출 방지)
     mock_turn_result = AsyncMock()
@@ -58,13 +87,18 @@ async def test_start_consultation_deducts_credit(monkeypatch):
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             res = await client.post(
                 "/api/counsel/start",
-                headers={"Authorization": "Bearer fake-token"},
+                headers=_idem(Authorization="Bearer fake-token"),
                 json={"question": "취업에 관한 고민이 있습니다."},
             )
 
         assert res.status_code == 200
         data = res.json()
         assert data["remaining_credits"] == 40
+        # 계약이 더한 네 필드 (기존 필드는 그대로 유지된다)
+        assert data["operation_status"] == "SUCCEEDED"
+        assert data["credit_delta"] == -10
+        assert data["operation_id"]
+        assert data["session_id"] == "test-session-id-001"
 
         # DB 검증: 50 -> 40 차감
         async with AsyncSessionLocal() as session:
@@ -84,6 +118,11 @@ async def test_start_consultation_deducts_credit(monkeypatch):
                 .all()
             )
             assert len(ledger_entries) == 2  # 웰컴 +50, 차감 -10
+            assert sorted(e.amount for e in ledger_entries) == [-10, 50]
+            # 이벤트 종류가 붙어야 DB 제약이 중복을 막을 수 있다
+            assert {e.event_type for e in ledger_entries} == {"WELCOME", "DEBIT"}
+            debit = next(e for e in ledger_entries if e.event_type == "DEBIT")
+            assert debit.operation_id == data["operation_id"]
 
 
     app.dependency_overrides.clear()
@@ -105,16 +144,19 @@ async def test_insufficient_credit_returns_402(monkeypatch):
 
     from api.deps import require_user
     app.dependency_overrides[require_user] = mock_require_user
+    _open_service_gates()
 
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         res = await client.post(
             "/api/counsel/start",
-            headers={"Authorization": "Bearer fake-token"},
+            headers=_idem(Authorization="Bearer fake-token"),
             json={"question": "크레딧 부족 테스트입니다."},
         )
 
     assert res.status_code == 402
     assert "크레딧이 부족합니다" in res.json()["detail"]
+    assert res.json()["code"] == "INSUFFICIENT_CREDITS"
+    assert res.json()["remaining_credits"] == 5
 
     app.dependency_overrides.clear()
 
@@ -129,6 +171,7 @@ async def test_multiple_consecutive_consultations_deduct_credits_correctly():
 
     from api.deps import require_user
     app.dependency_overrides[require_user] = mock_require_user
+    _open_service_gates()
 
     mock_turn_result = AsyncMock()
     mock_turn_result.session_id = "test-session-id-consec"
@@ -148,32 +191,44 @@ async def test_multiple_consecutive_consultations_deduct_credits_correctly():
     with patch("api.main.run_turn", return_value=mock_turn_result):
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             # 1회차: 50 -> 40
-            res1 = await client.post("/api/counsel/start", json={"question": "질문 1"})
+            res1 = await client.post(
+                "/api/counsel/start", headers=_idem(), json={"question": "질문 1"}
+            )
             assert res1.status_code == 200
             assert res1.json()["remaining_credits"] == 40
 
             # 2회차: 40 -> 30
-            res2 = await client.post("/api/counsel/start", json={"question": "질문 2"})
+            res2 = await client.post(
+                "/api/counsel/start", headers=_idem(), json={"question": "질문 2"}
+            )
             assert res2.status_code == 200
             assert res2.json()["remaining_credits"] == 30
 
             # 3회차: 30 -> 20
-            res3 = await client.post("/api/counsel/start", json={"question": "질문 3"})
+            res3 = await client.post(
+                "/api/counsel/start", headers=_idem(), json={"question": "질문 3"}
+            )
             assert res3.status_code == 200
             assert res3.json()["remaining_credits"] == 20
 
             # 4회차: 20 -> 10
-            res4 = await client.post("/api/counsel/start", json={"question": "질문 4"})
+            res4 = await client.post(
+                "/api/counsel/start", headers=_idem(), json={"question": "질문 4"}
+            )
             assert res4.status_code == 200
             assert res4.json()["remaining_credits"] == 10
 
             # 5회차: 10 -> 0
-            res5 = await client.post("/api/counsel/start", json={"question": "질문 5"})
+            res5 = await client.post(
+                "/api/counsel/start", headers=_idem(), json={"question": "질문 5"}
+            )
             assert res5.status_code == 200
             assert res5.json()["remaining_credits"] == 0
 
             # 6회차: 0 < 10 -> 402 Error
-            res6 = await client.post("/api/counsel/start", json={"question": "질문 6"})
+            res6 = await client.post(
+                "/api/counsel/start", headers=_idem(), json={"question": "질문 6"}
+            )
             assert res6.status_code == 402
 
     app.dependency_overrides.clear()
@@ -200,6 +255,7 @@ async def test_counsel_turn_deducts_credit_and_handles_402():
 
     from api.deps import require_user
     app.dependency_overrides[require_user] = mock_require_user
+    _open_service_gates()
 
     mock_turn_result = AsyncMock()
     mock_turn_result.session_id = session_id
@@ -221,6 +277,7 @@ async def test_counsel_turn_deducts_credit_and_handles_402():
             # 1번째 턴: 15 -> 5
             res1 = await client.post(
                 "/api/counsel/turn",
+                headers=_idem(),
                 json={"session_id": session_id, "user_message": "턴 메세지 1"},
             )
             assert res1.status_code == 200
@@ -229,6 +286,7 @@ async def test_counsel_turn_deducts_credit_and_handles_402():
             # 2번째 턴: 5 < 10 -> 402 Payment Required
             res2 = await client.post(
                 "/api/counsel/turn",
+                headers=_idem(),
                 json={"session_id": session_id, "user_message": "턴 메세지 2"},
             )
             assert res2.status_code == 402
@@ -274,13 +332,14 @@ def _override_auth(user_id: str):
         return user_id
 
     app.dependency_overrides = {require_user: mock_require_user}
+    _open_service_gates()
 
 
 async def _post_start():
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         return await client.post(
             "/api/counsel/start",
-            headers={"Authorization": "Bearer fake-token"},
+            headers=_idem(Authorization="Bearer fake-token"),
             json={"question": "취업에 관한 고민이 있습니다."},
         )
 
@@ -289,7 +348,7 @@ async def _post_turn(session_id: str):
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         return await client.post(
             "/api/counsel/turn",
-            headers={"Authorization": "Bearer fake-token"},
+            headers=_idem(Authorization="Bearer fake-token"),
             json={"session_id": session_id, "user_message": "이어지는 이야기입니다."},
         )
 
@@ -337,6 +396,10 @@ async def test_crisis_turn_is_refunded_on_start():
         )
     # 웰컴 +50, 차감 -10, 환불 +10 — 무엇이 왜 되돌아갔는지 장부에 남는다
     assert sorted(e.amount for e in entries) == [-10, 10, 50]
+    assert {e.event_type for e in entries} == {"WELCOME", "DEBIT", "RELEASE"}
+    # 되돌린 예약은 RELEASED로 종결되고 최종 0C다
+    assert res.json()["operation_status"] == "RELEASED"
+    assert res.json()["credit_delta"] == 0
 
 
 @pytest.mark.asyncio
@@ -359,6 +422,8 @@ async def test_crisis_turn_is_refunded_on_followup():
 
     assert res.status_code == 200
     assert res.json()["remaining_credits"] == 30
+    assert res.json()["credit_delta"] == 0
+    assert res.json()["operation_status"] == "RELEASED"
     assert await _balance(user_id) == 30
 
 
@@ -374,6 +439,8 @@ async def test_duplicate_question_is_still_charged():
 
     assert res.status_code == 200
     assert res.json()["remaining_credits"] == 40
+    assert res.json()["credit_delta"] == -10, "재삼독도 정상 답변이므로 차감한다"
+    assert res.json()["operation_status"] == "SUCCEEDED"
     assert await _balance(user_id) == 40
 
 

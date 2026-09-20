@@ -5,7 +5,8 @@
 [![Architecture](https://img.shields.io/badge/Architecture-3--Tier_Serverless-blue?style=flat&logo=googlecloud)](https://github.com/casareborgia/IChing-AI-Consultant)
 [![Frontend](https://img.shields.io/badge/Frontend-Next.js_16-black?style=flat&logo=nextdotjs)](https://github.com/casareborgia/IChing-AI-Consultant)
 [![Backend](https://img.shields.io/badge/Backend-FastAPI_v1.0-009688?style=flat&logo=fastapi)](https://github.com/casareborgia/IChing-AI-Consultant)
-[![Tests](https://img.shields.io/badge/Tests-167_Passed-brightgreen?style=flat&logo=pytest)](https://github.com/casareborgia/IChing-AI-Consultant)
+[![Status](https://img.shields.io/badge/Status-Free_Beta_Live-brightgreen?style=flat)](https://github.com/casareborgia/IChing-AI-Consultant)
+[![Tests](https://img.shields.io/badge/Regression_Tests-348_Passed-brightgreen?style=flat&logo=pytest)](https://github.com/casareborgia/IChing-AI-Consultant)
 [![Socratic Counsel](https://img.shields.io/badge/Socratic_Counsel-v0.5.0_5Turn_ActionCard-gold?style=flat&logo=openai)](https://github.com/casareborgia/IChing-AI-Consultant)
 [![Security](https://img.shields.io/badge/Security-Zero_Trust_JWT-emerald?style=flat&logo=auth0)](https://github.com/casareborgia/IChing-AI-Consultant)
 [![License: Code](https://img.shields.io/badge/Code-MIT_License-blue?style=flat)](LICENSE)
@@ -15,18 +16,42 @@
 
 ---
 
-## 🌟 Overview
+## 🚀 Service Operation & Release Status
+
+The service is currently running live in **Free Beta**:
+
+- **Production Web**: [https://i-ching-ai-consultant.vercel.app](https://i-ching-ai-consultant.vercel.app)
+- **Backend API**: Google Cloud Run (Seoul `asia-northeast3`) serverless container
+- **Database**: Supabase (PostgreSQL 16 + pgvector with RLS security policies)
+
+| Component | Status | Details |
+|---|---|---|
+| **Conversational Engine** | ✅ Operational | 5-turn Socratic coaching + Action Card v2 renderer + **Session Resume from History** |
+| **Pre-counseling Report** | ✅ v2 Live | Visual hexagram cards, body-use flow analysis, Zhu Xi changing-line focus, academic commentary panel |
+| **Security Guardrails** | ✅ Hardened | OWASP LLM01 prompt injection defense (tag sandboxing, jailbreak code suppression, termination fraud block) |
+| **Credit Ledger** | ✅ Atomic | 10 credits per chat turn, 50 credits auto-refill per 12 hours, idempotent distributed recovery |
+| **Safety & Compliance** | ✅ Compliant | 24h crisis latch (hotline 109 redirection), Zero-Trust JWT verification, AI transparency disclosure |
+
+Detailed specifications and test matrices are available in
+[`PROJECT_CONTROL.md`](docs/commercialization/PROJECT_CONTROL.md),
+[`TEST_MATRIX.md`](docs/commercialization/TEST_MATRIX.md), and
+[`CONTRACTS.md`](docs/commercialization/CONTRACTS.md).
+
+---
+
+## 🌟 Key Features
 
 **I-Ching AI Consultant** listens to the user's situation, derives a hexagram through a Zhu Xi changing-line rule engine, and renders the classical source text (hexagram and line statements) plus 2,536 Song-dynasty commentary entries into the language of modern reflective counseling.
 
 - **Positioning**: not a prophet who fixes the future, but a **decision-support companion and mirror** that helps users find their own answers.
-- **Five-turn Socratic coaching engine (v0.5.0)**: a five-stage Socratic model grounded in Neo-Confucian self-examination (自省) and Toegye's philosophy of reverence (敬). A hard five-turn guardrail (`is_final: true`) prevents endless follow-up loops, and a four-gate critique-and-refinement pass suppresses clichés in favor of high-register Korean prose.
-- **Action Card v2 with canvas renderer (v0.5.0)**: on completing five turns, the user's single concrete action pledge is structured and rendered as a shareable graphic card, with encrypted export.
-- **1:1 personalized consulting report**: a dedicated `Report Agent` built on the TCREI framework fuses six-line numerology, Zhu Xi's *gobyeonjeom* (考變占) rules, Chinese source text of line statements from the database, and RAG-retrieved classical commentary into a **four-part report**, then binds its conclusions into the `Counsel Agent` conversation.
-- **Report context persistence**: the full report written on the first turn is stored on the session (`counsel_sessions.report_data`) and re-injected into every subsequent turn's prompt, so later answers never contradict the first report's action guidance or closing summary. Generation state is tracked via `report_status` (`ready` / `failed` / `not_requested`) and `report_error_code`.
+- **Session Resume from History (NEW)**: authenticated users can review past consultations from their journal archive and seamlessly resume conversations starting from turn 6.
+- **Pre-counseling Report v2 (NEW)**: a dedicated TCREI-based `Report Agent` fuses six-line numerology, Zhu Xi *gobyeonjeom* (考變占) rules, verbatim line statements, and pgvector RAG commentary into a comprehensive analysis with visual cards and academic panels.
+- **Robust Prompt Injection Guardrails (NEW)**: input sanitization, `<untrusted_user_input>` tag sandboxing, jailbreak code filters, and termination fraud prevention compliant with OWASP LLM01.
+- **Five-turn Socratic coaching engine (v0.5.0)**: a five-stage Socratic model grounded in Neo-Confucian self-examination (自省) and Toegye's philosophy of reverence (敬), with hard five-turn limits and 4-gate critique loops.
+- **Action Card v2 with canvas renderer (v0.5.0)**: on completing five turns, the user's single concrete action pledge is rendered as a shareable graphic card with encrypted export.
 - **Provenance**: no hallucinated sources. Verbatim database text and pgvector RAG commentary are exposed in a frontend evidence panel.
 - **Layered safety net & SaMD wellness stance**: on detecting crisis signals (suicide, self-harm, violence), hexagram derivation is blocked and the session is handed off to Korea's 24-hour suicide prevention line (`109`), with a 24-hour crisis latch and automatic full credit refund.
-- **Zero-trust security**: `user_id` in the request body is rejected outright; identity is established by verifying the Supabase JWT signature (`HS256`, `audience="authenticated"`), closing off crisis-latch bypass and session-ownership (BOLA) tampering.
+- **Zero-trust security**: `user_id` in the request body is rejected outright; identity is established by verifying the Supabase JWT signature (`HS256`, `audience="authenticated"`).
 
 ---
 
@@ -193,7 +218,9 @@ cd ..
 
 ### 2. Prompt Files (required)
 
-Agent prompts (`prompts/*.md`) are **not** included in this repository. This repo is public and the prompts are not intended for publication, so they are excluded via `.gitignore`. **Without them the backend dies at import time with `FileNotFoundError`.**
+Agent prompts (`prompts/*.md`) are **not** included in this repository. Regardless of repository
+visibility, prompts are managed as separate private assets and excluded via `.gitignore`.
+**Without them the backend exits during import with `FileNotFoundError`.**
 
 If you have access, pull them from the private repository:
 
@@ -241,10 +268,13 @@ Open **`http://localhost:3000`** to start a consultation.
 
 ## 🧪 Tests & Benchmarks
 
-The project ships 167 automated tests plus standard evaluation harnesses for Codex/CI verification:
+The project includes automated tests and standard evaluation harnesses for Codex/CI. The number
+shown here is the **348 selected, non-DB Python regressions** run for the CYCLE-03 integration;
+it is not a full release-verification count. Environment-dependent results must be run separately
+and recorded in `TEST_MATRIX.md`.
 
 ```bash
-# 1. Full unit and security integration suite (167 passed, 4 skipped)
+# 1. Full suite (prepare the required local test DB, prompts, and other dependencies first)
 .venv/bin/pytest -v
 
 # 2. Credit race-condition and payment guard tests

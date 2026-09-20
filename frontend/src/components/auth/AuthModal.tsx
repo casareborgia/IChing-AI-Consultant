@@ -13,6 +13,16 @@ interface AuthModalProps {
 
 export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const { signInWithGoogle } = useAuth();
+  const [ageConfirmed, setAgeConfirmed] = React.useState(false);
+  const [termsAgreed, setTermsAgreed] = React.useState(false);
+
+  const handleGoogleLogin = async () => {
+    // 우회 차단 (A21): DevTools 등으로 disabled 속성을 지우고 클릭하는 경우 방지
+    if (!ageConfirmed || !termsAgreed) {
+      return;
+    }
+    await signInWithGoogle();
+  };
 
   if (!isOpen) return null;
 
@@ -55,10 +65,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               ䷀
             </div>
             <h3 className="mt-4 font-serif text-2xl font-semibold tracking-tight text-stone-100">
-              주역 AI 심층 상담 시작하기
+              시작하기 (로그인 / 간편가입)
             </h3>
             <p className="mt-2 text-sm text-stone-400">
-              간편 로그인 후 <span className="font-semibold text-amber-400">50 웰컴 크레딧</span>으로 지금 바로 심층 성찰을 경험하세요.
+              처음 오셨다면 구글 계정으로 3초 간편가입 즉시 <span className="font-semibold text-amber-400">50 웰컴 크레딧</span>이 자동 지급됩니다.
             </p>
           </div>
 
@@ -78,12 +88,68 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             </div>
           </div>
 
+          {/* 법적 필수 동의 및 연령 확인 체크박스 (AG-1 / A19, A21, A22, A24) */}
+          <div className="mt-6 space-y-3 rounded-2xl border border-stone-800/80 bg-stone-950/40 p-4 text-xs text-stone-300">
+            <label className="flex items-start gap-2.5 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={ageConfirmed}
+                onChange={(e) => setAgeConfirmed(e.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-stone-700 bg-stone-900 text-amber-500 focus:ring-amber-500 focus:ring-offset-0 cursor-pointer"
+              />
+              <span className="leading-tight">
+                <strong className="text-amber-400">[필수]</strong> 만 19세 이상입니다.
+              </span>
+            </label>
+
+            <label className="flex items-start gap-2.5 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={termsAgreed}
+                onChange={(e) => setTermsAgreed(e.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-stone-700 bg-stone-900 text-amber-500 focus:ring-amber-500 focus:ring-offset-0 cursor-pointer"
+              />
+              <span className="leading-tight">
+                <strong className="text-amber-400">[필수]</strong>{' '}
+                <a
+                  href="/terms"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline underline-offset-2 hover:text-amber-300 transition"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  이용약관
+                </a>
+                {' '}및{' '}
+                <a
+                  href="/privacy"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline underline-offset-2 hover:text-amber-300 transition"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  개인정보처리방침
+                </a>
+                에 동의합니다.
+              </span>
+            </label>
+
+            <p className="pt-1 text-[10px] leading-normal text-stone-500">
+              ※ 본 확인은 만 19세 이상 확인용이며, 본인확인기관을 통한 법적 본인확인 절차가 아닙니다 (운영자 결정 D02).
+            </p>
+          </div>
+
           {/* Social Login Buttons */}
-          <div className="mt-6">
+          <div className="mt-5">
             {/* 구글 로그인 버튼 */}
             <button
-              onClick={signInWithGoogle}
-              className="flex w-full items-center justify-center gap-3 rounded-2xl border border-stone-700 bg-stone-800/80 px-5 py-3.5 text-sm font-semibold text-stone-100 shadow-md transition hover:bg-stone-800 hover:border-stone-600 active:scale-[0.98]"
+              onClick={handleGoogleLogin}
+              disabled={!(ageConfirmed && termsAgreed)}
+              className={`flex w-full items-center justify-center gap-3 rounded-2xl border px-5 py-3.5 text-sm font-semibold shadow-md transition ${
+                ageConfirmed && termsAgreed
+                  ? 'border-stone-700 bg-stone-800/80 text-stone-100 hover:bg-stone-800 hover:border-stone-600 active:scale-[0.98] cursor-pointer'
+                  : 'border-stone-800 bg-stone-900/50 text-stone-500 cursor-not-allowed opacity-60'
+              }`}
             >
               <svg className="h-5 w-5" viewBox="0 0 24 24">
                 <path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.7l3.1-3.1C17.3 1.8 14.8 1 12 1 7.4 1 3.6 3.6 1.7 7.4l3.7 2.9C6.3 7.4 8.9 5 12 5z"/>
@@ -94,11 +160,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               Google 계정으로 계속하기
             </button>
           </div>
-
-          {/* Footer note */}
-          <p className="mt-5 text-center text-[11px] text-stone-500">
-            로그인 시 서비스 이용약관 및 개인정보 처리방침에 동의하게 됩니다.
-          </p>
         </motion.div>
       </div>
     </AnimatePresence>

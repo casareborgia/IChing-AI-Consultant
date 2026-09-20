@@ -43,6 +43,11 @@ class HexagramEvidence:
     judgment_text: str
     judgment_ko: str
     symbol: Optional[str] = None
+    # 대상전. **보충 근거다.** 괘사를 대신하지 않으며 0변효의 주 근거로도 올라가지
+    # 않는다 — 주 근거를 정하는 것은 초점 규칙뿐이다. `summary_korean`에도 넣지
+    # 않는다. 리포트의 근거 패널에서만 쓴다.
+    xiang_text: Optional[str] = None   # 한문 원문
+    xiang_ko: Optional[str] = None     # 한글 번역. 없으면 누락 상태로 둔다
 
 
 @dataclass
@@ -148,6 +153,22 @@ class ReadingEvidence:
         return None
 
 
+async def _get_daesang_ko(session: AsyncSession, hex_id: int) -> Optional[str]:
+    """대상전 한글 번역.
+
+    `hexagrams.xiang_text`에는 한문만 있고 번역은 청크 쪽에 있다. 소상전과 같은
+    사정이며, 의미 검색이 아니라 괘로 딱 떨어지는 1:1 조회다 — `daesang` 유형이
+    64건, 괘당 정확히 한 줄이다. 없으면 `None`으로 둔다. 번역을 다른 유형의
+    청크로 대신 채우지 않는다.
+    """
+    stmt = select(InterpretationChunk.content_ko).where(
+        InterpretationChunk.source_type == "daesang",
+        InterpretationChunk.hexagram_id == hex_id,
+        InterpretationChunk.line_number.is_(None),
+    )
+    return (await session.execute(stmt)).scalars().first()
+
+
 async def _get_hexagram(session: AsyncSession, hex_id: int) -> HexagramEvidence:
     stmt = select(Hexagram).where(Hexagram.id == hex_id)
     h = (await session.execute(stmt)).scalar_one()
@@ -158,6 +179,8 @@ async def _get_hexagram(session: AsyncSession, hex_id: int) -> HexagramEvidence:
         judgment_text=h.judgment_text,
         judgment_ko=h.judgment_ko or "",
         symbol=h.symbol,
+        xiang_text=h.xiang_text,
+        xiang_ko=await _get_daesang_ko(session, hex_id),
     )
 
 

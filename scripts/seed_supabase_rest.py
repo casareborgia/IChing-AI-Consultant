@@ -4,7 +4,7 @@ import httpx
 from sqlalchemy import text
 from core.db import AsyncSessionLocal
 
-SUPABASE_URL = os.getenv("SUPABASE_URL", "https://ovkrhkfhscsyxixsxenk.supabase.co")
+SUPABASE_URL = os.getenv("SUPABASE_URL", "https://your-project.supabase.co")
 SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("SUPABASE_ANON_KEY") or os.getenv("SUPABASE_KEY", "")
 
 headers = {

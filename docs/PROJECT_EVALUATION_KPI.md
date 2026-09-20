@@ -106,7 +106,7 @@
 | :--- | :--- | :---: | :---: | :--- |
 | **KPI-5.1** | **상담 대화 턴당 응답 지연 (Latency)** | ≤ 15.0초 | 초기 45초 → 약 11~14초 (Gemini Flash) | `api/routers/counsel.py` 스트리밍/추론 파이프라인 실측 |
 | **KPI-5.2** | **세션당 토큰 효율 및 비즈니스 마진율** | 마진율 ≥ 90% | 세션당 입력 5.8k / 출력 1.1k 토큰 (마진율 > 95%) | `scripts/measure_session.py -p ollama` |
-| **KPI-5.3** | **Cloud Run 서버리스 가동성** | Scale-to-Zero 무중단 | Cloud Run Seoul 리전 배포 정상 동작 | `curl -f https://iching-counsel-api-517419857386.asia-northeast3.run.app/health` |
+| **KPI-5.3** | **Cloud Run 서버리스 가동성** | Scale-to-Zero 무중단 | Cloud Run Seoul 리전 배포 정상 동작 | `curl -f https://iching-counsel-api-<PROJECT_NUMBER>.asia-northeast3.run.app/health` |
 | **KPI-5.4** | **프론트엔드 실시간 크레딧 동기화** | 지연 0건 | 턴 완료 시 API 잔액 수신 즉시 UI 상태 반영 | `frontend/src/context/AuthContext.tsx` 및 `page.tsx` 연동 |
 
 - **Pass 기준**: 지연 시간 15초 이내 및 마진율 90% 이상 유지.

@@ -995,3 +995,78 @@ async def test_후속_턴도_근거_주석을_손에_쥔다(monkeypatch):
     assert 주석 in 첫턴_프롬프트
     assert 주석 in 후속_프롬프트, "둘째 턴에서 근거 주석이 사라지면 안 된다"
     assert res2.evidences, "후속 턴 화면에도 근거가 실려야 한다"
+
+
+@pytest.mark.asyncio
+async def test_위기_재감지되면_래치_창이_다시_열린다():
+    """D05: 최초 감지부터 24시간, **재감지 시 다시 24시간**.
+
+    CYCLE-08 분류에서 A36의 이 부분만 검증 증거가 없었다. 기존 테스트는 래치가
+    사람 단위인지(세션을 넘는지)와 창을 0으로 두면 풀리는지를 덮었지만, 창이
+    만료된 뒤 다시 감지됐을 때 새 창이 열리는지는 확인하지 않았다.
+
+    파이프라인을 돌리지 않고 `_has_recent_crisis`를 직접 본다. 래치 판정은 LLM이나
+    괘 도출과 무관한 DB 규칙이고, 그 규칙만 좁게 확인하는 것이 이 테스트의 목적이다.
+    """
+    import uuid
+    from datetime import datetime, timedelta, timezone
+
+    from sqlalchemy import text
+
+    from agents.pipeline import _has_recent_crisis
+    from core.config import settings
+    from core.models.counsel import CounselSession
+
+    user_id = "latch_relatch_" + uuid.uuid4().hex[:8]
+    window = timedelta(hours=settings.CRISIS_LATCH_HOURS)
+    now = datetime.now(timezone.utc)
+
+    async def _place_crisis_session(session, updated_at):
+        """`safety_redirect` 세션 하나를 원하는 시각에 놓는다."""
+        row = CounselSession(
+            id=str(uuid.uuid4()),
+            user_id=user_id,
+            raw_question="래치 창 검증용 합성 입력",
+            status="safety_redirect",
+        )
+        session.add(row)
+        await session.commit()
+        # `updated_at`은 server_default/onupdate라 직접 밀어야 한다.
+        await session.execute(
+            text("UPDATE counsel_sessions SET updated_at = :t WHERE id = :i"),
+            {"t": updated_at, "i": row.id},
+        )
+        await session.commit()
+        return row.id
+
+    async with AsyncSessionLocal() as session:
+        # 1. 창 안의 위기는 래치를 건다.
+        await _place_crisis_session(session, now - window + timedelta(hours=1))
+        assert await _has_recent_crisis(session, user_id) is True, (
+            "창 안의 위기 판정은 래치를 걸어야 한다"
+        )
+
+        # 2. 그 위기를 창 밖으로 밀면 래치가 풀린다.
+        await session.execute(
+            text("UPDATE counsel_sessions SET updated_at = :t WHERE user_id = :u"),
+            {"t": now - window - timedelta(hours=1), "u": user_id},
+        )
+        await session.commit()
+        assert await _has_recent_crisis(session, user_id) is False, (
+            "창이 지난 위기만 남았으면 래치가 풀려야 한다"
+        )
+
+        # 3. 재감지. 새 위기 판정이 창을 다시 연다.
+        await _place_crisis_session(session, now)
+        assert await _has_recent_crisis(session, user_id) is True, (
+            "재감지되면 만료된 이전 위기와 무관하게 새 창이 열려야 한다"
+        )
+
+        # 4. 다른 사용자에게는 번지지 않는다.
+        assert await _has_recent_crisis(session, "latch_unrelated_user") is False
+
+        # 정리: 이 테스트가 만든 행만 지운다.
+        await session.execute(
+            text("DELETE FROM counsel_sessions WHERE user_id = :u"), {"u": user_id}
+        )
+        await session.commit()

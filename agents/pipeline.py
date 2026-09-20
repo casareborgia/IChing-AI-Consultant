@@ -25,6 +25,7 @@ from core.config import settings
 from agents.intake import run_intake
 from agents.interpret import run_interpret
 from agents.report import run_report_agent
+from agents.report_v2 import run_report_v2_agent
 from agents.journal import write_journal
 from agents.safety import format_safety_response, screen
 from core.hexagram_engine import rebuild_cast
@@ -34,6 +35,7 @@ from core.models.hexagram import Hexagram
 from core.prompts import load_prompt_block
 from core.rag import make_retriever
 from core.reading import build_evidence
+from core.report_versions import REPORT_V2, public_report_error_code
 from schemas.counsel import EvidenceItem, HexagramInterpretationSchema, SafetyVerdict
 
 
@@ -519,25 +521,40 @@ async def run_turn(
         report_error_code = None
         report_started = perf_counter()
         try:
-            report_obj = await run_report_agent(
-                session,
-                question=message,
-                original_hex_id=interp_res.original_hexagram_id,
-                transformed_hex_id=interp_res.transformed_hexagram_id,
-                changing_lines=interp_res.changing_lines,
-                lines_val=getattr(interp_res, "lines_val", [7, 8, 9, 8, 9, 7]),
-                focus_rule=evidence.focus_rule.model_dump(),
-                evidences=interp_res.evidences,
-                topic_category=c_session.topic_category or "기타",
-                client=clients.get("report"),
-            )
-            report_data = report_obj.model_dump()
+            # 괘·초점 규칙·원문은 `evidence` 하나로 넘긴다. 예전에는 본괘 ID, 지괘 ID,
+            # 동효, 6효 수치, focus_rule을 따로 떼어 넘겼고 리포트가 그것들로 점법을
+            # 다시 계산했다. 특히 `lines_val`에 `[7, 8, 9, 8, 9, 7]` 기본값이 붙어 있어,
+            # 속성이 없으면 실제 뽑힌 괘와 무관한 6효가 화면의 수리 표로 나갈 수 있었다.
+            #
+            # 판본은 설정이 정한다. **어느 쪽이든 근거는 `evidence` 하나에서 나온다** —
+            # v2 플래그가 꺼져 있다는 이유로 예전의 독자 고변점 계산이 되살아나지 않는다.
+            if settings.REPORT_SCHEMA_VERSION == REPORT_V2:
+                report_obj = await run_report_v2_agent(
+                    question=message,
+                    session_id=str(sid),
+                    reading=evidence,
+                    evidences=interp_res.evidences,
+                    topic_category=c_session.topic_category or "기타",
+                    client=clients.get("report"),
+                )
+            else:
+                report_obj = await run_report_agent(
+                    question=message,
+                    reading=evidence,
+                    evidences=interp_res.evidences,
+                    topic_category=c_session.topic_category or "기타",
+                    client=clients.get("report"),
+                )
+            report_data = report_obj.model_dump(mode="json")
             report_status = "ready"
             c_session.report_data = report_data
             c_session.report_status = report_status
             c_session.report_error_code = None
         except Exception as exc:
-            report_error_code = type(exc).__name__
+            # 공개해도 되는 안정된 코드만 내보낸다. 예전에는 `type(exc).__name__`을
+            # 그대로 응답에 실었다 — 내부 예외 클래스 이름이 사용자와 로그에 새고,
+            # 리팩터링으로 클래스 이름이 바뀌면 FE 분기가 조용히 깨진다.
+            report_error_code = public_report_error_code(exc)
             c_session.report_data = None
             c_session.report_status = report_status
             c_session.report_error_code = report_error_code

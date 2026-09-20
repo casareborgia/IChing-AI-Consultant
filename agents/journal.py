@@ -178,9 +178,9 @@ async def write_journal(
     ).scalar_one_or_none()
 
     if existing_journal:
-        existing_journal.summary = summary
-        existing_journal.key_insights = key_insights
-        existing_journal.action_items = action_items
+        # B안 이어가기 정책: 상담 완료 후 추가 턴이 이어져 다시 is_final이 되어도,
+        # 내담자가 5턴 코칭 아크에서 이미 확정받은 행동 다짐(Action Pledge)과
+        # 내려받은 저널 카드 내용을 조용히 덮어쓰지 않고 최초의 성찰 기록을 영구 보존한다.
         journal_entry = existing_journal
     else:
         journal_entry = JournalEntry(
@@ -188,6 +188,7 @@ async def write_journal(
             summary=summary,
             key_insights=key_insights,
             action_items=action_items,
+            card_data=full_schema,
         )
         session.add(journal_entry)
 

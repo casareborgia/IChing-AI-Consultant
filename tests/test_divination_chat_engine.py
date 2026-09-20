@@ -64,7 +64,15 @@ def test_adapt_to_report_payload():
     assert payload["derivation_data"]["original_hexagram"]["name"] == "제49괘 택화혁"
     assert payload["derivation_data"]["resulting_hexagram"]["name"] == "제55괘 뇌화풍"
     assert "구오" in payload["judgment_rules"]["target_focus"]
-    assert "大人虎變" in payload["judgment_rules"]["local_target_text"]
+    # 상담사에게 넘어가는 것은 한글 해석이다.
+    #
+    # 예전 기대값은 `"大人虎變" in local_target_text`였다. 이 값은 상담 프롬프트로
+    # 그대로 들어가는데, `agents/counsel.py`는 첫 줄에 "한문 원문 노출 차단"을
+    # 적어 두고 있고 `AGENTS.md` 설계원칙 1도 같은 말을 한다. 테스트가 그 위반을
+    # 통과 조건으로 고정하고 있었으므로 기대값을 바꾼다
+    # (2026-09-12, 리포트 v2 카드 B).
+    assert payload["judgment_rules"]["local_target_text"] == "단단한 내면의 신뢰를 먼저 구축해야 합니다."
+    assert "大人虎變" not in payload["judgment_rules"]["local_target_text"]
     assert len(payload["counseling_agenda"]) >= 1
 
 
@@ -176,3 +184,125 @@ async def test_refinement_loop_적용_테스트():
     assert "마음의 허물을 벗겨내고" in res.message
     assert "택화혁의 기류 속에" not in res.message
     assert "?" in res.message
+
+
+# --- P2: 6턴 이상 프롬프트 일관성 및 후속 대화 회귀 테스트 (SR-1 ~ SR-5) ---
+
+
+def test_sr_1_generate_chat_prompt_turn_6_followup():
+    """SR-1: generate_chat_prompt(..., turn_num_override=6) 시 실제 Turn 6, Follow-up 목표, Turn 5 현재 지시 없음."""
+    engine = DivinationChatEngine()
+    payload = adapt_to_report_payload(
+        interpretation_raw_text=INTERP_SAMPLE.raw_text,
+        contextual_mapping=INTERP_SAMPLE.contextual_mapping,
+    )
+    prompts = engine.generate_chat_prompt(
+        conversation_history=[],
+        user_question="소통을 어떻게 이어가면 좋을까요?",
+        report_payload=payload,
+        turn_num_override=6,
+    )
+
+    sys_prompt = prompts["system_prompt"]
+    user_prompt = prompts["user_prompt"]
+
+    # 1. 실제 Turn 6 반영
+    assert "Turn 6" in user_prompt
+    assert "Turn 6 of 5" not in user_prompt
+    assert "Follow-up Stage" in user_prompt
+
+    # 2. 6+ 후속 대화 설계 반영
+    assert "[CRITICAL DIALOGUE DESIGN: FOLLOW-UP STAGE (TURN 6+)]" in sys_prompt
+    assert "The 5-turn coaching arc and the action pledge are already complete" in sys_prompt
+
+    # 3. Turn 5 전용 하드 터미네이션 지시 배제
+    assert "TURN 5 [Action Pledge Call - Hard Termination]" not in sys_prompt
+    assert "Inscribed on your Action Pledge Card" not in sys_prompt
+    assert '"is_final": false' in sys_prompt
+
+
+def test_sr_2_critique_prompt_turn_6_does_not_demand_action_pledge():
+    """SR-2: critique prompt turn 6에서 Action Pledge 정렬을 요구하지 않음."""
+    engine = DivinationChatEngine()
+    payload = adapt_to_report_payload(
+        interpretation_raw_text=INTERP_SAMPLE.raw_text,
+    )
+    draft = "지난번 다짐하신 경청의 태도를 실천해보시니 마음이 어떠셨습니까?"
+    critique = engine.generate_critique_prompt(draft, [], payload, turn_num_override=6)
+
+    assert "[4 Quality Gates of Follow-up Dialogue (Turn 6+)]" in critique
+    assert "[Follow-up Alignment]" in critique
+    assert "Turn 6 (Follow-up Stage)" in critique
+    # Turn 5 Action Pledge 정렬 요구 배제
+    assert "Turn 5 = Direct pledge call" not in critique
+    assert "demand another Action Pledge/Hard Termination" in critique  # 배제 검증 문구
+
+
+def test_sr_3_refinement_prompt_turn_10_maintains_followup_contract():
+    """SR-3: refinement prompt turn 10에서 후속 대화 계약 유지."""
+    engine = DivinationChatEngine()
+    payload = adapt_to_report_payload(
+        interpretation_raw_text=INTERP_SAMPLE.raw_text,
+    )
+    draft = "초안: 계속 소통해보십시오."
+    refinement = engine.generate_refinement_prompt(
+        draft, "조금 더 깊은 질문 필요", [], payload, turn_num_override=10
+    )
+
+    assert "Turn 10 (Follow-up Stage)" in refinement
+    assert "[Follow-up Refinement Mandate]" in refinement
+    assert "do NOT ask for an Action Pledge card" in refinement
+    assert "do NOT hard-terminate" in refinement
+
+
+@pytest.mark.asyncio
+async def test_sr_4_refinement_loop_turn_6_produces_natural_followup():
+    """SR-4: refinement loop를 켠 run_counsel_turn(turn_number=6)에서 is_final=False 및 자연스러운 후속 응답."""
+    class MockFollowupLLM:
+        def complete_json(self, user: str, *, system: str = "", **kwargs) -> dict:
+            return {
+                "message": "초안: 네, 그렇군요. 어떤 생각이 드시나요?",
+                "needs_followup": True,
+                "followup_question": "어떤 생각이 드시나요?",
+                "is_final": False,
+            }
+
+        def complete(self, prompt: str, *, system: str = "", **kwargs) -> str:
+            return "그동안 실천해보신 다짐 속에서 스스로 가장 크게 달라졌다고 느낀 순간은 언제였습니까?"
+
+    llm = MockFollowupLLM()
+    res = await run_counsel_turn(
+        "다짐을 실천해보고 있습니다.",
+        INTERP_SAMPLE,
+        turn_number=6,
+        client=llm,
+        enable_refinement_loop=True,
+    )
+
+    assert res.is_final is False
+    assert res.needs_followup is True
+    assert "그동안 실천해보신 다짐 속에서" in res.message
+
+
+@pytest.mark.asyncio
+async def test_sr_5_turn_5_maintains_action_pledge_and_hard_termination():
+    """SR-5: turn 5에서는 기존 Action Pledge 및 강제 종료 유지."""
+    class DummyLLM:
+        def complete_json(self, user: str, *, system: str = "", **kwargs) -> dict:
+            return {
+                "message": "오늘의 결단을 마음에 새기십시오.",
+                "needs_followup": True,
+                "followup_question": "무엇을 하시겠습니까?",
+                "is_final": False,
+            }
+
+    res = await run_counsel_turn(
+        "실천하겠습니다.",
+        INTERP_SAMPLE,
+        turn_number=5,
+        client=DummyLLM(),
+    )
+
+    assert res.is_final is True
+    assert res.needs_followup is False
+    assert res.followup_question is None

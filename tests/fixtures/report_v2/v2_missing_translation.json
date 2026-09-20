@@ -1,0 +1,213 @@
+{
+  "academic_details": {
+    "casting": {
+      "changing_lines": [
+        1
+      ],
+      "has_transformation": true,
+      "lines": [
+        {
+          "is_changing": true,
+          "line_type_ko": "노양",
+          "position": 1,
+          "value": 9
+        },
+        {
+          "is_changing": false,
+          "line_type_ko": "소양",
+          "position": 2,
+          "value": 7
+        },
+        {
+          "is_changing": false,
+          "line_type_ko": "소양",
+          "position": 3,
+          "value": 7
+        },
+        {
+          "is_changing": false,
+          "line_type_ko": "소양",
+          "position": 4,
+          "value": 7
+        },
+        {
+          "is_changing": false,
+          "line_type_ko": "소양",
+          "position": 5,
+          "value": 7
+        },
+        {
+          "is_changing": false,
+          "line_type_ko": "소양",
+          "position": 6,
+          "value": 7
+        }
+      ],
+      "original_hexagram_id": 1,
+      "original_lower_trigram": "건(하늘)",
+      "original_name": "제1괘",
+      "original_upper_trigram": "건(하늘)",
+      "transformed_hexagram_id": 44,
+      "transformed_name": "제44괘"
+    },
+    "focus_rule": {
+      "body_use_note_ko": null,
+      "body_use_type": "STANDARD",
+      "changing_count": 1,
+      "description_ko": "1개의 변효가 있으므로 본괘 1효의 효사(爻辭)를 주 해석으로 삼습니다.",
+      "focus_type": "SINGLE_LINE_STATEMENT",
+      "rule_version": "zhuxi-gobyeonjeom-2026-08-30",
+      "target_hexagram_type": "ORIGINAL",
+      "target_line_numbers": [
+        1
+      ]
+    },
+    "sources": [
+      {
+        "annotation": null,
+        "annotation_source": null,
+        "classical_text": "爻辭原文1-1",
+        "classical_translation": null,
+        "hexagram_id": 1,
+        "hexagram_name": "제1괘",
+        "id": "E1",
+        "line_number": 1,
+        "locator": null,
+        "role": "primary"
+      },
+      {
+        "annotation": null,
+        "annotation_source": null,
+        "classical_text": "卦辭原文1",
+        "classical_translation": "제1괘의 괘사 번역입니다.",
+        "hexagram_id": 1,
+        "hexagram_name": "제1괘",
+        "id": "E2",
+        "line_number": null,
+        "locator": null,
+        "role": "background"
+      },
+      {
+        "annotation": null,
+        "annotation_source": null,
+        "classical_text": "象曰 大象原文1",
+        "classical_translation": "제1괘 대상전 번역입니다.",
+        "hexagram_id": 1,
+        "hexagram_name": "제1괘",
+        "id": "E3",
+        "line_number": null,
+        "locator": null,
+        "role": "supplement"
+      },
+      {
+        "annotation": "그 자리에서 마땅함을 얻으면 허물이 없다고 하였다.",
+        "annotation_source": "정전(程傳) 효사 주석",
+        "classical_text": "그 자리에서 마땅함을 얻으면 허물이 없다고 하였다.",
+        "classical_translation": null,
+        "hexagram_id": 1,
+        "hexagram_name": "제1괘",
+        "id": "E4",
+        "line_number": 1,
+        "locator": null,
+        "role": "annotation"
+      },
+      {
+        "annotation": "턱 사이에 물건이 있어 깨물어 없애야 합해지니, 깨물어 합하면 형통하다.",
+        "annotation_source": "정전(程傳)",
+        "classical_text": "턱 사이에 물건이 있어 깨물어 없애야 합해지니, 깨물어 합하면 형통하다.",
+        "classical_translation": null,
+        "hexagram_id": 1,
+        "hexagram_name": "제1괘",
+        "id": "E5",
+        "line_number": null,
+        "locator": null,
+        "role": "annotation"
+      },
+      {
+        "annotation": "막힌 것을 깨물어 통하게 한다는 뜻을 취하였다.",
+        "annotation_source": "본의(本義)",
+        "classical_text": "막힌 것을 깨물어 통하게 한다는 뜻을 취하였다.",
+        "classical_translation": null,
+        "hexagram_id": 1,
+        "hexagram_name": "제1괘",
+        "id": "E6",
+        "line_number": null,
+        "locator": null,
+        "role": "annotation"
+      }
+    ],
+    "user_facts": [
+      {
+        "id": "U1",
+        "text": "요즘 일이 막혀 있는 느낌입니다."
+      },
+      {
+        "id": "U2",
+        "text": "어디서부터 손을 대야 할까요?"
+      }
+    ]
+  },
+  "counseling_handoff": {
+    "opening_question": "지금 걸려 있는 것 가운데 먼저 말씀하고 싶은 것은 무엇인가요?",
+    "suggested_action_title": "걸린 것 하나만 적어 보기",
+    "unconfirmed_points": [
+      "실제로 조정할 수 있는 범위가 어디까지인지 아직 모릅니다."
+    ],
+    "working_hypotheses": [
+      "한 번에 해결하려는 부담이 시작을 늦추고 있는지"
+    ]
+  },
+  "generation_metadata": {
+    "evidence_snapshot_hash": "c4528099a06e9ba89c85a80329599e077f532d4f8d58358b984df0c3db43afe7",
+    "generated_at": "2026-09-12T04:30:00+00:00",
+    "model": "stub-model",
+    "prompt_version": "v2.0.0+c3cd72c8",
+    "provider": null,
+    "repair_count": 0,
+    "rule_version": "zhuxi-gobyeonjeom-2026-08-30"
+  },
+  "narrative": {
+    "emotional_context": {
+      "pattern_hypothesis": "한 번에 전부 해결하려다 손을 못 대는 흐름이 반복되는지 함께 살펴보면 좋겠습니다.",
+      "user_fact_refs": [
+        "U1"
+      ],
+      "validation": "말씀하신 상황에서 답답함이 쌓이는 것은 자연스러운 일입니다. 당장 풀리지 않는 일 앞에서 마음이 무거워지셨을 것 같습니다."
+    },
+    "headline_metaphor": "단단한 것을 한 번에 삼키려 하지 않고, 씹어 넘길 만큼만 떼어내는 자리입니다.",
+    "micro_action_task": {
+      "completion_criterion": "표시한 항목이 하나 생기면 끝난 것으로 봅니다.",
+      "duration_minutes": 10,
+      "smaller_alternative": "적기 어려우면 소리 내어 한 가지만 말해 봅니다.",
+      "steps": [
+        "지금 마음에 걸리는 일을 떠오르는 대로 적습니다.",
+        "그중 가장 작아 보이는 것 하나에 표시합니다."
+      ],
+      "title": "걸린 것 하나만 적어 보기",
+      "when": "오늘 중 조용히 앉을 수 있는 때"
+    },
+    "perspective": {
+      "alternative_perspective": "막혀 있다는 느낌이 능력의 문제가 아니라 순서의 문제일 수 있다는 각도에서 볼 수도 있습니다.",
+      "applied_reading": "이번 사연에 옮기면, 전부를 한꺼번에 처리하기보다 걸려 있는 것 하나를 먼저 떼어내는 쪽에 가깝습니다.",
+      "classical_reading": "고전은 턱 사이에 낀 것을 깨물어 없애야 비로소 위아래가 맞물린다고 말합니다.",
+      "evidence_refs": [
+        "E1"
+      ],
+      "thought_observation": "지금 떠오르는 생각 가운데는 사실이 아니라 지나가는 걱정도 섞여 있을 수 있습니다."
+    },
+    "value_direction": {
+      "conditions_to_check": [
+        "지금 걸려 있는 것 가운데 오늘 손댈 수 있는 것이 무엇인지",
+        "나누어 하는 방식이 이 상황에서 실제로 가능한지"
+      ],
+      "evidence_refs": [
+        "E1"
+      ],
+      "proposed_value": "감당할 수 있는 크기로 나누어 다루기",
+      "rationale": "한 번에 끝내려는 마음이 클수록 시작이 늦어지는 흐름이 있습니다. 작은 단위로 나누면 손을 댈 자리가 생깁니다."
+    }
+  },
+  "report_id": "00000000-0000-4000-8000-000000000001",
+  "schema_version": "2.0",
+  "session_id": "fixture-session-0001"
+}

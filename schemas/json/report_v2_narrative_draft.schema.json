@@ -1,0 +1,295 @@
+{
+  "$defs": {
+    "CounselingHandoff": {
+      "additionalProperties": false,
+      "description": "다음 상담 턴으로 넘기는 것.\n\n무엇이 확인됐고 무엇이 아직 아닌지를 갈라 둔다. 이 구분이 없으면 리포트의\n잠정 해석이 다음 턴에서 확정 사실로 굳는다.\n\n카드 B에서는 생성·저장만 한다. 5턴 상담이 이 구조를 실제로 소비하는 것은\n카드 E다.",
+      "properties": {
+        "opening_question": {
+          "maxLength": 200,
+          "minLength": 5,
+          "title": "Opening Question",
+          "type": "string"
+        },
+        "suggested_action_title": {
+          "maxLength": 100,
+          "minLength": 2,
+          "title": "Suggested Action Title",
+          "type": "string"
+        },
+        "unconfirmed_points": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 5,
+          "title": "Unconfirmed Points",
+          "type": "array"
+        },
+        "working_hypotheses": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 5,
+          "title": "Working Hypotheses",
+          "type": "array"
+        }
+      },
+      "required": [
+        "suggested_action_title",
+        "opening_question"
+      ],
+      "title": "CounselingHandoff",
+      "type": "object"
+    },
+    "EmotionalContext": {
+      "additionalProperties": false,
+      "description": "지금의 마음과 상황.\n\n`validation`은 사용자가 실제로 말한 것에 대한 공감이다. `pattern_hypothesis`는\n관찰된 적 없는 반복 패턴이라 **가설**로만 존재한다 — 없으면 `null`이고,\n있어도 상담에서 확인할 대상이지 확정 사실이 아니다.",
+      "properties": {
+        "pattern_hypothesis": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Pattern Hypothesis"
+        },
+        "user_fact_refs": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 10,
+          "title": "User Fact Refs",
+          "type": "array"
+        },
+        "validation": {
+          "maxLength": 800,
+          "minLength": 10,
+          "title": "Validation",
+          "type": "string"
+        }
+      },
+      "required": [
+        "validation"
+      ],
+      "title": "EmotionalContext",
+      "type": "object"
+    },
+    "MicroActionTask": {
+      "additionalProperties": false,
+      "description": "오늘 시도해 볼 작은 행동.\n\n`duration_minutes`의 상한이 15인 것은 수행 가능성 때문이다. 10분은 기본 제안이지\n고정값이 아니다. 사용자의 생활 조건(퇴근 시각, 업무 알림 정책)을 모르면\n`when`에 특정 시각을 강제하지 않는다.\n\n**이 칸은 제안이다.** 사용자가 고른 적도 끝낸 적도 없다. 선택·완료는 별도\n상태로 관리한다(카드 C).",
+      "properties": {
+        "completion_criterion": {
+          "maxLength": 200,
+          "minLength": 5,
+          "title": "Completion Criterion",
+          "type": "string"
+        },
+        "duration_minutes": {
+          "maximum": 15,
+          "minimum": 1,
+          "title": "Duration Minutes",
+          "type": "integer"
+        },
+        "smaller_alternative": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Smaller Alternative"
+        },
+        "steps": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 3,
+          "minItems": 1,
+          "title": "Steps",
+          "type": "array"
+        },
+        "title": {
+          "maxLength": 100,
+          "minLength": 2,
+          "title": "Title",
+          "type": "string"
+        },
+        "when": {
+          "maxLength": 200,
+          "minLength": 2,
+          "title": "When",
+          "type": "string"
+        }
+      },
+      "required": [
+        "title",
+        "duration_minutes",
+        "when",
+        "steps",
+        "completion_criterion"
+      ],
+      "title": "MicroActionTask",
+      "type": "object"
+    },
+    "Perspective": {
+      "additionalProperties": false,
+      "description": "다른 각도에서 살펴보기.\n\n`classical_reading`과 `applied_reading`이 갈라져 있는 것이 이 모델의 핵심이다.\n한 칸이면 \"利用獄은 인지적 탈융합을 뜻합니다\"가 나온다 — 원전의 뜻이 현대\n심리 용어로 대체된 것이고, 고전이 그렇게 말한 적은 없다. 두 칸이면\n\"옥사를 다스린다는 것은 …\"(고전)과 \"이번 사연에 옮기면 …\"(적용)이 각각 제 자리에\n선다.",
+      "properties": {
+        "alternative_perspective": {
+          "maxLength": 800,
+          "minLength": 10,
+          "title": "Alternative Perspective",
+          "type": "string"
+        },
+        "applied_reading": {
+          "maxLength": 800,
+          "minLength": 10,
+          "title": "Applied Reading",
+          "type": "string"
+        },
+        "classical_reading": {
+          "maxLength": 500,
+          "minLength": 10,
+          "title": "Classical Reading",
+          "type": "string"
+        },
+        "evidence_refs": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 10,
+          "minItems": 1,
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "thought_observation": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Thought Observation"
+        }
+      },
+      "required": [
+        "classical_reading",
+        "applied_reading",
+        "alternative_perspective",
+        "evidence_refs"
+      ],
+      "title": "Perspective",
+      "type": "object"
+    },
+    "ReportNarrative": {
+      "additionalProperties": false,
+      "properties": {
+        "emotional_context": {
+          "$ref": "#/$defs/EmotionalContext"
+        },
+        "headline_metaphor": {
+          "maxLength": 200,
+          "minLength": 5,
+          "title": "Headline Metaphor",
+          "type": "string"
+        },
+        "micro_action_task": {
+          "$ref": "#/$defs/MicroActionTask"
+        },
+        "perspective": {
+          "$ref": "#/$defs/Perspective"
+        },
+        "value_direction": {
+          "$ref": "#/$defs/ValueDirection"
+        }
+      },
+      "required": [
+        "headline_metaphor",
+        "emotional_context",
+        "perspective",
+        "value_direction",
+        "micro_action_task"
+      ],
+      "title": "ReportNarrative",
+      "type": "object"
+    },
+    "ValueDirection": {
+      "additionalProperties": false,
+      "description": "지키고 싶은 가치와 점검할 조건.\n\n지괘가 들어오는 자리다. 확정적 미래나 파국 예고가 아니라 `conditions_to_check`\n— 선택할 때 무엇을 살펴볼지다.",
+      "properties": {
+        "conditions_to_check": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 5,
+          "minItems": 1,
+          "title": "Conditions To Check",
+          "type": "array"
+        },
+        "evidence_refs": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 10,
+          "minItems": 1,
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "proposed_value": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Proposed Value"
+        },
+        "rationale": {
+          "maxLength": 800,
+          "minLength": 10,
+          "title": "Rationale",
+          "type": "string"
+        }
+      },
+      "required": [
+        "rationale",
+        "conditions_to_check",
+        "evidence_refs"
+      ],
+      "title": "ValueDirection",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "LLM 출력 계약. `narrative` + `counseling_handoff`만 받는다.",
+  "properties": {
+    "counseling_handoff": {
+      "$ref": "#/$defs/CounselingHandoff"
+    },
+    "narrative": {
+      "$ref": "#/$defs/ReportNarrative"
+    }
+  },
+  "required": [
+    "narrative",
+    "counseling_handoff"
+  ],
+  "title": "NarrativeDraft",
+  "type": "object"
+}

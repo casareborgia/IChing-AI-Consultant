@@ -86,7 +86,7 @@
 - 이미지 digest: `sha256:5abcfc7f30ae57b6b7bfe099442247e340319841304b98033e4a49ae60ce634d`
 - 현재 리비전: `iching-counsel-api-00030-cvd`
 - 트래픽: 100%
-- URL: `https://iching-counsel-api-517419857386.asia-northeast3.run.app`
+- URL: `https://iching-counsel-api-<PROJECT_NUMBER>.asia-northeast3.run.app`
 
 ### 프런트엔드
 
@@ -108,7 +108,7 @@
 1. 새 백엔드 헬스 체크
 
    ```bash
-   curl -i https://iching-counsel-api-517419857386.asia-northeast3.run.app/health
+   curl -i https://iching-counsel-api-<PROJECT_NUMBER>.asia-northeast3.run.app/health
    ```
 
    기대값: HTTP 200과 `"database":"ok"`.
